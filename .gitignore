@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────
+# .gitignore — Study Hub
+# ─────────────────────────────────────────────────────────────────
+
+# ── Secrets (NEVER commit these) ─────────────────────────────────
+# .env contains your Anthropic API key and JWT secret.
+# Anyone with these can make AI calls at your expense and forge auth tokens.
+backend/.env
+.env
+.env.*
+!.env.example
+
+# ── Database files ────────────────────────────────────────────────
+# studyhub.db contains all user accounts (emails + hashed passwords).
+# studyhub.db-wal and studyhub.db-shm are SQLite WAL journal files
+# that can contain uncommitted data rows in plaintext.
+backend/*.db
+backend/*.db-wal
+backend/*.db-shm
+
+# ── Dependencies ──────────────────────────────────────────────────
+node_modules/
+backend/node_modules/
+
+# ── Runtime logs ──────────────────────────────────────────────────
+backend/logs/
+*.log
+
+# ── OS / editor ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────────
+# .gitignore — Study Hub
+#
+# NEVER commit the files listed below. They contain secrets, user data,
+# or generated artifacts that do not belong in version control.
+# ─────────────────────────────────────────────────────────────────
+
+# ── Secrets ───────────────────────────────────────────────────────
+# Contains ANTHROPIC_API_KEY and JWT_SECRET.
+# Anyone with these can impersonate users and run AI calls at your expense.
+.env
+.env.*
+!.env.example        # The EXAMPLE file (no real secrets) IS committed
+
+# ── Database files ────────────────────────────────────────────────
+# studyhub.db contains all user accounts and hashed passwords.
+# studyhub.db-wal and studyhub.db-shm are SQLite write-ahead log files.
+# All three should be backed up separately, never committed to git.
+backend/*.db
+backend/*.db-wal
+backend/*.db-shm
+
+# ── Dependencies ──────────────────────────────────────────────────
+node_modules/
+backend/node_modules/
+
+# ── Logs ─────────────────────────────────────────────────────────
+backend/logs/
+*.log
+
+# ── OS / editor artifacts ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ── Build artifacts ───────────────────────────────────────────────
+dist/
+build/

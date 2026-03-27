@@ -1,0 +1,15 @@
+{
+  "name": "ase-study-hub",
+  "version": "2.0.0",
+  "description": "ASE Study Hub — AI-powered exam preparation platform",
+  "private": true,
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "init-db":         "node init-db.js",
+    "dev":             "cd backend && npm run dev",
+    "start":           "cd backend && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
