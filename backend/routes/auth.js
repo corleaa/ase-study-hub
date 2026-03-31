@@ -103,7 +103,7 @@ router.post('/register',
       setRefreshCookie(res, refreshToken);
       res.status(201).json({
         accessToken: makeAccessToken(userId),
-        user: { id: userId, email },
+        user: { id: userId, email, role: 'free' },
       });
     } catch (e) {
       next(e);
@@ -143,7 +143,7 @@ router.post('/login',
       setRefreshCookie(res, refreshToken);
       res.json({
         accessToken: makeAccessToken(user.id),
-        user: { id: user.id, email: user.email },
+        user: { id: user.id, email: user.email, role: user.role || 'free' },
       });
     } catch (e) {
       next(e);
@@ -224,7 +224,7 @@ router.post('/refresh', (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 router.get('/me', authenticate, (req, res) => {
   const user = getDb()
-    .prepare('SELECT id, email FROM users WHERE id = ?')
+    .prepare('SELECT id, email, role FROM users WHERE id = ?')
     .get(req.userId);
   if (!user) return res.status(404).json({ error: 'User not found.' });
   res.json({ user });

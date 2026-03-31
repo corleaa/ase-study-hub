@@ -18,17 +18,44 @@
 'use strict';
 
 const rateLimit = require('express-rate-limit');
-const { countRecentCalls } = require('../db/client');
+const { countRecentCalls, countRecentCallsByIp } = require('../db/client');
 const { logger } = require('../utils/logger');
 
-// ── Budgets per feature (adjust these to taste) ───────────────────
+// ── Budgets per feature per tier ──────────────────────────────────
 // Format: { windowMinutes, maxPerWindow, dailyMax }
+// admin: null = no limits
+// dailyMax: 0 = feature blocked for this tier
 const FEATURE_LIMITS = {
-  chat:       { windowMinutes: 1,  maxPerWindow: 5,  dailyMax: 100 },
-  quiz:       { windowMinutes: 5,  maxPerWindow: 3,  dailyMax: 30  },
-  flashcards: { windowMinutes: 5,  maxPerWindow: 3,  dailyMax: 30  },
-  exam:       { windowMinutes: 10, maxPerWindow: 2,  dailyMax: 10  },
-  summarize:  { windowMinutes: 5,  maxPerWindow: 3,  dailyMax: 20  },
+  chat: {
+    guest: { windowMinutes: 1,  maxPerWindow: 2,  dailyMax: 5   },
+    free:  { windowMinutes: 1,  maxPerWindow: 5,  dailyMax: 30  },
+    pro:   { windowMinutes: 1,  maxPerWindow: 10, dailyMax: 200 },
+    admin: null,
+  },
+  quiz: {
+    guest: { windowMinutes: 5,  maxPerWindow: 1,  dailyMax: 2  },
+    free:  { windowMinutes: 5,  maxPerWindow: 3,  dailyMax: 10 },
+    pro:   { windowMinutes: 5,  maxPerWindow: 5,  dailyMax: 50 },
+    admin: null,
+  },
+  flashcards: {
+    guest: { windowMinutes: 5,  maxPerWindow: 1,  dailyMax: 2  },
+    free:  { windowMinutes: 5,  maxPerWindow: 3,  dailyMax: 10 },
+    pro:   { windowMinutes: 5,  maxPerWindow: 5,  dailyMax: 50 },
+    admin: null,
+  },
+  exam: {
+    guest: { windowMinutes: 10, maxPerWindow: 0,  dailyMax: 0  },  // blocked
+    free:  { windowMinutes: 10, maxPerWindow: 2,  dailyMax: 3  },
+    pro:   { windowMinutes: 10, maxPerWindow: 3,  dailyMax: 20 },
+    admin: null,
+  },
+  summarize: {
+    guest: { windowMinutes: 5,  maxPerWindow: 1,  dailyMax: 1  },
+    free:  { windowMinutes: 5,  maxPerWindow: 3,  dailyMax: 5  },
+    pro:   { windowMinutes: 5,  maxPerWindow: 5,  dailyMax: 30 },
+    admin: null,
+  },
 };
 
 // ── 1. IP-level limiter for auth routes ──────────────────────────
@@ -62,40 +89,68 @@ const aiIpLimiter = rateLimit({
   },
 });
 
-// ── 3. Per-user, per-feature DB limiter ──────────────────────────
-// Called AFTER authenticate so req.user is available.
+// ── 3. Per-user/per-guest, per-feature DB limiter ────────────────
+// Works with optionalAuth: req.userRole is always set ('guest'/'free'/'pro'/'admin').
 // Returns a middleware function configured for a specific feature.
 function perUserLimiter(feature) {
-  const limits = FEATURE_LIMITS[feature];
-  if (!limits) throw new Error(`Unknown feature for rate limiter: ${feature}`);
+  const featureLimits = FEATURE_LIMITS[feature];
+  if (!featureLimits) throw new Error(`Unknown feature for rate limiter: ${feature}`);
 
   return async function userRateLimit(req, res, next) {
-    const userId = req.user.id;
+    const role   = req.userRole || 'guest';
+    const limits = featureLimits[role];
+
+    // Admin — no limits at all
+    if (limits === null) return next();
+
+    // Feature completely blocked for this tier (dailyMax === 0)
+    if (!limits || limits.dailyMax === 0) {
+      const upgradeMsg = role === 'guest'
+        ? 'Creează un cont gratuit pentru acces la această funcționalitate.'
+        : 'Upgrade la Pro pentru acces la această funcționalitate.';
+      logger.warn('Feature blocked for tier', { role, feature });
+      return res.status(429).json({
+        error: upgradeMsg,
+        upgradeRequired: true,
+        currentRole: role,
+      });
+    }
 
     try {
-      // Check short window (burst)
-      const recentCount = countRecentCalls(userId, feature, limits.windowMinutes);
+      const isGuest  = role === 'guest';
+      const id       = isGuest ? req.clientIpHash : req.user.id;
+      const countFn  = isGuest ? countRecentCallsByIp : countRecentCalls;
+
+      // Burst check
+      const recentCount = countFn(id, feature, limits.windowMinutes);
       if (recentCount >= limits.maxPerWindow) {
-        logger.warn('User burst rate limit hit', { userId, feature, recentCount });
+        logger.warn('Burst rate limit hit', { role, feature, recentCount });
         return res.status(429).json({
-          error: `You're generating ${feature} too fast. Please wait ${limits.windowMinutes} minute(s).`,
+          error: `Generezi ${feature} prea rapid. Așteaptă ${limits.windowMinutes} minut(e).`,
+          retryAfterMinutes: limits.windowMinutes,
         });
       }
 
-      // Check daily budget (cost control)
-      const dailyCount = countRecentCalls(userId, feature, 24 * 60);
+      // Daily budget
+      const dailyCount = countFn(id, feature, 24 * 60);
       if (dailyCount >= limits.dailyMax) {
-        logger.warn('User daily rate limit hit', { userId, feature, dailyCount });
+        logger.warn('Daily rate limit hit', { role, feature, dailyCount });
+        const freeLimit = featureLimits.free?.dailyMax;
+        const proLimit  = featureLimits.pro?.dailyMax;
+        const upgradeMsg = role === 'guest'
+          ? `Limită atinsă (${limits.dailyMax}/zi fără cont). Creează un cont gratuit pentru ${freeLimit}/zi.`
+          : `Limită zilnică atinsă (${limits.dailyMax}/zi). Upgrade la Pro pentru ${proLimit}/zi.`;
         return res.status(429).json({
-          error: `You've reached your daily limit for ${feature} (${limits.dailyMax} per day). Try again tomorrow.`,
+          error: upgradeMsg,
+          upgradeRequired: true,
+          currentRole: role,
+          dailyLimitHit: true,
         });
       }
 
       next();
     } catch (err) {
-      // If the DB check fails, fail open with a warning rather than
-      // blocking the user entirely. Log it for investigation.
-      logger.error('Rate limiter DB error — failing open', { err: err.message, userId, feature });
+      logger.error('Rate limiter DB error — failing open', { err: err.message, feature, role });
       next();
     }
   };

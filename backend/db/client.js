@@ -11,6 +11,8 @@
 //   + enforceSessionLimit(): max 5 active sessions per user
 //   + cleanExpiredTokens(): removes stale rows (call on startup + cron)
 //   + findRefreshToken(): single lookup used in /refresh route
+//   + role column on users: 'free' | 'pro' | 'admin'
+//   + guest_ai_calls: IP-hash based tracking for unauthenticated users
 // ═════════════════════════════════════════════════════════════════
 const path     = require('path');
 const Database = require('better-sqlite3');
@@ -30,10 +32,11 @@ function initDb() {
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
-      email        TEXT    UNIQUE NOT NULL,
-      password_hash TEXT   NOT NULL,
-      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      email         TEXT    UNIQUE NOT NULL,
+      password_hash TEXT    NOT NULL,
+      role          TEXT    NOT NULL DEFAULT 'free' CHECK(role IN ('free', 'pro', 'admin')),
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS refresh_tokens (
@@ -44,7 +47,7 @@ function initDb() {
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- ai_calls: one row per AI endpoint call, used by perUserLimiter
+    -- ai_calls: one row per AI endpoint call for authenticated users
     CREATE TABLE IF NOT EXISTS ai_calls (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -52,12 +55,28 @@ function initDb() {
       called_at  DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- guest_ai_calls: IP-hash based tracking for unauthenticated users
+    CREATE TABLE IF NOT EXISTS guest_ai_calls (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      ip_hash   TEXT    NOT NULL,
+      feature   TEXT    NOT NULL,
+      called_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_ai_calls_user_feature
       ON ai_calls(user_id, feature, called_at);
+
+    CREATE INDEX IF NOT EXISTS idx_guest_ai_calls_ip_feature
+      ON guest_ai_calls(ip_hash, feature, called_at);
 
     CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user
       ON refresh_tokens(user_id, expires_at);
   `);
+
+  // Migrate existing databases: add role column if it doesn't exist
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'free' CHECK(role IN ('free', 'pro', 'admin'))");
+  } catch { /* Column already exists — safe to ignore */ }
 
   // Remove expired tokens on startup
   cleanExpiredTokens();
@@ -75,7 +94,7 @@ function getDb() {
 // ─────────────────────────────────────────────────────────────────
 function findUserById(id) {
   return getDb()
-    .prepare('SELECT id, email FROM users WHERE id = ?')
+    .prepare('SELECT id, email, role FROM users WHERE id = ?')
     .get(id);
 }
 
@@ -189,17 +208,22 @@ function cleanExpiredTokens() {
 
 /**
  * Record one AI call for rate-limit accounting.
- * Call this at the END of a successful AI request.
+ * For authenticated users pass userId; for guests pass null + ipHash.
  */
-function logApiCall(userId, feature) {
-  getDb()
-    .prepare('INSERT INTO ai_calls (user_id, feature) VALUES (?, ?)')
-    .run(userId, feature);
+function logApiCall(userId, feature, ipHash) {
+  if (userId !== null && userId !== undefined) {
+    getDb()
+      .prepare('INSERT INTO ai_calls (user_id, feature) VALUES (?, ?)')
+      .run(userId, feature);
+  } else if (ipHash) {
+    getDb()
+      .prepare('INSERT INTO guest_ai_calls (ip_hash, feature) VALUES (?, ?)')
+      .run(ipHash, feature);
+  }
 }
 
 /**
- * Count recent calls for a user+feature within the last N minutes.
- * Used by perUserLimiter for both burst and daily budget checks.
+ * Count recent calls for an authenticated user+feature within the last N minutes.
  */
 function countRecentCalls(userId, feature, windowMinutes) {
   const row = getDb()
@@ -211,6 +235,22 @@ function countRecentCalls(userId, feature, windowMinutes) {
         AND called_at >= datetime('now', ? || ' minutes')
     `)
     .get(userId, feature, `-${windowMinutes}`);
+  return row?.cnt ?? 0;
+}
+
+/**
+ * Count recent calls for a guest by IP hash within the last N minutes.
+ */
+function countRecentCallsByIp(ipHash, feature, windowMinutes) {
+  const row = getDb()
+    .prepare(`
+      SELECT COUNT(*) AS cnt
+      FROM guest_ai_calls
+      WHERE ip_hash  = ?
+        AND feature  = ?
+        AND called_at >= datetime('now', ? || ' minutes')
+    `)
+    .get(ipHash, feature, `-${windowMinutes}`);
   return row?.cnt ?? 0;
 }
 
@@ -229,4 +269,5 @@ module.exports = {
   // AI call tracking
   logApiCall,
   countRecentCalls,
+  countRecentCallsByIp,
 };

@@ -14,9 +14,9 @@
 // ═════════════════════════════════════════════════════════════════
 'use strict';
 
-const router       = require('express').Router();
-const Anthropic    = require('@anthropic-ai/sdk');
-const authenticate = require('../middleware/authenticate');
+const router      = require('express').Router();
+const Anthropic   = require('@anthropic-ai/sdk');
+const { optionalAuth } = require('../middleware/authenticate');
 const { validate, validateAiResponse } = require('../middleware/validate');
 const { aiIpLimiter, perUserLimiter }  = require('../middleware/rateLimiter');
 const { logApiCall } = require('../db/client');
@@ -25,10 +25,10 @@ const { logger }     = require('../utils/logger');
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ── Shared middleware stack for all AI routes ─────────────────────
-// Order: IP limit → auth → per-user limit
+// Order: IP limit → optional auth (guest allowed) → per-tier limit
 const aiGuard = (feature) => [
   aiIpLimiter,
-  authenticate,
+  optionalAuth,
   perUserLimiter(feature),
 ];
 
@@ -90,7 +90,7 @@ router.post('/chat',
       });
 
       const content = response.content[0]?.text || '';
-      logApiCall(req.user.id, 'chat');
+      logApiCall(req.user?.id ?? null, 'chat', req.clientIpHash);
 
       // Return both keys for frontend compatibility
       res.json({ content, response: content });
@@ -134,7 +134,7 @@ Format pentru adevărat/fals:
         questions = JSON.parse(clean);
         if (!Array.isArray(questions)) throw new Error('Not an array');
       } catch {
-        logger.warn('Quiz: AI returned invalid JSON', { userId: req.user.id, subjectName });
+        logger.warn('Quiz: AI returned invalid JSON', { userId: req.user?.id, subjectName });
         return res.status(500).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
       }
 
@@ -142,13 +142,13 @@ Format pentru adevărat/fals:
       const validation = validateAiResponse('quiz', questions);
       if (!validation.valid) {
         logger.warn('Quiz: AI response failed schema validation', {
-          userId: req.user.id,
+          userId: req.user?.id,
           error:  validation.error,
         });
         return res.status(502).json({ error: 'AI a returnat date neașteptate. Încearcă din nou.' });
       }
 
-      logApiCall(req.user.id, 'quiz');
+      logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash);
       res.json({ questions: validation.data });
     } catch (e) {
       next(e);
@@ -179,20 +179,20 @@ Format: [{"front":"Întrebare sau termen","back":"Răspuns sau definiție"}]`;
         flashcards = JSON.parse(clean);
         if (!Array.isArray(flashcards)) throw new Error('Not an array');
       } catch {
-        logger.warn('Flashcards: AI returned invalid JSON', { userId: req.user.id });
+        logger.warn('Flashcards: AI returned invalid JSON', { userId: req.user?.id });
         return res.status(500).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
       }
 
       const validation = validateAiResponse('flashcards', flashcards);
       if (!validation.valid) {
         logger.warn('Flashcards: AI response failed schema validation', {
-          userId: req.user.id,
+          userId: req.user?.id,
           error:  validation.error,
         });
         return res.status(502).json({ error: 'AI a returnat date neașteptate. Încearcă din nou.' });
       }
 
-      logApiCall(req.user.id, 'flashcards');
+      logApiCall(req.user?.id ?? null, 'flashcards', req.clientIpHash);
       res.json({ flashcards: validation.data });
     } catch (e) {
       next(e);
@@ -223,20 +223,20 @@ Format: [{"type":"mc","question":"...","options":["a) ...","b) ...","c) ...","d)
         questions = JSON.parse(clean);
         if (!Array.isArray(questions)) throw new Error('Not an array');
       } catch {
-        logger.warn('Exam: AI returned invalid JSON', { userId: req.user.id });
+        logger.warn('Exam: AI returned invalid JSON', { userId: req.user?.id });
         return res.status(500).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
       }
 
       const validation = validateAiResponse('exam', questions);
       if (!validation.valid) {
         logger.warn('Exam: AI response failed schema validation', {
-          userId: req.user.id,
+          userId: req.user?.id,
           error:  validation.error,
         });
         return res.status(502).json({ error: 'AI a returnat date neașteptate. Încearcă din nou.' });
       }
 
-      logApiCall(req.user.id, 'exam');
+      logApiCall(req.user?.id ?? null, 'exam', req.clientIpHash);
       res.json({ questions: validation.data, minutes });
     } catch (e) {
       next(e);
@@ -260,7 +260,7 @@ Creează un rezumat clar, structurat, cu titluri și bullet points. Folosește f
       const userMsg = `${title ? `Titlu: ${title}\n\n` : ''}Text de rezumat:\n${text}`;
       const summary = await askClaude(system, userMsg, 2000);
 
-      logApiCall(req.user.id, 'summarize');
+      logApiCall(req.user?.id ?? null, 'summarize', req.clientIpHash);
       res.json({ summary });
     } catch (e) {
       next(e);

@@ -32,6 +32,7 @@ db.exec(`
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     email         TEXT    UNIQUE NOT NULL,
     password_hash TEXT    NOT NULL,
+    role          TEXT    NOT NULL DEFAULT 'free' CHECK(role IN ('free', 'pro', 'admin')),
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -50,14 +51,30 @@ db.exec(`
     called_at  DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS guest_ai_calls (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip_hash   TEXT    NOT NULL,
+    feature   TEXT    NOT NULL,
+    called_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE INDEX IF NOT EXISTS idx_ai_calls_user_feature
     ON ai_calls(user_id, feature, called_at);
+
+  CREATE INDEX IF NOT EXISTS idx_guest_ai_calls_ip_feature
+    ON guest_ai_calls(ip_hash, feature, called_at);
 
   CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user
     ON refresh_tokens(user_id, expires_at);
 `);
 
+// Migrate existing databases
+try {
+  db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'free' CHECK(role IN ('free', 'pro', 'admin'))");
+  console.log('[init-db] Migrated: added role column to users');
+} catch { /* Column already exists */ }
+
 db.close();
 
-console.log('[init-db] Done. Tables created: users, refresh_tokens, ai_calls');
+console.log('[init-db] Done. Tables: users, refresh_tokens, ai_calls, guest_ai_calls');
 console.log('[init-db] You can now start the server with: npm run dev');

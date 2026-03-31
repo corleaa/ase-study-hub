@@ -1120,6 +1120,13 @@ input, textarea, select { font-family: inherit; }
   letter-spacing: 0.04em;
 }
 
+/* Topbar auth area */
+#topbarAuthArea {
+  display: flex;
+  align-items: center;
+  margin-left: 6px;
+}
+
 /* Notification bell in topbar */
 .topbar-notif-btn {
   position: relative;
@@ -5421,61 +5428,46 @@ code { font-family: var(--font-mono) !important; }
 <!-- =============================================
      WELCOME / AUTH SCREEN
      ============================================= -->
-<div id="welcomeScreen" style="display:none;position:fixed;inset:0;background:var(--bg-base);z-index:9999;overflow-y:auto;">
-  <div style="min-height:100vh;display:flex;flex-direction:column;">
+<!-- ── AUTH MODAL ────────────────────────────────────────────────── -->
+<!-- Opens via openAuthModal(), not shown automatically on load      -->
+<div id="authModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:380px;background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:32px;position:relative;box-shadow:var(--shadow);">
+    <!-- Close button -->
+    <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1;padding:4px;">✕</button>
 
-    <!-- Hero -->
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;text-align:center;">
-      <div style="font-size:3rem;margin-bottom:16px;">📚</div>
-      <h1 style="font-family:var(--font-display);font-size:2.4rem;font-weight:800;margin-bottom:10px;background:linear-gradient(135deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">ASE Study Hub</h1>
-      <p style="color:var(--text-secondary);font-size:1.05rem;max-width:480px;line-height:1.7;margin-bottom:40px;">Platforma AI pentru pregătirea examenelor la ASE București. Generează quiz-uri, flashcard-uri și prezentări din materialul tău de studiu.</p>
+    <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;margin-bottom:4px;">Study Hub</div>
+    <p style="color:var(--text-secondary);font-size:.84rem;margin-bottom:22px;">Cont gratuit · Acces la mai multe funcții</p>
 
-      <!-- Feature pills -->
-      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:48px;">
-        <span style="padding:8px 16px;background:var(--accent-muted);border:1px solid var(--accent-border);border-radius:20px;font-size:.84rem;color:var(--accent);">🧠 Quiz AI</span>
-        <span style="padding:8px 16px;background:var(--green-muted);border:1px solid rgba(16,217,160,0.2);border-radius:20px;font-size:.84rem;color:var(--green);">🃏 Flashcards</span>
-        <span style="padding:8px 16px;background:var(--purple-muted);border:1px solid rgba(167,139,250,0.2);border-radius:20px;font-size:.84rem;color:var(--purple);">🤖 Mentor AI</span>
-        <span style="padding:8px 16px;background:var(--amber-muted);border:1px solid rgba(245,166,35,0.2);border-radius:20px;font-size:.84rem;color:var(--amber);">📊 Prezentări</span>
-      </div>
+    <div id="authError" style="display:none;background:var(--red-muted);border:1px solid rgba(239,69,101,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;color:var(--red);font-size:.85rem;"></div>
 
-      <!-- Auth box -->
-      <div style="width:100%;max-width:360px;background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:32px;text-align:left;">
-        <div id="authError" style="display:none;background:var(--red-muted);border:1px solid rgba(239,69,101,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;color:var(--red);font-size:.85rem;"></div>
-        <div style="display:flex;gap:8px;margin-bottom:20px;">
-          <button id="authTabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:.87rem;font-family:inherit;">Autentificare</button>
-          <button id="authTabRegister" onclick="switchAuthTab('register')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.87rem;font-family:inherit;">Cont nou</button>
-        </div>
-        <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);font-size:.9rem;margin-bottom:12px;box-sizing:border-box;font-family:inherit;">
-        <input id="authPassword" type="password" placeholder="Parolă (min. 8 caractere)" autocomplete="current-password" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);font-size:.9rem;margin-bottom:16px;box-sizing:border-box;font-family:inherit;">
-        <button id="authSubmitBtn" onclick="submitAuth()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;">Intră în cont</button>
-      </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button id="authTabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:.87rem;font-family:inherit;">Autentificare</button>
+      <button id="authTabRegister" onclick="switchAuthTab('register')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.87rem;font-family:inherit;">Cont nou</button>
     </div>
+    <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);font-size:.9rem;margin-bottom:12px;box-sizing:border-box;font-family:inherit;">
+    <input id="authPassword" type="password" placeholder="Parolă (min. 8 caractere)" autocomplete="current-password" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);font-size:.9rem;margin-bottom:16px;box-sizing:border-box;font-family:inherit;">
+    <button id="authSubmitBtn" onclick="submitAuth()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;">Intră în cont</button>
 
-    <!-- Footer features -->
-    <div style="padding:32px 20px;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;max-width:800px;margin:0 auto;width:100%;">
-      <div style="text-align:center;">
-        <div style="font-size:1.5rem;margin-bottom:8px;">📄</div>
-        <div style="font-weight:600;font-size:.9rem;margin-bottom:4px;">Upload materiale</div>
-        <div style="color:var(--text-secondary);font-size:.82rem;">PDF, DOCX sau text simplu</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:1.5rem;margin-bottom:8px;">🎯</div>
-        <div style="font-weight:600;font-size:.9rem;margin-bottom:4px;">Generat din cursul tău</div>
-        <div style="color:var(--text-secondary);font-size:.82rem;">Quiz-uri și flashcard-uri personalizate</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:1.5rem;margin-bottom:8px;">🔒</div>
-        <div style="font-weight:600;font-size:.9rem;margin-bottom:4px;">Cont securizat</div>
-        <div style="color:var(--text-secondary);font-size:.82rem;">Date salvate în siguranță</div>
-      </div>
-    </div>
+    <p style="text-align:center;color:var(--text-muted);font-size:.76rem;margin-top:14px;">Fără abonament. Cont gratuit pentru acces extins.</p>
+  </div>
+</div>
+
+<!-- ── UPGRADE MODAL ──────────────────────────────────────────────── -->
+<div id="upgradeModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:360px;background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:28px;position:relative;box-shadow:var(--shadow);text-align:center;">
+    <button onclick="closeUpgradeModal()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1;padding:4px;">✕</button>
+    <div style="font-size:2rem;margin-bottom:12px;">🚀</div>
+    <div id="upgradeModalTitle" style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;margin-bottom:8px;">Limită atinsă</div>
+    <p id="upgradeModalMsg" style="color:var(--text-secondary);font-size:.88rem;margin-bottom:20px;line-height:1.55;"></p>
+    <button id="upgradeModalCta" onclick="openAuthModal();closeUpgradeModal();" style="width:100%;padding:11px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;">Creează cont gratuit</button>
+    <button onclick="closeUpgradeModal()" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:.88rem;cursor:pointer;font-family:inherit;">Continuă ca Guest</button>
   </div>
 </div>
 
 <!-- =============================================
      APP SHELL
      ============================================= -->
-<div class="app" id="app" style="display:none;">
+<div class="app" id="app">
 
   <!-- SIDEBAR BACKDROP (mobile) -->
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
@@ -5511,6 +5503,9 @@ code { font-family: var(--font-mono) !important; }
           <span class="topbar-notif-dot" id="topbarNotifDot"></span>
         </button>
         <span class="topbar-clock" id="clock"></span>
+        <div id="topbarAuthArea">
+          <!-- Filled by updateAuthUI(): guest = login button, logged-in = user badge -->
+        </div>
       </div>
     </header>
     <div class="page" id="pageContent"></div>
@@ -5728,18 +5723,11 @@ async function refreshAccessToken() {
 }
 
 function handleSessionExpired() {
+  // Defined again in auth script block below — this stub is kept for
+  // compatibility with old event listeners. Real logic in auth block.
   window.__shAccessToken = null;
-  try {
-    var app = document.getElementById('app');
-    if (app) app.style.display = 'none';
-    var ws = document.getElementById('welcomeScreen');
-    if (ws) ws.style.display = 'block';
-    var errEl = document.getElementById('authError');
-    if (errEl) {
-      errEl.textContent = 'Sesiunea a expirat. Intră din nou în cont.';
-      errEl.style.display = 'block';
-    }
-  } catch (e) {}
+  window.__shUser = null;
+  try { if (typeof updateAuthUI === 'function') updateAuthUI(null); } catch(e) {}
 }
 
 async function authFetch(url, options, isRetry) {
@@ -5763,6 +5751,15 @@ async function authFetch(url, options, isRetry) {
       return authFetch(url, retryOpts, true);
     }
     handleSessionExpired();
+  }
+
+  // 429 = rate limit: show upgrade modal (non-blocking — caller still gets the response)
+  if (response.status === 429) {
+    response.clone().json().then(function(data) {
+      if (data && data.upgradeRequired && typeof handleRateLimitError === 'function') {
+        handleRateLimitError(data);
+      }
+    }).catch(function() {});
   }
 
   return response;
@@ -6087,9 +6084,8 @@ function handleLock() {
 }
 
 function unlock() {
-  // Arată aplicația (auth-ul e gestionat de welcomeScreen + JWT)
-  var appEl = document.getElementById('app');
-  if (appEl) appEl.style.display = 'flex';
+  // App is always visible now (guest mode supported)
+  // Just render the UI components
   try { updateThemeButton(); } catch(e) {}
   try { renderSidebar(); } catch(e) {}
   try { renderPage(); } catch(e) {}
@@ -6114,14 +6110,21 @@ function unlock() {
   }, 700);
 }
 
-function handleLogout() {
-  // Ascunde app, arată welcome screen pentru re-autentificare
-  var appEl = document.getElementById('app');
-  if (appEl) appEl.style.display = 'none';
-  var ws = document.getElementById('welcomeScreen');
-  if (ws) ws.style.display = 'block';
-  // Șterge token din memorie
+async function handleLogout() {
+  // Call server to revoke refresh token
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch(e) {}
+  // Clear in-memory token and update UI to guest state
   window.__shAccessToken = null;
+  window.__shUser = null;
+  if (typeof updateAuthUI === 'function') updateAuthUI(null);
+  // Re-render sidebar (no personal data anymore)
+  try { renderSidebar(); } catch(e) {}
 }
 
 // =============================================
@@ -12358,8 +12361,93 @@ async function exportProgressPDF() {
 // ── Auth management ───────────────────────────────────────────────
 window.__shAccessToken = null;
 window.__shRefreshPromise = null;
+window.__shUser = null;  // { id, email, role }
 var __authTab = 'login';
-window.addEventListener('sh:session-expired', handleSessionExpired);
+
+// ── Auth Modal ────────────────────────────────────────────────────
+function openAuthModal() {
+  var modal = document.getElementById('authModal');
+  if (modal) modal.style.display = 'flex';
+  setTimeout(function() {
+    var emailInput = document.getElementById('authEmail');
+    if (emailInput) emailInput.focus();
+  }, 50);
+}
+function closeAuthModal() {
+  var modal = document.getElementById('authModal');
+  if (modal) modal.style.display = 'none';
+  var errEl = document.getElementById('authError');
+  if (errEl) errEl.style.display = 'none';
+}
+
+// ── Upgrade Modal ─────────────────────────────────────────────────
+function openUpgradeModal(message, isLoggedIn) {
+  var modal = document.getElementById('upgradeModal');
+  var msgEl = document.getElementById('upgradeModalMsg');
+  var ctaBtn = document.getElementById('upgradeModalCta');
+  if (msgEl) msgEl.textContent = message;
+  if (ctaBtn) {
+    if (isLoggedIn) {
+      // User is logged in (free tier) — show upgrade to pro CTA
+      ctaBtn.textContent = 'Upgrade la Pro';
+      ctaBtn.onclick = function() { closeUpgradeModal(); navigateTo('settings'); };
+    } else {
+      // Guest — show create account CTA
+      ctaBtn.textContent = 'Creează cont gratuit';
+      ctaBtn.onclick = function() { closeUpgradeModal(); openAuthModal(); };
+    }
+  }
+  if (modal) modal.style.display = 'flex';
+}
+function closeUpgradeModal() {
+  var modal = document.getElementById('upgradeModal');
+  if (modal) modal.style.display = 'none';
+}
+
+// ── Handle 429 rate limit errors from API ────────────────────────
+function handleRateLimitError(data) {
+  var msg = data.error || 'Limită atinsă. Încearcă mai târziu.';
+  var isLoggedIn = !!window.__shUser;
+  openUpgradeModal(msg, isLoggedIn);
+}
+
+// ── Topbar auth UI ────────────────────────────────────────────────
+function updateAuthUI(user) {
+  var area = document.getElementById('topbarAuthArea');
+  if (!area) return;
+  window.__shUser = user;
+
+  if (!user) {
+    // Guest state
+    area.innerHTML = '<button onclick="openAuthModal()" style="padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-muted);color:var(--accent);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">Intră în cont</button>';
+    // Update sidebar logout button to show login
+    var logoutBtn = document.querySelector('.logout-btn');
+    if (logoutBtn) {
+      logoutBtn.title = 'Intră în cont';
+      logoutBtn.onclick = function() { openAuthModal(); };
+    }
+  } else {
+    // Logged-in state
+    var roleBadge = '';
+    if (user.role === 'admin') {
+      roleBadge = '<span style="padding:2px 7px;background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.3);border-radius:4px;font-size:.65rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;">ADMIN</span>';
+    } else if (user.role === 'pro') {
+      roleBadge = '<span style="padding:2px 7px;background:var(--green-muted);border:1px solid rgba(16,217,160,0.25);border-radius:4px;font-size:.65rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px;">PRO</span>';
+    }
+    var emailShort = user.email.length > 20 ? user.email.slice(0, 18) + '…' : user.email;
+    area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;">'
+      + roleBadge
+      + '<span style="font-size:.78rem;color:var(--text-secondary);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + user.email + '">' + emailShort + '</span>'
+      + '<button onclick="handleLogout()" style="padding:4px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:.75rem;cursor:pointer;font-family:inherit;">Ieși</button>'
+      + '</div>';
+    // Update sidebar logout button behavior
+    var logoutBtn = document.querySelector('.logout-btn');
+    if (logoutBtn) {
+      logoutBtn.title = 'Delogare';
+      logoutBtn.onclick = function() { handleLogout(); };
+    }
+  }
+}
 
 function switchAuthTab(tab) {
   __authTab = tab;
@@ -12407,14 +12495,14 @@ async function submitAuth() {
       return;
     }
     window.__shAccessToken = data.accessToken;
-    // Ascunde welcome screen, arată aplicația
-    var ws = document.getElementById('welcomeScreen');
-    if (ws) ws.style.display = 'none';
-    var app = document.getElementById('app');
-    if (app) app.style.display = 'flex';
+    closeAuthModal();
+    updateAuthUI(data.user);
     // Compatibilitate cu state vechi
     if (window.state) window.state.apiKey = 'backend';
     if (window.saveState) window.saveState();
+    // Re-render to reflect logged-in state
+    try { renderSidebar(); } catch(e) {}
+    try { renderPage(); } catch(e) {}
   } catch (e) {
     if (errEl) { errEl.textContent = 'Eroare de conexiune cu serverul.'; errEl.style.display = 'block'; }
   } finally {
@@ -12422,12 +12510,33 @@ async function submitAuth() {
   }
 }
 
+function handleSessionExpired() {
+  window.__shAccessToken = null;
+  window.__shUser = null;
+  updateAuthUI(null);
+}
+
 document.addEventListener('keydown', function(e) {
-  var ws = document.getElementById('welcomeScreen');
-  if (e.key === 'Enter' && ws && ws.style.display !== 'none') submitAuth();
+  var modal = document.getElementById('authModal');
+  if (e.key === 'Enter' && modal && modal.style.display !== 'none') submitAuth();
+  if (e.key === 'Escape') {
+    closeAuthModal();
+    closeUpgradeModal();
+  }
 });
 
-// La încărcare: încearcă să reia sesiunea prin refresh cookie (HttpOnly)
+// Close modals on backdrop click
+document.addEventListener('click', function(e) {
+  var authModal = document.getElementById('authModal');
+  if (authModal && e.target === authModal) closeAuthModal();
+  var upgradeModal = document.getElementById('upgradeModal');
+  if (upgradeModal && e.target === upgradeModal) closeUpgradeModal();
+});
+
+window.addEventListener('sh:session-expired', handleSessionExpired);
+
+// ── On page load: try to restore session via HttpOnly cookie ─────
+// If no valid session → treat as guest (app stays visible)
 (async function() {
   try {
     var res = await fetch('/api/auth/refresh', {
@@ -12438,23 +12547,29 @@ document.addEventListener('keydown', function(e) {
     if (res.ok) {
       var data = await res.json();
       window.__shAccessToken = data.accessToken;
-      setTimeout(function() {
-        if (window.state) window.state.apiKey = 'backend';
-        if (window.saveState) window.saveState();
-      }, 100);
-      // Sesiune restaurată — arată direct aplicația și randează conținutul
-      var ws = document.getElementById('welcomeScreen');
-      if (ws) ws.style.display = 'none';
-      var app = document.getElementById('app');
-      if (app) app.style.display = 'flex';
-      // Fix blank dashboard: unlock() randează sidebar + page + bottomNav
-      try { unlock(); } catch(e) {}
-      return;
+      // Fetch full user profile (includes role)
+      try {
+        var meRes = await fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + data.accessToken },
+          credentials: 'include'
+        });
+        if (meRes.ok) {
+          var meData = await meRes.json();
+          window.__shUser = meData.user;
+          updateAuthUI(meData.user);
+        }
+      } catch(e) {}
+      if (window.state) window.state.apiKey = 'backend';
+      if (window.saveState) window.saveState();
+    } else {
+      // No valid session — guest mode (app already visible)
+      updateAuthUI(null);
     }
-  } catch(e) {}
-  // Fără sesiune validă — arată welcome screen
-  var ws = document.getElementById('welcomeScreen');
-  if (ws) ws.style.display = 'block';
+  } catch(e) {
+    updateAuthUI(null);
+  }
+  // Always unlock/render the app (it's visible for everyone)
+  try { unlock(); } catch(e) {}
 })();
 </script>
 <script src="js/learning-layers.js"></script>
