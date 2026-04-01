@@ -90,6 +90,7 @@ router.post('/',
         text,
         filename: originalname,
         size,
+        chars: text.length,
         extractedChars: text.length,
       });
     } catch (e) {

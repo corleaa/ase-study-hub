@@ -48,6 +48,23 @@ function stripJsonFences(raw) {
   return raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
 }
 
+// ── Compatibility mappers for legacy frontend contracts ───────────
+function toLegacyQuizQuestion(question) {
+  if (question.type === 'tf') {
+    return {
+      ...question,
+      q: question.question,
+      options: ['Adevărat', 'Fals'],
+      correct: question.correct ? 0 : 1,
+    };
+  }
+
+  return {
+    ...question,
+    q: question.question,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────
 // POST /api/ai/chat
 // ─────────────────────────────────────────────────────────────────
@@ -148,8 +165,10 @@ Format pentru adevărat/fals:
         return res.status(502).json({ error: 'AI a returnat date neașteptate. Încearcă din nou.' });
       }
 
+      const legacyQuestions = validation.data.map(toLegacyQuizQuestion);
+
       logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash);
-      res.json({ questions: validation.data });
+      res.json({ questions: legacyQuestions });
     } catch (e) {
       next(e);
     }
@@ -193,7 +212,10 @@ Format: [{"front":"Întrebare sau termen","back":"Răspuns sau definiție"}]`;
       }
 
       logApiCall(req.user?.id ?? null, 'flashcards', req.clientIpHash);
-      res.json({ flashcards: validation.data });
+      res.json({
+        flashcards: validation.data,
+        cards: validation.data,
+      });
     } catch (e) {
       next(e);
     }
