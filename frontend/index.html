@@ -6,97 +6,92 @@
 <!-- CSP: blochează script-uri inline neautoizate și resurse externe nelistate -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data: blob:; worker-src blob:;">
 <title>ASE Study Hub — AI-Powered</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
 <!-- DOMPurify — sanitizare HTML pentru prevenirea XSS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js" crossorigin="anonymous"></script>
 <!-- finance.js removed — dead code, 55KB saved -->
 <style>
-/* =============================================
-   FINTECH DARK THEME — v12
-   Paletă: Obsidian + Electric Indigo + Emerald
-   ============================================= */
 :root {
-  /* Backgrounds — layered depth */
-  --bg-base:    #080a0f;
-  --bg-raised:  #0e1118;
-  --bg-surface: #141820;
-  --bg-overlay: #1a2030;
-  --bg-input:   #10141c;
-  --bg-card:    #0e1118;
+  --bg-base:    #161316;
+  --bg-raised:  #211d21;
+  --bg-surface: #292329;
+  --bg-overlay: #352d34;
+  --bg-input:   #241f24;
+  --bg-card:    #211d21;
+  --bg-tint:    rgba(255,255,255,0.03);
 
-  /* Typography */
-  --text-primary:   #eceef5;
-  --text-secondary: #7a8099;
-  --text-muted:     #414860;
+  --text-primary:   #f5efe8;
+  --text-secondary: #c6b8ad;
+  --text-muted:     #8d7f75;
 
-  /* Brand — Electric Indigo */
-  --accent:        #4f6ef7;
-  --accent-hover:  #6b85ff;
-  --accent-muted:  rgba(79, 110, 247, 0.1);
-  --accent-border: rgba(79, 110, 247, 0.22);
-  --accent-glow:   0 0 24px rgba(79, 110, 247, 0.25);
+  --accent:        #f29b6d;
+  --accent-hover:  #f6ab83;
+  --accent-muted:  rgba(242, 155, 109, 0.13);
+  --accent-border: rgba(242, 155, 109, 0.26);
+  --accent-glow:   0 20px 50px rgba(242, 155, 109, 0.18);
 
-  /* Semantic colors */
-  --green:       #10d9a0;
-  --green-muted: rgba(16, 217, 160, 0.1);
-  --amber:       #f5a623;
-  --amber-muted: rgba(245, 166, 35, 0.1);
-  --red:         #ef4565;
-  --red-muted:   rgba(239, 69, 101, 0.1);
-  --blue:        #38bdf8;
-  --blue-muted:  rgba(56, 189, 248, 0.1);
-  --purple:      #a78bfa;
-  --purple-muted:rgba(167, 139, 250, 0.1);
+  --green:       #73c9a6;
+  --green-muted: rgba(115, 201, 166, 0.14);
+  --amber:       #e9bb74;
+  --amber-muted: rgba(233, 187, 116, 0.14);
+  --red:         #e08d86;
+  --red-muted:   rgba(224, 141, 134, 0.14);
+  --blue:        #8ab8d8;
+  --blue-muted:  rgba(138, 184, 216, 0.14);
+  --purple:      #ba9ed6;
+  --purple-muted:rgba(186, 158, 214, 0.14);
+  --teal:        #79c9c3;
+  --pink:        #df9ebb;
 
-  /* Structure */
-  --border:       rgba(255, 255, 255, 0.045);
-  --border-hover: rgba(255, 255, 255, 0.09);
-  --border-accent:rgba(79, 110, 247, 0.3);
-  --shadow:       0 8px 40px rgba(0, 0, 0, 0.6);
-  --shadow-sm:    0 2px 12px rgba(0, 0, 0, 0.4);
+  --border:       rgba(255, 245, 236, 0.08);
+  --border-hover: rgba(255, 245, 236, 0.14);
+  --border-accent:rgba(242, 155, 109, 0.34);
+  --shadow:       0 30px 80px rgba(0, 0, 0, 0.36);
+  --shadow-sm:    0 10px 30px rgba(0, 0, 0, 0.2);
 
-  /* Geometry */
-  --radius:    12px;
-  --radius-sm: 8px;
-  --radius-xs: 5px;
+  --radius:    22px;
+  --radius-sm: 16px;
+  --radius-xs: 12px;
   --ease:      cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Typography scale */
-  --font-display: 'Syne', sans-serif;
-  --font-body:    'DM Sans', sans-serif;
+  --font-display: 'Nunito', sans-serif;
+  --font-body:    'Manrope', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 }
 
 [data-theme="light"] {
-  --bg-base:    #f0f2f7;
+  --bg-base:    #f7f1ea;
   --bg-raised:  #ffffff;
-  --bg-surface: #f5f7fc;
-  --bg-overlay: #eaecf4;
-  --bg-input:   #f8f9fe;
+  --bg-surface: #f9f5ef;
+  --bg-overlay: #efe7de;
+  --bg-input:   #fcfaf7;
   --bg-card:    #ffffff;
-  --text-primary:   #0d1021;
-  --text-secondary: #4a5068;
-  --text-muted:     #9098b8;
-  --accent:        #3b5bdb;
-  --accent-hover:  #4c6ef5;
-  --accent-muted:  rgba(59, 91, 219, 0.07);
-  --accent-border: rgba(59, 91, 219, 0.2);
+  --bg-tint:    rgba(115, 73, 47, 0.03);
+  --text-primary:   #2c221c;
+  --text-secondary: #69584d;
+  --text-muted:     #a18e80;
+  --accent:        #d97745;
+  --accent-hover:  #e38b5f;
+  --accent-muted:  rgba(217, 119, 69, 0.1);
+  --accent-border: rgba(217, 119, 69, 0.2);
   --accent-glow:   none;
-  --green:       #0ea472;
-  --green-muted: rgba(14, 164, 114, 0.08);
-  --amber:       #d68910;
-  --amber-muted: rgba(214, 137, 16, 0.08);
-  --red:         #c73055;
-  --red-muted:   rgba(199, 48, 85, 0.08);
-  --blue:        #0891b2;
-  --blue-muted:  rgba(8, 145, 178, 0.08);
-  --purple:      #7c3aed;
-  --purple-muted:rgba(124, 58, 237, 0.08);
-  --border:       rgba(0, 0, 0, 0.07);
-  --border-hover: rgba(0, 0, 0, 0.13);
-  --border-accent:rgba(59, 91, 219, 0.25);
-  --shadow:       0 8px 40px rgba(0, 0, 0, 0.08);
-  --shadow-sm:    0 2px 12px rgba(0, 0, 0, 0.06);
+  --green:       #3d9d79;
+  --green-muted: rgba(61, 157, 121, 0.1);
+  --amber:       #c88a36;
+  --amber-muted: rgba(200, 138, 54, 0.1);
+  --red:         #c56f67;
+  --red-muted:   rgba(197, 111, 103, 0.1);
+  --blue:        #4f8ab2;
+  --blue-muted:  rgba(79, 138, 178, 0.1);
+  --purple:      #8f6db3;
+  --purple-muted:rgba(143, 109, 179, 0.1);
+  --teal:        #4ca9a1;
+  --pink:        #cb799d;
+  --border:       rgba(92, 63, 38, 0.09);
+  --border-hover: rgba(92, 63, 38, 0.16);
+  --border-accent:rgba(217, 119, 69, 0.24);
+  --shadow:       0 22px 70px rgba(95, 72, 55, 0.11);
+  --shadow-sm:    0 8px 22px rgba(95, 72, 55, 0.08);
 }
 
 /* =============================================
@@ -117,9 +112,10 @@ body {
   overflow-x: hidden;
   font-size: 15px;
   line-height: 1.55;
-  /* Subtle grid texture in dark mode */
-  background-image: radial-gradient(circle at 20% 80%, rgba(79,110,247,0.03) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(16,217,160,0.02) 0%, transparent 40%);
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(242,155,109,0.11) 0%, transparent 30%),
+    radial-gradient(circle at 100% 0%, rgba(138,184,216,0.08) 0%, transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0));
 }
 
 ::-webkit-scrollbar { width: 5px; }
@@ -5376,13 +5372,16 @@ input, textarea, select { font-family: inherit; }
 }
 
 /* =============================================
-   UPDATED GLOBAL STYLES — fintech polish
+   UPDATED GLOBAL STYLES — warm premium system
    ============================================= */
 /* Upgrade all panel/card borders to subtle */
 .panel, .quiz-question-card, .quiz-gen-section, .chart-panel,
 .exam-countdown-card, .add-exam-form, .calendar-mini,
 .flashcard-scene .flashcard-front, .mentor-layout > * {
   border-color: var(--border) !important;
+  border-radius: var(--radius) !important;
+  background: linear-gradient(180deg, var(--bg-raised), color-mix(in srgb, var(--bg-raised) 85%, var(--bg-tint))) !important;
+  box-shadow: var(--shadow-sm);
 }
 /* Upgrade headings */
 h2 { font-family: var(--font-display); letter-spacing: -0.02em; }
@@ -5417,6 +5416,447 @@ input, textarea, select {
 }
 /* Code blocks */
 code { font-family: var(--font-mono) !important; }
+
+.sidebar,
+.topbar,
+.bottom-nav {
+  backdrop-filter: blur(18px);
+}
+
+.sidebar {
+  background: color-mix(in srgb, var(--bg-raised) 88%, transparent);
+  border-right: 1px solid var(--border);
+}
+
+.topbar {
+  background: color-mix(in srgb, var(--bg-base) 78%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  letter-spacing: -0.02em;
+}
+
+.nav-item,
+.theme-btn,
+.logout-btn,
+.topbar-notif-btn,
+.topbar-kbd-hint,
+.summary-gen-btn,
+.quiz-nav-btn,
+.fc-btn,
+.chat-send,
+.todo-btn,
+.link-add-btn,
+.empty-state-btn,
+.api-save {
+  border-radius: 999px !important;
+}
+
+.todo-inp,
+.chat-input,
+.summary-textarea,
+.mentor-input,
+.api-inp,
+#authEmail,
+#authPassword,
+#collabCodeInput,
+#newSubjDesc,
+#newSubjPrompt,
+#editSubjDesc,
+#editSubjPrompt {
+  border-radius: 18px !important;
+}
+
+.page {
+  padding-bottom: 56px;
+}
+
+.clarity-hero,
+.learning-studio,
+.graph-playground,
+.summary-deck,
+.insight-shell {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-raised) 88%, var(--bg-tint)), var(--bg-raised));
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  box-shadow: var(--shadow-sm);
+}
+
+.clarity-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, .9fr);
+  gap: 22px;
+  padding: 32px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.clarity-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(242,155,109,.18), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(138,184,216,.12), transparent 28%);
+  pointer-events: none;
+}
+
+.clarity-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.clarity-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--accent-muted);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.clarity-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3vw, 3.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  max-width: 12ch;
+  margin-top: 18px;
+}
+
+.clarity-copy {
+  max-width: 60ch;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.75;
+  margin-top: 14px;
+}
+
+.clarity-actions,
+.clarity-pill-row,
+.studio-toolbar,
+.playground-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.clarity-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  color: var(--text-secondary);
+  font-size: .85rem;
+}
+
+.purpose-grid,
+.summary-deck-grid,
+.interactive-blocks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.purpose-card,
+.interactive-card,
+.summary-mini-card {
+  padding: 18px;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+  border: 1px solid var(--border);
+  min-height: 170px;
+}
+
+.purpose-card strong,
+.interactive-card strong,
+.summary-mini-card strong {
+  display: block;
+  font-size: 1rem;
+  margin: 14px 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.purpose-card p,
+.interactive-card p,
+.summary-mini-card p {
+  color: var(--text-secondary);
+  font-size: .87rem;
+  line-height: 1.65;
+}
+
+.studio-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(290px, .85fr);
+  gap: 18px;
+}
+
+.learning-studio,
+.graph-playground,
+.summary-deck {
+  padding: 22px;
+  margin-bottom: 22px;
+}
+
+.section-kicker {
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+
+.section-copy {
+  color: var(--text-secondary);
+  font-size: .92rem;
+  line-height: 1.7;
+}
+
+.layer-stack,
+.example-stack,
+.insight-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.layer-card,
+.example-card,
+.insight-row {
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-surface);
+}
+
+.layer-card details summary,
+.example-card details summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+}
+
+.layer-card details summary::-webkit-details-marker,
+.example-card details summary::-webkit-details-marker {
+  display: none;
+}
+
+.detail-chevron {
+  color: var(--text-muted);
+  transition: transform .25s var(--ease);
+}
+
+details[open] .detail-chevron {
+  transform: rotate(90deg);
+}
+
+.concept-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.concept-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.playground-stage {
+  margin-top: 18px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+  padding: 18px;
+}
+
+.playground-bars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+  min-height: 240px;
+  margin-top: 18px;
+}
+
+.play-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.play-bar-visual {
+  min-height: 180px;
+  border-radius: 20px 20px 10px 10px;
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 52%, black));
+  position: relative;
+  overflow: hidden;
+}
+
+.play-bar-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0));
+}
+
+.play-bar-label {
+  font-size: .78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.play-bar-value {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+}
+
+.slider-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.slider-card {
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.slider-card label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: .82rem;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.slider-card input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.scenario-callout {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: var(--accent-muted);
+  border: 1px solid var(--accent-border);
+  color: var(--text-primary);
+}
+
+.scenario-callout p {
+  color: var(--text-secondary);
+  margin-top: 6px;
+  line-height: 1.65;
+}
+
+.decompose-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.decompose-step {
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.decompose-step .step-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-size: .75rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.dashboard-next-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.next-step-card {
+  padding: 20px;
+  border-radius: 22px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.soft-badge {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--bg-overlay);
+  color: var(--text-secondary);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 980px) {
+  .clarity-hero,
+  .studio-grid,
+  .slider-grid,
+  .dashboard-next-steps,
+  .decompose-steps,
+  .purpose-grid,
+  .summary-deck-grid,
+  .interactive-blocks,
+  .playground-bars {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 
 </head>
@@ -6460,16 +6900,16 @@ function renderPage() {
   resetSubjectTheme();
 
   if (state.tab === 'dashboard') {
-    title.textContent = 'Dashboard';
+    title.textContent = 'Study Hub';
     renderDashboard(page);
   } else if (state.tab === 'calendar') {
     title.textContent = 'Calendar Sesiune';
     renderCalendarPage(page);
   } else if (state.tab === 'quiz') {
-    title.textContent = 'Quiz Mode — Grile AI';
+    title.textContent = 'Quiz Lab';
     renderQuizPage(page);
   } else if (state.tab === 'flashcards') {
-    title.textContent = 'Flashcards cu Spaced Repetition';
+    title.textContent = 'Flashcards';
     renderFlashcardsPage(page);
   } else if (state.tab === 'mindmap') {
     title.textContent = 'Mind Map AI';
@@ -6481,7 +6921,7 @@ function renderPage() {
     title.textContent = 'Realizări & XP';
     renderAchievementsPage(page);
   } else if (state.tab === 'stats') {
-    title.textContent = 'Statistici Avansate';
+    title.textContent = 'Insight Center';
     renderStatsPage(page);
   } else if (state.tab === 'mentor') {
     title.textContent = 'AI Mentor';
@@ -6501,6 +6941,112 @@ function renderPage() {
     title.textContent = subject.name + ' — ' + subject.full;
     renderSubjectPage(page, state.tab, subject);
   }
+}
+
+function renderProductIdentityCards() {
+  const cards = [
+    { iconN: 'layers2', title: 'Summaries', copy: 'Transformă cursurile în explicații clare, secțiuni compacte și idei ordonate vizual.' },
+    { iconN: 'cards', title: 'Flashcards', copy: 'Memorează cu revizuire distribuită și sesiuni scurte care îți arată exact ce merită repetat.' },
+    { iconN: 'brain', title: 'Quizzes', copy: 'Testează înțelegerea cu întrebări generate din materia ta, nu din exemple abstracte.' },
+    { iconN: 'chart', title: 'Interactive Learning', copy: 'Explorarea vizuală te ajută să vezi relații, cauze și efecte înainte de formule.' }
+  ];
+  return '<div class="purpose-grid">' + cards.map(function(card) {
+    return '<div class="purpose-card">'
+      + '<span class="icon icon-sm" style="color:var(--accent)">' + icon(card.iconN, 'sm') + '</span>'
+      + '<strong>' + card.title + '</strong>'
+      + '<p>' + card.copy + '</p>'
+      + '</div>';
+  }).join('') + '</div>';
+}
+
+function renderDashboardNextSteps() {
+  const steps = [
+    { badge: '1', title: 'Generează un rezumat vizual', copy: 'Începe cu o fișă de învățare. Este baza pentru înțelegere, recapitulare și exemple concrete.', action: "navigateTo('dashboard')", label: 'Alege o materie' },
+    { badge: '2', title: 'Testează ideile importante', copy: 'Treci rapid din rezumat în quiz. Vezi unde înțelegi bine și unde ai nevoie de clarificare.', action: "navigateTo('quiz')", label: 'Deschide quiz' },
+    { badge: '3', title: 'Fixează în memorie', copy: 'Mută conceptele în flashcards pentru recapitulări scurte, dese și ușor de urmărit.', action: "navigateTo('flashcards')", label: 'Studiază flashcards' }
+  ];
+  return '<div class="dashboard-next-steps">' + steps.map(function(step) {
+    return '<div class="next-step-card"><span class="soft-badge">Pasul ' + step.badge + '</span><div class="section-title" style="font-size:1.02rem;margin-top:12px;">'
+      + step.title + '</div><div class="section-copy" style="font-size:.86rem;">' + step.copy + '</div><button class="summary-gen-btn" style="margin-top:16px;" onclick="' + step.action + '">' + step.label + '</button></div>';
+  }).join('') + '</div>';
+}
+
+function getLearningPlaygroundState(subjectKey, subject) {
+  if (!window.__studyHubPlaygrounds) window.__studyHubPlaygrounds = {};
+  if (!window.__studyHubPlaygrounds[subjectKey]) {
+    const lower = (subject.full || subject.name || '').toLowerCase();
+    const economicsLike = /micro|macro|econ|elastic|cerere|ofert|finance|bank|pia|cost/.test(lower);
+    window.__studyHubPlaygrounds[subjectKey] = economicsLike
+      ? { mode: 'economics', price: 12, demand: 70, sensitivity: 50 }
+      : { mode: 'learning', chunk: 4, repetition: 3, difficulty: 55 };
+  }
+  return window.__studyHubPlaygrounds[subjectKey];
+}
+
+function setPlaygroundValue(subjectKey, field, value) {
+  const subject = getSubjects()[subjectKey];
+  if (!subject) return;
+  const stateObj = getLearningPlaygroundState(subjectKey, subject);
+  stateObj[field] = Number(value);
+  const zone = document.getElementById('learningStudioZone');
+  if (zone) zone.innerHTML = renderInteractiveLearningStudio(subjectKey, subject, getAllPresentations(subjectKey));
+}
+
+function renderLearningPlayground(subjectKey, subject) {
+  const play = getLearningPlaygroundState(subjectKey, subject);
+
+  if (play.mode === 'economics') {
+    const adjustedDemand = Math.max(10, Math.round(play.demand - (play.price - 10) * (play.sensitivity / 8)));
+    const revenue = adjustedDemand * play.price;
+    const stableDemand = Math.max(12, Math.round(play.demand - (play.price - 10) * 2));
+    return '<div class="graph-playground"><div class="section-kicker">Interactive Graph</div><div class="section-title">Elasticitate explicată vizual</div><div class="section-copy">Mișcă variabilele și vezi separat prețul, cererea și venitul. Așa înțelegi graficul ca relație reală, nu doar ca teorie.</div>'
+      + '<div class="slider-grid">'
+      + '<div class="slider-card"><label><span>Preț</span><strong>' + play.price + ' lei</strong></label><input type="range" min="4" max="20" value="' + play.price + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'price\',this.value)"></div>'
+      + '<div class="slider-card"><label><span>Cerere de bază</span><strong>' + play.demand + ' unități</strong></label><input type="range" min="30" max="110" value="' + play.demand + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'demand\',this.value)"></div>'
+      + '<div class="slider-card"><label><span>Sensibilitate</span><strong>' + play.sensitivity + '%</strong></label><input type="range" min="10" max="90" value="' + play.sensitivity + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'sensitivity\',this.value)"></div>'
+      + '<div class="slider-card"><label><span>Scenariu</span><strong>Piață de cafea</strong></label><div class="section-copy" style="font-size:.82rem;">Prețul crește, clienții reacționează diferit în funcție de cât de elastică este cererea.</div></div>'
+      + '</div>'
+      + '<div class="playground-stage"><div class="decompose-steps"><div class="decompose-step"><span class="step-no">1</span><strong>Prețul urcă</strong><p class="section-copy" style="font-size:.82rem;">Valoarea produsului pleacă din controlul tău direct.</p></div><div class="decompose-step"><span class="step-no">2</span><strong>Cererea reacționează</strong><p class="section-copy" style="font-size:.82rem;">Sensibilitatea arată cât de repede scad cumpărătorii.</p></div><div class="decompose-step"><span class="step-no">3</span><strong>Venitul se schimbă</strong><p class="section-copy" style="font-size:.82rem;">Abia la final vezi dacă noul preț ajută sau nu.</p></div></div>'
+      + '<div class="playground-bars"><div class="play-bar"><div class="play-bar-label">Preț</div><div class="play-bar-visual" style="height:' + Math.max(70, play.price * 10) + 'px;"></div><div class="play-bar-value">' + play.price + ' lei</div></div><div class="play-bar"><div class="play-bar-label">Cerere estimată</div><div class="play-bar-visual" style="height:' + Math.max(70, adjustedDemand * 2) + 'px;background:linear-gradient(180deg,var(--blue),color-mix(in srgb,var(--blue) 56%, black));"></div><div class="play-bar-value">' + adjustedDemand + ' unități</div></div><div class="play-bar"><div class="play-bar-label">Venit</div><div class="play-bar-visual" style="height:' + Math.max(70, revenue * .22) + 'px;background:linear-gradient(180deg,var(--green),color-mix(in srgb,var(--green) 56%, black));"></div><div class="play-bar-value">' + revenue + ' lei</div></div></div>'
+      + '<div class="scenario-callout"><strong>Exemplu concret</strong><p>Dacă vinzi cafea într-o zonă cu multe alternative, o sensibilitate mare înseamnă că o creștere mică de preț mută clienții în altă parte. Dacă cererea este mai stabilă, venitul poate crește chiar dacă vinzi puțin mai puțin.</p><p style="margin-top:8px;">Comparație rapidă: la aceeași cerere de bază, un model stabil ar produce aproximativ ' + stableDemand + ' unități. Asta te ajută să vezi diferența dintre cerere elastică și cerere inelastică.</p></div></div></div>';
+  }
+
+  const clarity = Math.max(5, 100 - play.difficulty);
+  const retention = Math.max(8, Math.round(play.chunk * 12 + play.repetition * 14 + clarity * 0.35));
+  const overload = Math.max(5, Math.round(play.difficulty * 0.8 + play.chunk * 6 - play.repetition * 8));
+  return '<div class="graph-playground"><div class="section-kicker">Interactive Graph</div><div class="section-title">Cum se construiește retenția</div><div class="section-copy">Experimentează cu dimensiunea unui bloc de studiu, numărul de repetiții și dificultatea. Vezi separat ce ajută și ce obosește memoria.</div>'
+    + '<div class="slider-grid">'
+    + '<div class="slider-card"><label><span>Bloc de studiu</span><strong>' + play.chunk + ' idei</strong></label><input type="range" min="1" max="8" value="' + play.chunk + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'chunk\',this.value)"></div>'
+    + '<div class="slider-card"><label><span>Repetiții</span><strong>' + play.repetition + ' treceri</strong></label><input type="range" min="1" max="6" value="' + play.repetition + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'repetition\',this.value)"></div>'
+    + '<div class="slider-card"><label><span>Dificultate</span><strong>' + play.difficulty + '%</strong></label><input type="range" min="20" max="95" value="' + play.difficulty + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'difficulty\',this.value)"></div>'
+    + '<div class="slider-card"><label><span>Scenariu</span><strong>Capitol înainte de examen</strong></label><div class="section-copy" style="font-size:.82rem;">Dacă pui prea multe idei într-un bloc mare, înțelegerea scade chiar dacă petreci mai mult timp.</div></div>'
+    + '</div>'
+    + '<div class="playground-stage"><div class="decompose-steps"><div class="decompose-step"><span class="step-no">1</span><strong>Fragmentare</strong><p class="section-copy" style="font-size:.82rem;">Mai puține idei pe bloc înseamnă mai puțină încărcare mentală.</p></div><div class="decompose-step"><span class="step-no">2</span><strong>Repetiție</strong><p class="section-copy" style="font-size:.82rem;">Fiecare revenire întărește traseul până când informația devine familiară.</p></div><div class="decompose-step"><span class="step-no">3</span><strong>Aplicare</strong><p class="section-copy" style="font-size:.82rem;">Retenția bună apare când blocul e clar, iar dificultatea rămâne gestionabilă.</p></div></div>'
+    + '<div class="playground-bars"><div class="play-bar"><div class="play-bar-label">Claritate</div><div class="play-bar-visual" style="height:' + Math.max(70, clarity * 2) + 'px;background:linear-gradient(180deg,var(--blue),color-mix(in srgb,var(--blue) 56%, black));"></div><div class="play-bar-value">' + clarity + '%</div></div><div class="play-bar"><div class="play-bar-label">Retenție</div><div class="play-bar-visual" style="height:' + Math.max(70, retention * 2) + 'px;"></div><div class="play-bar-value">' + retention + '%</div></div><div class="play-bar"><div class="play-bar-label">Supraîncărcare</div><div class="play-bar-visual" style="height:' + Math.max(70, overload * 2) + 'px;background:linear-gradient(180deg,var(--red),color-mix(in srgb,var(--red) 56%, black));"></div><div class="play-bar-value">' + overload + '%</div></div></div>'
+    + '<div class="scenario-callout"><strong>Exemplu concret</strong><p>Dacă înveți un capitol greu într-un singur bloc mare, supraîncărcarea crește și reții mai puțin. Dacă îl spargi în 3-4 idei și revii de câteva ori, crește claritatea și retenția, chiar dacă timpul total rămâne similar.</p></div></div></div>';
+}
+
+function renderInteractiveLearningStudio(subjectKey, subject, allPres) {
+  const summaryCount = allPres.length;
+  const hasGenerated = summaryCount > 0;
+  const subjectHint = subject.desc || subject.full || subject.name;
+  const exampleText = hasGenerated
+    ? 'Ai deja ' + summaryCount + ' rezumate sau prezentări pentru această materie. Folosește-le ca sursă pentru quiz, cards și explorarea vizuală.'
+    : 'Nu ai încă un rezumat generat. După primul material, această zonă devine punctul central pentru explicații stratificate și exemple reale.';
+
+  return '<div id="learningStudioZone">'
+    + '<section class="learning-studio anim-d1">'
+    + '<div class="studio-grid">'
+    + '<div><div class="section-kicker">Interactive Learning</div><div class="section-title">Înțelege materia în straturi, nu într-un bloc de text</div><div class="section-copy">Zona aceasta explică mai clar la ce folosește platforma pentru materia curentă și te pregătește pentru rezumatul interactiv. Fiecare card poate fi deschis separat, astfel încât utilizatorul să nu fie copleșit.</div>'
+    + '<div class="layer-stack">'
+    + '<div class="layer-card"><details open><summary><span>Imagine rapidă a materiei</span><span class="detail-chevron">›</span></summary><p class="section-copy" style="margin-top:12px;">' + escapeHtml(subjectHint) + '. Începe cu ideea simplă: ce problemă rezolvă această materie și unde apare ea în practică.</p></details></div>'
+    + '<div class="layer-card"><details><summary><span>Întrebări care te ghidează</span><span class="detail-chevron">›</span></summary><p class="section-copy" style="margin-top:12px;">Ce se schimbă, ce rămâne constant și ce variabile controlezi? Aceste întrebări fac legătura dintre rezumat, grafic și quiz.</p></details></div>'
+    + '<div class="layer-card"><details><summary><span>Semnale pentru concepte abstracte</span><span class="detail-chevron">›</span></summary><p class="section-copy" style="margin-top:12px;">Când apare un termen vag sau o relație greu de imaginat, platforma îl mută spre exemplu concret, comparație și vizualizare.</p></details></div>'
+    + '</div><div class="concept-chips"><span class="concept-chip">Summary first</span><span class="concept-chip">Example driven</span><span class="concept-chip">Quiz ready</span><span class="concept-chip">Visual breakdown</span></div></div>'
+    + '<div><div class="section-kicker">Studio</div><div class="section-title">Ce se întâmplă mai departe</div><div class="example-stack"><div class="example-card"><details open><summary><span>1. Generezi un rezumat ghidat</span><span class="detail-chevron">›</span></summary><p class="section-copy" style="margin-top:12px;">Rezumatul este împărțit pe niveluri: idee simplă, explicație conceptuală, formulă sau mecanism, plus exemple și greșeli frecvente.</p></details></div><div class="example-card"><details><summary><span>2. Explorezi un scenariu real</span><span class="detail-chevron">›</span></summary><p class="section-copy" style="margin-top:12px;">Ajustezi variabile și vezi rezultatul imediat, ca să înțelegi cauza și efectul înainte de memorare.</p></details></div><div class="example-card"><details><summary><span>3. Treci în memorare și testare</span><span class="detail-chevron">›</span></summary><p class="section-copy" style="margin-top:12px;">După clarificare, același material poate fi transformat în flashcards și quiz-uri fără să schimbi contextul.</p></details></div></div><div class="scenario-callout"><strong>Context pentru această materie</strong><p>' + escapeHtml(exampleText) + '</p></div></div>'
+    + '</div></section>'
+    + renderLearningPlayground(subjectKey, subject)
+    + '</div>';
 }
 
 // =============================================
@@ -6710,19 +7256,30 @@ function renderDashboard(element) {
     html += '</div>';
   }
 
-  // ── HERO SECTION ──────────────────────────
   const hour = new Date().getHours();
-  const greet = hour < 12 ? 'Bună dimineața' : hour < 18 ? 'Bună ziua' : 'Bună seara';
+  const greet = hour < 12 ? 'Bun venit în sesiunea de studiu de azi' : hour < 18 ? 'Continuă sesiunea cu claritate' : 'Închide ziua cu o recapitulare bună';
   const streak = state.streak || 0;
 
-  html += '<div class="dash-hero-v13">';
-  html += '<div class="dash-hero-v13-content">';
-  html += '<div class="dash-hero-v13-tag">' + icon('graduation','xs') + ' ASE Study Hub</div>';
-  html += '<h1>' + greet + '</h1>';
-  html += '<p class="dash-hero-v13-sub">Organizează toată materia într-un singur loc. Generează rezumate, quizuri și simulări de examen cu AI.</p>';
-  html += '<button class="dash-hero-v13-cta" onclick="openSubjectManager()">' + icon('plus','xs') + ' Adaugă materie</button>';
+  html += '<section class="clarity-hero">';
+  html += '<div>';
+  html += '<div class="clarity-label">' + icon('sparkle','xs') + ' Learning Platform</div>';
+  html += '<div class="clarity-title">' + greet + '</div>';
+  html += '<p class="clarity-copy">Study Hub este construit pentru patru lucruri foarte clare: rezumate structurate, flashcards, quiz-uri și învățare interactivă. Totul pornește din materia ta și se transformă în explicații mai ușor de înțeles.</p>';
+  html += '<div class="clarity-actions" style="margin-top:18px;">';
+  html += '<button class="summary-gen-btn" onclick="openSubjectManager()">' + icon('plus','xs') + ' Adaugă materie</button>';
+  html += '<button class="quiz-nav-btn primary" onclick="navigateTo(\'quiz\')">' + icon('brain','xs') + ' Începe un quiz</button>';
+  html += '</div>';
+  html += '<div class="clarity-pill-row" style="margin-top:18px;">';
+  html += '<div class="clarity-pill">' + icon('layers2','xs') + '<span>Rezumate explicate pe niveluri</span></div>';
+  html += '<div class="clarity-pill">' + icon('cards','xs') + '<span>Memorie activă cu revizuire</span></div>';
+  html += '<div class="clarity-pill">' + icon('chart','xs') + '<span>Grafice explorabile și scenarii reale</span></div>';
   html += '</div>';
   html += '</div>';
+  html += '<div class="insight-shell" style="padding:22px;">';
+  html += '<div class="section-kicker">Ce poți face aici</div>';
+  html += renderProductIdentityCards();
+  html += '</div>';
+  html += '</section>';
 
   // ── STREAK / GAMIFICATION BAR ─────────────
   const totalTodos = Object.values(state.todos).flat().length;
@@ -6736,7 +7293,7 @@ function renderDashboard(element) {
   html += '<div class="dash-streak-bar">';
   // Streak
   html += '<div class="dsb-item">';
-  html += '<span style="font-size:1.1rem">' + (streak >= 7 ? '🔥' : streak > 0 ? '⚡' : '💤') + '</span>';
+  html += '<span style="color:' + (streak>=7?'var(--amber)':streak>0?'var(--accent)':'var(--text-muted)') + '">' + icon('trending','xs') + '</span>';
   html += '<div><div class="dsb-val" style="color:' + (streak>=7?'var(--amber)':streak>0?'var(--accent)':'var(--text-muted)') + '">' + streak + ' zile</div><div class="dsb-label">Streak</div></div>';
   html += '</div>';
   html += '<div class="dsb-divider"></div>';
@@ -6765,6 +7322,13 @@ function renderDashboard(element) {
     html += '<div class="dsb-divider"></div>';
     html += '<div class="dsb-item clickable" onclick="navigateTo(\'calendar\')" style="cursor:pointer;margin-left:auto;"><span style="color:' + (examDays<=3?'var(--red)':'var(--blue)') + '">' + icon('calendar','xs') + '</span><div><div class="dsb-val" style="color:' + (examDays<=3?'var(--red)':'var(--blue)') + '">' + examDays + 'z</div><div class="dsb-label" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(nextExam.name) + '</div></div></div>';
   }
+  html += '</div>';
+
+  html += '<div class="summary-deck">';
+  html += '<div class="section-kicker">Flux recomandat</div>';
+  html += '<div class="section-title">Înțelege mai întâi, apoi memorizează și testează</div>';
+  html += '<div class="section-copy">Interfața nouă mută accentul dinspre listare de funcții spre un parcurs clar. Ai mereu un pas următor vizibil.</div>';
+  html += renderDashboardNextSteps();
   html += '</div>';
 
   // ── HOW TO START (prima utilizare) ────────
@@ -6991,6 +7555,8 @@ function renderSubjectPage(element, key, subject) {
   html += '<div class="qs-card"><div class="qs-val">' + (todos.length ? Math.round(doneTodos / todos.length * 100) : 0) + '%</div><div class="qs-label">Completat</div></div>';
   html += '</div>';
 
+  html += renderInteractiveLearningStudio(key, subject, allPres);
+
   html += '<div class="panels-grid">';
 
   // === PRESENTATIONS LIBRARY ===
@@ -7038,7 +7604,7 @@ function renderSubjectPage(element, key, subject) {
   // === PRESENTATION GENERATOR ===
   html += '<div class="panel panel-full anim-d2">';
   html += '<div class="panel-head">' + icon('sparkle','sm') + ' <span>Generează Fișă de Învățare AI</span>';
-  html += '<span style="font-size:.72rem;color:var(--text-muted)">fișă vizuală structurată</span></div>';
+  html += '<span style="font-size:.72rem;color:var(--text-muted)">rezumat vizual, explicat pe niveluri</span></div>';
   html += '<div class="panel-body">';
 
   if (false) {
@@ -7056,16 +7622,23 @@ function renderSubjectPage(element, key, subject) {
     html += '<span class="sf-size" id="fileSize"></span>';
     html += '<button class="sf-remove" onclick="removeFile()">✕</button></div>';
 
-    html += '<div class="summary-or">— sau lipește textul manual —</div>';
+    html += '<div class="summary-or">sau lipește textul manual</div>';
     html += '<textarea class="summary-textarea" id="summaryInput" placeholder="Lipește aici textul din curs, PDF, sau notițe..."></textarea>';
 
     html += '<div style="margin-top:8px;">';
     html += '<input class="todo-inp" id="presTitle" placeholder="Titlul prezentării (ex: Curs 3 — Regresie Logistică)" style="width:100%;">';
     html += '</div>';
 
+    html += '<div class="interactive-blocks" style="margin-top:18px;">';
+    html += '<div class="interactive-card"><span class="icon icon-sm" style="color:var(--accent)">' + icon('layers2','sm') + '</span><strong>Explicație pe straturi</strong><p>Rezumatul va fi împărțit în ideea simplă, explicația conceptuală și partea tehnică.</p></div>';
+    html += '<div class="interactive-card"><span class="icon icon-sm" style="color:var(--blue)">' + icon('chart','sm') + '</span><strong>Exemple și vizualizări</strong><p>Conceptele abstracte sunt însoțite de scenarii reale și blocuri interactive care pot fi deschise treptat.</p></div>';
+    html += '<div class="interactive-card"><span class="icon icon-sm" style="color:var(--green)">' + icon('brain','sm') + '</span><strong>Legătură directă cu quiz și cards</strong><p>După rezumat poți trece imediat la testare și memorare, fără să cauți următorul pas.</p></div>';
+    html += '<div class="interactive-card"><span class="icon icon-sm" style="color:var(--purple)">' + icon('target','sm') + '</span><strong>Claritate înainte de formulă</strong><p>Accentul este pe înțelegerea vizuală și cauzală, nu pe text dens.</p></div>';
+    html += '</div>';
+
     html += '<div class="summary-actions">';
     html += '<button class="summary-gen-btn" id="summaryBtn" onclick="generatePresentation(\'' + key + '\')">';
-    html += '<span>✨</span> Generează Fișă Vizuală</button>';
+    html += icon('sparkle','xs') + ' Generează fișa vizuală</button>';
     html += '<span class="summary-status" id="summaryStatus"></span>';
     html += '</div>';
   }
@@ -7975,7 +8548,7 @@ function buildRichSummarySlides(s) {
   }
   s1 += '</div>';
   if (s.key_insight) {
-    s1 += '<div style="background:rgba(79,110,247,.1);border:1px solid rgba(79,110,247,.25);border-radius:10px;padding:14px 20px;text-align:center;color:var(--text-primary);font-size:.9rem;line-height:1.6;"><strong>💡 Esența:</strong> ' + escapeHtml(s.key_insight) + '</div>';
+    s1 += '<div style="background:var(--accent-muted);border:1px solid var(--accent-border);border-radius:18px;padding:16px 20px;text-align:center;color:var(--text-primary);font-size:.9rem;line-height:1.6;"><strong>Ideea centrală:</strong> ' + escapeHtml(s.key_insight) + '</div>';
   }
   s1 += '</div>';
   slides.push({ tag: 'Intro', title: s.title, content: s1 });
@@ -7988,10 +8561,10 @@ function buildRichSummarySlides(s) {
     var layerColors = { 'Intuitiv': '#10d9a0', 'Conceptual': '#4f6ef7', 'Tehnic': '#a78bfa' };
     s.layers.forEach(function(layer) {
       var c = layer.color || layerColors[layer.level] || '#4f6ef7';
-      s2 += '<div style="background:' + c + '11;border:1px solid ' + c + '33;border-radius:10px;padding:14px 16px;">';
-      s2 += '<div style="background:' + c + '22;color:' + c + ';border:1px solid ' + c + '44;border-radius:20px;display:inline-block;padding:2px 11px;font-size:.72rem;font-weight:700;margin-bottom:8px;">' + escapeHtml(layer.level) + '</div>';
-      s2 += '<div style="color:var(--text-secondary);font-size:.87rem;line-height:1.65;">' + escapeHtml(layer.text) + '</div>';
-      s2 += '</div>';
+      s2 += '<details open style="background:' + c + '11;border:1px solid ' + c + '33;border-radius:18px;padding:14px 16px;">';
+      s2 += '<summary style="list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;"><span style="background:' + c + '22;color:' + c + ';border:1px solid ' + c + '44;border-radius:20px;display:inline-block;padding:2px 11px;font-size:.72rem;font-weight:700;">' + escapeHtml(layer.level) + '</span><span style="font-size:.78rem;color:var(--text-muted)">deschide sau restrânge</span></summary>';
+      s2 += '<div style="color:var(--text-secondary);font-size:.87rem;line-height:1.65;margin-top:12px;">' + escapeHtml(layer.text) + '</div>';
+      s2 += '</details>';
     });
     s2 += '</div>';
     slides.push({ tag: 'Niveluri', title: 'Explicație pe niveluri', content: s2 });
@@ -8012,6 +8585,16 @@ function buildRichSummarySlides(s) {
       s3 += '</div>';
     });
     s3 += '</div></div>';
+    if (s.pathway && s.pathway.length) {
+      s3 += '<div style="margin-top:18px;background:var(--bg-surface);border:1px solid var(--border);border-radius:18px;padding:16px 18px;">';
+      s3 += '<div style="font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Cum legi ideile</div>';
+      s3 += '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">';
+      s.pathway.forEach(function(node, i) {
+        if (i > 0) s3 += '<span style="color:var(--text-muted)">→</span>';
+        s3 += '<span style="padding:7px 12px;border-radius:999px;background:var(--bg-overlay);border:1px solid var(--border);font-size:.8rem;">' + escapeHtml(node) + '</span>';
+      });
+      s3 += '</div></div>';
+    }
     slides.push({ tag: 'Concepte', title: 'Concepte cheie', content: s3 });
   }
 
@@ -8071,7 +8654,7 @@ function buildRichSummarySlides(s) {
     s5 += '<div style="display:flex;flex-direction:column;gap:10px;">';
     s.examples.forEach(function(ex) {
       s5 += '<div style="background:rgba(79,110,247,.08);border:1px solid rgba(79,110,247,.2);border-radius:8px;padding:12px 14px;">';
-      s5 += '<div style="font-size:.67rem;font-weight:700;text-transform:uppercase;color:#4f6ef7;margin-bottom:6px;letter-spacing:.05em;">Exemplu</div>';
+      s5 += '<div style="font-size:.67rem;font-weight:700;text-transform:uppercase;color:#4f6ef7;margin-bottom:6px;letter-spacing:.05em;">Exemplu real</div>';
       s5 += '<div style="color:var(--text-secondary);font-size:.84rem;line-height:1.55;">' + escapeHtml(ex.scenario) + '</div>';
       if (ex.insight) {
         s5 += '<div style="margin-top:8px;color:rgba(16,217,160,0.9);font-size:.79rem;">→ ' + escapeHtml(ex.insight) + '</div>';
@@ -8088,7 +8671,7 @@ function buildRichSummarySlides(s) {
     s5 += '<div style="display:flex;flex-direction:column;gap:8px;">';
     s.warnings.forEach(function(w) {
       s5 += '<div style="background:rgba(239,69,101,.08);border:1px solid rgba(239,69,101,.2);border-radius:8px;padding:10px 14px;">';
-      s5 += '<div style="font-size:.67rem;font-weight:700;text-transform:uppercase;color:#ef4565;margin-bottom:4px;letter-spacing:.05em;">⚠ Atenție</div>';
+      s5 += '<div style="font-size:.67rem;font-weight:700;text-transform:uppercase;color:#ef4565;margin-bottom:4px;letter-spacing:.05em;">Atenție</div>';
       s5 += '<div style="color:var(--text-secondary);font-size:.81rem;line-height:1.5;">' + escapeHtml(w) + '</div>';
       s5 += '</div>';
     });
@@ -11129,13 +11712,13 @@ function renderStatsPage(element) {
 
   // ── HTML ──────────────────────────────────
   let html = '<div class="anim">';
-  html += '<div class="dash-hero" style="padding:28px 20px 20px"><h2>' + icon('chart','sm') + ' Statistici Avansate</h2><p>Vizualizează progresul tău în detaliu</p></div>';
+  html += '<div class="dash-hero" style="padding:28px 20px 20px"><h2>' + icon('chart','sm') + ' Insight Center</h2><p>Vezi progresul, descompune indicatorii și explorează relațiile dintre efort, retenție și rezultate.</p></div>';
 
   // Hero stats cards
   html += '<div class="stats-grid">';
   const heroStats = [
     { val: totalXP, label: 'XP Total', sub: 'Nivel ' + (state.level || 1), color: 'var(--accent)' },
-    { val: (state.streak || 0), label: 'Streak Actual', sub: 'zile consecutive 🔥', color: 'var(--amber)' },
+    { val: (state.streak || 0), label: 'Streak Actual', sub: 'zile consecutive', color: 'var(--amber)' },
     { val: totalHours, label: 'Timp Studiu', sub: 'estimat total', color: 'var(--blue)' },
     { val: totalQuizzes, label: 'Quiz-uri', sub: avgQuizScore + '% medie', color: 'var(--green)' },
     { val: totalFC, label: 'Flashcards', sub: totalFCReviews + ' reviews', color: 'var(--teal, #2ec4b6)' },
@@ -11151,6 +11734,8 @@ function renderStatsPage(element) {
     html += '</div>';
   });
   html += '</div>';
+
+  html += renderLearningPlayground(Object.keys(subjects)[0] || '__generic__', Object.values(subjects)[0] || { name: 'Study Flow', full: 'Learning Flow' });
 
   // Heatmap 30 zile + Distribuție activitate
   html += '<div class="stats-two-col">';
