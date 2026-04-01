@@ -985,16 +985,33 @@ input, textarea, select { font-family: inherit; }
 }
 
 .sidebar-brand-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--accent);
-  border-radius: 9px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(79,110,247,0.35);
+}
+
+.sidebar-brand-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.auth-brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .sidebar-brand-text {
@@ -5895,7 +5912,10 @@ details[open] .detail-chevron {
     <!-- Close button -->
     <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1;padding:4px;">✕</button>
 
-    <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;margin-bottom:4px;">Study Hub</div>
+    <div class="auth-brand">
+      <img class="auth-brand-mark" src="/assets/logos/study-hub-logo-concept-a-layered-s.svg" alt="Study Hub logo">
+      <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;">Study Hub</div>
+    </div>
     <p style="color:var(--text-secondary);font-size:.84rem;margin-bottom:22px;">Cont gratuit · Acces la mai multe funcții</p>
 
     <div id="authError" style="display:none;background:var(--red-muted);border:1px solid rgba(239,69,101,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;color:var(--red);font-size:.85rem;"></div>
@@ -5935,7 +5955,7 @@ details[open] .detail-chevron {
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div class="sidebar-brand-icon"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/><path d="M12 6v6l4 2"/></svg></span></div>
+      <div class="sidebar-brand-icon"><img src="/assets/logos/study-hub-logo-concept-a-layered-s.svg" alt="Study Hub logo"></div>
       <div class="sidebar-brand-text">
         <h1>Study Hub</h1>
         <div class="sidebar-brand-tag">AI Platform</div>

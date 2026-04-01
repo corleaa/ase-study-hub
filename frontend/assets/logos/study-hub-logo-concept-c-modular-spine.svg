@@ -1,0 +1,45 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgC" x1="34" y1="34" x2="224" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3F3940"/>
+      <stop offset="1" stop-color="#231F24"/>
+    </linearGradient>
+    <linearGradient id="cardC" x1="52" y1="66" x2="204" y2="196" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8ECDF"/>
+      <stop offset="1" stop-color="#E1C1A4"/>
+    </linearGradient>
+    <linearGradient id="accentC" x1="76" y1="62" x2="184" y2="194" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6A776"/>
+      <stop offset="1" stop-color="#D56F54"/>
+    </linearGradient>
+    <filter id="shadowC" x="22" y="18" width="212" height="220" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#100A10" flood-opacity="0.26"/>
+    </filter>
+    <mask id="maskC">
+      <rect width="256" height="256" fill="black"/>
+      <rect x="34" y="34" width="188" height="188" rx="48" fill="white"/>
+      <path d="M171 66C184.255 66 195 76.7452 195 90C195 103.255 184.255 114 171 114H108C101.925 114 97 118.925 97 125C97 131.075 101.925 136 108 136H145C172.062 136 194 157.938 194 185V190H168V185C168 172.297 157.703 162 145 162H108C87.5655 162 71 145.435 71 125C71 104.565 87.5655 88 108 88H171C170.448 88 170 88.4477 170 89C170 89.5523 170.448 90 171 90H195C195 76.7452 184.255 66 171 66Z" fill="black"/>
+      <path d="M169 52C169 44.268 175.268 38 183 38C190.732 38 197 44.268 197 52V66H169V52Z" fill="black"/>
+      <path d="M58 190H84V203C84 210.18 78.1797 216 71 216C63.8203 216 58 210.18 58 203V190Z" fill="black"/>
+    </mask>
+  </defs>
+
+  <g filter="url(#shadowC)">
+    <rect x="34" y="34" width="188" height="188" rx="48" fill="url(#bgC)"/>
+    <rect x="34.75" y="34.75" width="186.5" height="186.5" rx="47.25" stroke="#6E646D" stroke-opacity="0.54" stroke-width="1.5"/>
+  </g>
+
+  <g opacity="0.96">
+    <rect x="58" y="66" width="136" height="38" rx="19" fill="url(#cardC)"/>
+    <rect x="50" y="110" width="146" height="42" rx="21" fill="url(#cardC)" fill-opacity="0.95"/>
+    <rect x="62" y="158" width="136" height="38" rx="19" fill="url(#cardC)" fill-opacity="0.9"/>
+  </g>
+
+  <g mask="url(#maskC)">
+    <rect x="52" y="64" width="144" height="132" rx="24" fill="url(#accentC)"/>
+  </g>
+
+  <path d="M176 56C176 51.5817 179.582 48 184 48H189C193.418 48 197 51.5817 197 56V66H176V56Z" fill="url(#accentC)"/>
+  <path d="M60 190H84V197C84 203.627 78.6274 209 72 209C65.3726 209 60 203.627 60 197V190Z" fill="url(#accentC)"/>
+  <path d="M78 89H171C171.552 89 172 89.4477 172 90C172 90.5523 171.552 91 171 91H108C89.7746 91 75 105.775 75 124C75 142.225 89.7746 157 108 157H145C159.359 157 171 168.641 171 183V186H163V183C163 173.059 154.941 165 145 165H108C85.3563 165 67 146.644 67 124C67 101.356 85.3563 83 108 83H171C176.523 83 181 78.5228 181 73C181 67.4772 176.523 63 171 63H78V71H171C172.105 71 173 71.8954 173 73C173 74.1046 172.105 75 171 75H108C81.4903 75 60 96.4903 60 123C60 149.51 81.4903 171 108 171H145C151.627 171 157 176.373 157 183V186H149V183C149 180.791 147.209 179 145 179H108C77.0721 179 52 153.928 52 123C52 92.0721 77.0721 67 108 67H171C174.314 67 177 69.6863 177 73C177 76.3137 174.314 79 171 79H78V89Z" fill="#F8B188" fill-opacity="0.38"/>
+</svg>
