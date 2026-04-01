@@ -5571,6 +5571,11 @@ code { font-family: var(--font-mono) !important; }
   gap: 14px;
 }
 
+.insight-shell .purpose-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .purpose-card,
 .interactive-card,
 .summary-mini-card {
@@ -5581,6 +5586,11 @@ code { font-family: var(--font-mono) !important; }
   min-height: 170px;
 }
 
+.insight-shell .purpose-card {
+  min-height: 0;
+  padding: 16px;
+}
+
 .purpose-card strong,
 .interactive-card strong,
 .summary-mini-card strong {
@@ -5588,6 +5598,7 @@ code { font-family: var(--font-mono) !important; }
   font-size: 1rem;
   margin: 14px 0 8px;
   letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .purpose-card p,
@@ -5596,6 +5607,11 @@ code { font-family: var(--font-mono) !important; }
   color: var(--text-secondary);
   font-size: .87rem;
   line-height: 1.65;
+}
+
+.insight-shell .purpose-card p {
+  font-size: .8rem;
+  line-height: 1.55;
 }
 
 .studio-grid {
@@ -5854,6 +5870,10 @@ details[open] .detail-chevron {
   .summary-deck-grid,
   .interactive-blocks,
   .playground-bars {
+    grid-template-columns: 1fr;
+  }
+
+  .insight-shell .purpose-grid {
     grid-template-columns: 1fr;
   }
 }
