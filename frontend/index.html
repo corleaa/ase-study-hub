@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- CSP: blochează script-uri inline neautoizate și resurse externe nelistate -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data: blob:; worker-src blob:;">
-<title>ASE Study Hub — AI-Powered</title>
+<title>Study Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
 <!-- DOMPurify — sanitizare HTML pentru prevenirea XSS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js" crossorigin="anonymous"></script>
@@ -9142,7 +9142,7 @@ function updatePomoDisplay() {
   if (pomoRunning) {
     document.title = display + ' — ' + (pomoIsBreak ? 'Pauză' : 'Focus') + ' · Study Hub';
   } else {
-    document.title = 'ASE Study Hub — AI-Powered';
+    document.title = 'Study Hub';
   }
 }
 
@@ -9283,7 +9283,7 @@ async function exportChatAsPDF(key) {
     <html lang="ro">
     <head>
       <meta charset="UTF-8">
-      <title>ASE Study Hub — ${subject.name} Chat Export</title>
+      <title>Study Hub — ${subject.name} Chat Export</title>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -9353,7 +9353,7 @@ async function exportChatAsPDF(key) {
     <body>
       <div class="header">
         <div class="header-top">
-          <div class="logo">ASE Study Hub</div>
+          <div class="logo">Study Hub</div>
           <div class="meta">Exportat: ${exportDate}, ${exportTime}</div>
         </div>
         <div class="title">AI Tutor — ${subject.name}</div>
@@ -9371,7 +9371,7 @@ async function exportChatAsPDF(key) {
       </div>
 
       <div class="footer">
-        ASE Study Hub — AI-Powered Learning Platform · Generat cu Claude by Anthropic
+        Study Hub · Generat cu Claude by Anthropic
       </div>
 
       <scr" + "ipt>
@@ -12949,7 +12949,7 @@ async function exportProgressPDF() {
   <thead><tr><th>Materie</th><th style="width:220px">Tasks</th><th>Prez.</th><th>Quiz avg</th><th>Flashcards</th><th>Studiu</th></tr></thead>
   <tbody>${subjectRows||'<tr><td colspan="6" style="text-align:center;color:#414860;padding:24px;">Nicio materie configurată</td></tr>'}</tbody>
 </table>
-<div class="footer"><span>ASE Study Hub · AI-Powered</span><span>${today}</span></div>
+<div class="footer"><span>Study Hub</span><span>${today}</span></div>
 <scr" + "ipt>window.print();<\/scr" + "ipt>
 </body></html>`);
   win.document.close();
