@@ -6294,6 +6294,216 @@ details[open] .detail-chevron {
   color: var(--accent);
 }
 
+.finance-stability-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+  gap: 18px;
+}
+
+.finance-stability-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.finance-report-card {
+  background: #f7f9fc;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, #dce4f0);
+  border-radius: 22px;
+  padding: 18px;
+  color: #243348;
+}
+
+.finance-report-card .finance-panel-title,
+.finance-report-card .finance-chart-caption,
+.finance-report-card .finance-chart-legend span,
+.finance-report-card .finance-mini-note,
+.finance-report-card .finance-scorecard-label,
+.finance-report-card .finance-scorecard-band,
+.finance-report-card .finance-scorecard-benchmark,
+.finance-report-card .finance-risk-copy,
+.finance-report-card .finance-risk-meta,
+.finance-report-card .finance-vuln-copy,
+.finance-report-card .finance-vuln-tone {
+  color: #516175;
+}
+
+.finance-report-card .finance-chart {
+  background: linear-gradient(180deg, rgba(230,236,244,0.95), rgba(247,249,252,0.75));
+  border-color: #d5deea;
+}
+
+.finance-report-card .finance-story {
+  background: #eef3f9;
+  border-color: #d5deea;
+  color: #43546b;
+}
+
+.finance-risk-board {
+  display: grid;
+  gap: 12px;
+}
+
+.finance-risk-item {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 14px 14px 12px;
+  border-radius: 18px;
+  border: 1px solid #d5deea;
+  background: rgba(255,255,255,0.82);
+}
+
+.finance-risk-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  margin-top: 4px;
+}
+
+.finance-risk-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #243348;
+  margin-bottom: 4px;
+}
+
+.finance-risk-copy {
+  font-size: 0.79rem;
+  line-height: 1.55;
+}
+
+.finance-risk-meta {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  min-width: 86px;
+}
+
+.finance-risk-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.finance-risk-trend {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.finance-vuln-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.finance-vuln-card {
+  border-radius: 20px;
+  padding: 16px;
+  color: #fff;
+  min-height: 128px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.finance-vuln-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.finance-vuln-copy {
+  color: rgba(255,255,255,0.86) !important;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.finance-vuln-tone {
+  color: rgba(255,255,255,0.86) !important;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.finance-scorecard {
+  overflow: auto;
+}
+
+.finance-scorecard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.finance-scorecard-table th,
+.finance-scorecard-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #d7dfeb;
+  vertical-align: middle;
+}
+
+.finance-scorecard-table th {
+  text-align: left;
+  color: #5b6c82;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.finance-scorecard-label {
+  font-weight: 700;
+  color: #243348;
+}
+
+.finance-scorecard-band {
+  font-size: 0.72rem;
+}
+
+.finance-scorecard-benchmark {
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+}
+
+.finance-scorecard-value {
+  font-weight: 800;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.finance-scorecard-spark {
+  width: 108px;
+}
+
+.finance-dual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.finance-network-wrap {
+  display: grid;
+  gap: 14px;
+}
+
+.finance-network-note {
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: #516175;
+}
+
+.finance-policy-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .finance-live-bump {
   animation: financeRefresh 0.34s ease;
 }
@@ -6329,9 +6539,13 @@ details[open] .detail-chevron {
   .home-tools-grid,
   .finance-overview,
   .finance-zone-grid,
+  .finance-stability-grid,
   .finance-scenario-row,
   .finance-metric-grid,
-  .finance-stat-strip {
+  .finance-stat-strip,
+  .finance-dual-grid,
+  .finance-vuln-grid,
+  .finance-policy-strip {
     grid-template-columns: 1fr;
   }
 
@@ -7916,6 +8130,114 @@ function financeStabilitySvg(metrics) {
   return svg + '</svg>';
 }
 
+function financeSparklineSvg(values, color) {
+  var width = 108, height = 32, pad = 3;
+  var min = Math.min.apply(null, values);
+  var max = Math.max.apply(null, values);
+  var span = Math.max(0.001, max - min);
+  var path = '';
+  values.forEach(function(v, i) {
+    var x = pad + i * ((width - pad * 2) / (values.length - 1));
+    var y = height - pad - ((v - min) / span) * (height - pad * 2);
+    path += (i ? ' L ' : 'M ') + x.toFixed(2) + ' ' + y.toFixed(2);
+  });
+  return '<svg viewBox="0 0 ' + width + ' ' + height + '"><path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function financeStabilityRiskBoardHtml(metrics) {
+  var risks = metrics.riskBoard || [];
+  return '<div class="finance-risk-board">' + risks.map(function(risk) {
+    return '<div class="finance-risk-item">'
+      + '<span class="finance-risk-dot" style="background:' + risk.color + ';"></span>'
+      + '<div><div class="finance-risk-title">' + risk.title + '</div><div class="finance-risk-copy">' + risk.copy + '</div></div>'
+      + '<div class="finance-risk-meta"><span class="finance-risk-badge" style="color:' + risk.color + ';background:' + risk.bg + ';">' + risk.level + '</span><span class="finance-risk-trend" style="color:' + risk.color + ';">' + risk.trend + '</span></div>'
+      + '</div>';
+  }).join('') + '</div>';
+}
+
+function financeVulnerabilityHtml(metrics) {
+  return '<div class="finance-vuln-grid">' + metrics.vulnerabilityCards.map(function(card) {
+    return '<div class="finance-vuln-card" style="background:' + card.color + ';">'
+      + '<div><div class="finance-vuln-title">' + card.title + '</div><div class="finance-vuln-copy">' + card.copy + '</div></div>'
+      + '<div class="finance-vuln-tone">' + card.tone + '</div>'
+      + '</div>';
+  }).join('') + '</div>';
+}
+
+function financeScorecardHtml(metrics) {
+  return '<div class="finance-scorecard"><table class="finance-scorecard-table"><thead><tr><th>Indicator</th><th>Bandă prudentă</th><th>Istoric</th><th>Acum</th><th>UE/Bench</th></tr></thead><tbody>'
+    + metrics.scorecard.map(function(row) {
+      return '<tr>'
+        + '<td class="finance-scorecard-label">' + row.label + '</td>'
+        + '<td class="finance-scorecard-band">' + row.band + '</td>'
+        + '<td class="finance-scorecard-spark">' + financeSparklineSvg(row.history, row.color) + '</td>'
+        + '<td class="finance-scorecard-value" style="color:' + row.color + ';">' + row.value + '</td>'
+        + '<td class="finance-scorecard-benchmark">' + row.benchmark + '</td>'
+        + '</tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+function financePolicySvg(metrics) {
+  var width = 620, height = 240, padL = 38, padR = 20, padT = 18, padB = 28;
+  var items = [
+    { label: 'CCyB', base: metrics.ccybNeed, top: Math.max(0, metrics.creditHeat / 55), color: '#4b83d1' },
+    { label: 'SyRB', base: Math.max(0, (metrics.creditGapStress * 0.17) + (metrics.contagionPressure * 0.012)), top: Math.max(0, metrics.creditGapStress * 0.08), color: '#5fb49c' },
+    { label: 'O-SII', base: Math.max(0.5, Math.min(2.5, 0.5 + metrics.finance.leverage * 0.16)), top: Math.max(0, metrics.systemicRiskScore * 0.01), color: '#8b78cf' },
+    { label: 'MREL', base: Math.max(18, Math.min(30, 20 + metrics.finance.capitalBuffer * 0.42)), top: Math.max(0, metrics.shockAbsorption * 0.05), color: '#e08d86' }
+  ];
+  var maxVal = 32;
+  var barW = 84;
+  var gap = 50;
+  var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '">';
+  for (var g = 0; g <= 4; g++) {
+    var gy = padT + ((height - padT - padB) / 4) * g;
+    svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (width - padR) + '" y2="' + gy + '" stroke="rgba(86,102,122,0.16)" stroke-width="1"/>';
+  }
+  items.forEach(function(item, idx) {
+    var x = padL + 26 + idx * (barW + gap);
+    var baseH = (item.base / maxVal) * (height - padT - padB);
+    var topH = (item.top / maxVal) * (height - padT - padB);
+    var yBase = height - padB - baseH;
+    svg += '<rect x="' + x + '" y="' + yBase.toFixed(2) + '" width="' + barW + '" height="' + baseH.toFixed(2) + '" rx="16" fill="' + item.color + '" fill-opacity="0.88"/>';
+    svg += '<rect x="' + x + '" y="' + (yBase - topH).toFixed(2) + '" width="' + barW + '" height="' + topH.toFixed(2) + '" rx="16" fill="' + item.color + '" fill-opacity="0.28"/>';
+    svg += '<text x="' + (x + barW / 2) + '" y="' + (height - 8) + '" text-anchor="middle" fill="rgba(81,97,117,0.85)" font-size="11">' + item.label + '</text>';
+    svg += '<text x="' + (x + barW / 2) + '" y="' + (yBase - topH - 8).toFixed(2) + '" text-anchor="middle" fill="' + item.color + '" font-size="12" font-weight="700">' + item.base.toLocaleString('ro-RO', { maximumFractionDigits: 1 }) + (item.label === 'MREL' ? '%' : '%') + '</text>';
+  });
+  return svg + '</svg>';
+}
+
+function financeNetworkSvg(metrics) {
+  var width = 620, height = 280;
+  var nodes = [
+    { id: 'Bănci', x: 124, y: 142, r: 34, color: '#4b83d1' },
+    { id: 'IFN', x: 278, y: 70, r: 20, color: '#e08d86' },
+    { id: 'Fonduri', x: 472, y: 118, r: 18, color: '#5fb49c' },
+    { id: 'Asigurări', x: 268, y: 214, r: 18, color: '#8b78cf' },
+    { id: 'Guvern', x: 500, y: 224, r: 22, color: '#6e7d91' }
+  ];
+  var links = [
+    { from: 0, to: 1, w: 2 + metrics.contagionPressure / 18, color: '#e08d86', label: Math.round(metrics.contagionPressure) },
+    { from: 0, to: 2, w: 2 + metrics.systemicRiskScore / 26, color: '#5fb49c', label: Math.round(metrics.systemicRiskScore) },
+    { from: 0, to: 3, w: 2 + metrics.creditHeat / 28, color: '#8b78cf', label: Math.round(metrics.creditHeat) },
+    { from: 0, to: 4, w: 2 + metrics.housingFragility / 24, color: '#6e7d91', label: Math.round(metrics.housingFragility) },
+    { from: 1, to: 4, w: 1.8 + metrics.creditGapStress / 10, color: '#d79c63', label: Math.round(metrics.creditGapStress) },
+    { from: 2, to: 4, w: 1.8 + metrics.tailLossTail / 7, color: '#73c9a6', label: Math.round(metrics.tailLossTail) }
+  ];
+  var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '">';
+  links.forEach(function(link) {
+    var a = nodes[link.from], b = nodes[link.to];
+    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    svg += '<line x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '" stroke="' + link.color + '" stroke-opacity="0.62" stroke-width="' + link.w.toFixed(2) + '"/>';
+    svg += '<text x="' + mx.toFixed(2) + '" y="' + (my - 6).toFixed(2) + '" text-anchor="middle" fill="' + link.color + '" font-size="11" font-weight="700">' + link.label + '</text>';
+  });
+  nodes.forEach(function(node) {
+    svg += '<circle cx="' + node.x + '" cy="' + node.y + '" r="' + node.r + '" fill="' + node.color + '" fill-opacity="0.9"/>';
+    svg += '<circle cx="' + node.x + '" cy="' + node.y + '" r="' + (node.r + 8) + '" fill="none" stroke="' + node.color + '" stroke-opacity="0.18" stroke-width="10"/>';
+    svg += '<text x="' + node.x + '" y="' + (node.y + 4) + '" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="800">' + node.id + '</text>';
+  });
+  return svg + '</svg>';
+}
+
 function getFinanceLabMetrics() {
   var finance = getFinanceLabState();
   var isStability = finance.mode === 'stability';
@@ -7972,10 +8294,36 @@ function getFinanceLabMetrics() {
     { label: 'Shock', nominal: Math.max(0, finance.capitalBuffer * 1.42 + finance.liquidityBuffer * 0.13), discounted: Math.max(0, finance.capitalBuffer + finance.liquidityBuffer * 0.08 - systemicRiskScore * 0.14) },
     { label: 'Buffer left', nominal: Math.max(0, finance.capitalBuffer * 1.35 + finance.liquidityBuffer * 0.11), discounted: Math.max(0, finance.capitalBuffer * 0.92 + finance.liquidityBuffer * 0.07 - systemicRiskScore * 0.1) }
   ];
+  function riskMeta(score) {
+    if (score >= 70) return { level: 'Sever', color: '#c84b5a', bg: 'rgba(200,75,90,0.12)', trend: '↑ ridicat' };
+    if (score >= 50) return { level: 'Ridicat', color: '#de8b3d', bg: 'rgba(222,139,61,0.12)', trend: '↗ în creștere' };
+    if (score >= 30) return { level: 'Moderat', color: '#6f9fc9', bg: 'rgba(111,159,201,0.12)', trend: '→ persistent' };
+    return { level: 'Redus', color: '#5ea68c', bg: 'rgba(94,166,140,0.12)', trend: '↘ controlat' };
+  }
+  var riskBoard = [
+    Object.assign({ title: 'Ciclul creditului și îndatorarea', copy: 'Creșterea creditului și datoria gospodăriilor pot împinge rapid sistemul într-o fază prociclică dacă buffer-ele rămân subțiri.' }, riskMeta(creditHeat)),
+    Object.assign({ title: 'Contagiune și interconectare', copy: 'Legăturile dintre bănci, IFN și fonduri pot transmite șocul dintr-un nod în întregul sistem mai repede decât sugerează indicatorii agregați.' }, riskMeta(contagionPressure)),
+    Object.assign({ title: 'Piața imobiliară și housing stress', copy: 'Fragilitatea crește când ratele, leverage-ul și povara datoriei gospodăriilor se comprimă simultan pe segmentul imobiliar.' }, riskMeta(housingFragility)),
+    Object.assign({ title: 'Reevaluări de piață și refinanțare', copy: 'Volatilitatea de piață și gap-ul de refinanțare pot eroda simultan lichiditatea și capitalul, mai ales în scenarii adverse.' }, riskMeta(Math.min(100, systemicRiskScore * 0.7 + refinancingGap * 0.7)))
+  ];
+  var vulnerabilityCards = [
+    { title: 'Vulnerabilitate ciclică', copy: 'Credit gap-ul și leverage-ul sistemic se amplifică reciproc când ritmul de creditare depășește fundamentele macro.', tone: Math.round(creditHeat) + '/100', color: 'linear-gradient(180deg,#d46a55,#b94655)' },
+    { title: 'Amortizoare de capital și lichiditate', copy: 'Capitalul și LCR-ul trebuie să acopere șocurile comune, nu doar deteriorarea individuală a unei instituții.', tone: financePct(Math.max(0, capitalRatio), 1) + ' CET1', color: 'linear-gradient(180deg,#397cc7,#2e5ca8)' },
+    { title: 'Contagiune prin rețea financiară', copy: 'Interdependențele dintre bănci, IFN, fonduri și sectorul suveran multiplică viteza de propagare a unui șoc.', tone: Math.round(contagionPressure) + '/100', color: 'linear-gradient(180deg,#6b68c9,#4c53a9)' },
+    { title: 'Piață imobiliară și gospodării', copy: 'Housing stress-ul urcă atunci când dobânzile și povara datoriei împing simultan DSTI și riscul de refinanțare.', tone: Math.round(housingFragility) + '/100', color: 'linear-gradient(180deg,#4ea29d,#318a85)' }
+  ];
+  var scorecard = [
+    { label: 'CET1 sub stres', band: '>10% confort | 8-10% watch | <8% critic', history: [12.8, 13.6, 13.1, 12.6, 12.2, 11.8, Math.max(0, capitalRatio)], value: financePct(capitalRatio, 1), benchmark: 'UE 17,8%', color: capitalRatio > 10 ? '#5ea68c' : capitalRatio > 8 ? '#de8b3d' : '#c84b5a' },
+    { label: 'LCR sub stres', band: '>110% confort | 100-110% watch | <100% critic', history: [138, 144, 132, 126, 120, 116, Math.max(0, liquidityCoverage)], value: financePct(liquidityCoverage, 1), benchmark: 'UE 161,6%', color: liquidityCoverage > 110 ? '#5ea68c' : liquidityCoverage > 100 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Credit gap', band: '<6 moderat | 6-10 ridicat | >10 sever', history: [4.1, 4.8, 5.2, 6.4, 7.3, 8.2, creditGapStress], value: financePct(creditGapStress, 1), benchmark: 'Prag intern 6%', color: creditGapStress < 6 ? '#5ea68c' : creditGapStress < 10 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Tail loss sever', band: '<12% redus | 12-18% watch | >18% sever', history: [7.4, 8.1, 9.8, 10.4, 12.2, 13.5, tailLossTail], value: financePct(tailLossTail, 1), benchmark: 'Scenariu intern', color: tailLossTail < 12 ? '#5ea68c' : tailLossTail < 18 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Scor risc sistemic', band: '<35 redus | 35-55 watch | >55 ridicat', history: [28, 31, 34, 39, 45, 49, systemicRiskScore], value: Math.round(systemicRiskScore) + '/100', benchmark: 'Țintă <35', color: systemicRiskScore < 35 ? '#5ea68c' : systemicRiskScore < 55 ? '#de8b3d' : '#c84b5a' },
+    { label: 'CCyB sugerat', band: '<1.5% redus | 1.5-2.5% watch | >2.5% activ', history: [0.5, 0.5, 1.0, 1.0, 1.0, 1.1, ccybNeed], value: financePct(ccybNeed, 1), benchmark: 'RO 1,0%', color: ccybNeed < 1.5 ? '#5ea68c' : ccybNeed < 2.5 ? '#de8b3d' : '#c84b5a' }
+  ];
   var overviewTone = isStability
     ? (stabilityScore >= 60 ? 'Sistemul rămâne absorbant, dar doar dacă ritmul creditului și contagiunea rămân sub control.' : 'Fragilitatea sistemică se acumulează prea repede; buffer-ele nu mai compensează ciclul creditului și canalele de contagiune.')
     : (npv >= 0 && stabilityScore >= 55 ? 'Poziție rezonabilă pentru un scenariu de lucru.' : 'Modelul arată presiune și merită stresat înainte de decizie.');
-  return { finance: finance, pvFlows: pvFlows, bufferPath: bufferPath, npv: npv, futureValue: futureValue, payback: payback, roi: roi, lossProbability: lossProbability, p10: p10, p50: p50, p90: p90, expectedPnl: expectedPnl, scenarioMeta: scenarioMeta, capitalRatio: capitalRatio, liquidityCoverage: liquidityCoverage, nplRate: nplRate, earningsDrag: earningsDrag, creditHeat: creditHeat, contagionPressure: contagionPressure, housingFragility: housingFragility, tailLossMedian: tailLossMedian, tailLossSpread: tailLossSpread, tailLossMild: tailLossMild, tailLossTail: tailLossTail, systemicRiskScore: systemicRiskScore, ccybNeed: ccybNeed, creditGapStress: creditGapStress, stabilityScore: stabilityScore, repricingPressure: repricingPressure, debtStress: debtStress, shockAbsorption: shockAbsorption, overviewTone: overviewTone };
+  return { finance: finance, pvFlows: pvFlows, bufferPath: bufferPath, npv: npv, futureValue: futureValue, payback: payback, roi: roi, lossProbability: lossProbability, p10: p10, p50: p50, p90: p90, expectedPnl: expectedPnl, scenarioMeta: scenarioMeta, capitalRatio: capitalRatio, liquidityCoverage: liquidityCoverage, nplRate: nplRate, earningsDrag: earningsDrag, creditHeat: creditHeat, contagionPressure: contagionPressure, housingFragility: housingFragility, tailLossMedian: tailLossMedian, tailLossSpread: tailLossSpread, tailLossMild: tailLossMild, tailLossTail: tailLossTail, systemicRiskScore: systemicRiskScore, ccybNeed: ccybNeed, creditGapStress: creditGapStress, stabilityScore: stabilityScore, repricingPressure: repricingPressure, debtStress: debtStress, shockAbsorption: shockAbsorption, overviewTone: overviewTone, riskBoard: riskBoard, vulnerabilityCards: vulnerabilityCards, scorecard: scorecard };
 }
 
 function scheduleFinanceLabUpdate() {
@@ -8063,10 +8411,18 @@ function updateFinanceLabUI() {
     var el = document.getElementById(id);
     if (el) { el.innerHTML = strips[id]; financePulse(el); }
   });
+  var riskBoard = document.getElementById('finRiskBoard');
+  if (riskBoard) { riskBoard.innerHTML = financeStabilityRiskBoardHtml(metrics); financePulse(riskBoard); }
+  var vulnMap = document.getElementById('finVulnerabilityMap');
+  if (vulnMap) { vulnMap.innerHTML = financeVulnerabilityHtml(metrics); financePulse(vulnMap); }
+  var scorecard = document.getElementById('finScorecard');
+  if (scorecard) { scorecard.innerHTML = financeScorecardHtml(metrics); financePulse(scorecard); }
   var chartA = document.getElementById('finValuationChart'); if (chartA) { chartA.innerHTML = financeLineChartSvg(metrics); financePulse(chartA); }
   var chartB = document.getElementById('finDistributionChart'); if (chartB) { chartB.innerHTML = financeDistributionSvg(metrics); financePulse(chartB); }
   var chartC = document.getElementById('finStressChart'); if (chartC) { chartC.innerHTML = financeStressSvg(metrics); financePulse(chartC); }
   var chartD = document.getElementById('finStabilityChart'); if (chartD) { chartD.innerHTML = financeStabilitySvg(metrics); financePulse(chartD); }
+  var chartPolicy = document.getElementById('finPolicyChart'); if (chartPolicy) { chartPolicy.innerHTML = financePolicySvg(metrics); financePulse(chartPolicy); }
+  var chartNetwork = document.getElementById('finNetworkChart'); if (chartNetwork) { chartNetwork.innerHTML = financeNetworkSvg(metrics); financePulse(chartNetwork); }
   document.querySelectorAll('.finance-scenario-card').forEach(function(card) {
     card.classList.toggle('active', card.getAttribute('data-fin-scenario') === finance.scenario);
   });
@@ -8085,6 +8441,17 @@ function renderFinanceLab(el) {
     + '<button class="finance-mode-tab ' + (mode === 'stability' ? 'active' : '') + '" onclick="setFinanceLabMode(\'stability\')">Stabilitate</button>'
     + '<button class="finance-mode-tab ' + (mode === 'monetary' ? 'active' : '') + '" onclick="setFinanceLabMode(\'monetary\')">Politici Monetare</button>'
     + '</div></div></div>';
+  if (isStability) {
+    html += '<div class="finance-overview"><div class="finance-kpi"><div class="finance-kpi-label">Risc sistemic</div><div class="finance-kpi-value" id="finKpiNpv"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Tail loss</div><div class="finance-kpi-value" id="finKpiLoss"></div></div><div class="finance-kpi"><div class="finance-kpi-label">CCyB sugerat</div><div class="finance-kpi-value" id="finKpiCapital"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Scor stabilitate</div><div class="finance-kpi-value" id="finKpiStability"></div></div></div>';
+    html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 1</div><div class="finance-zone-title">Board de riscuri și hartă de vulnerabilități</div><div class="finance-zone-copy">Inspirat din structura rapoartelor de stabilitate financiară: vezi imediat care sunt riscurile dominante, cât de severe sunt și unde se concentrează fragilitatea sistemică.</div></div></div><div class="finance-stability-grid"><div class="finance-control-panel"><div class="finance-panel-title">Motoarele ciclului financiar</div>' + financeSlider('creditGrowth', 'Creștere credit', finance.creditGrowth, 0, 20, 0.5) + financeSlider('householdDebt', 'Datorie gospodării / venit', finance.householdDebt, 20, 90, 1) + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('leverage', 'Leverage sistemic', finance.leverage, 1, 10, 0.1) + '<div class="finance-story" id="finStoryValuation"></div></div><div class="finance-stability-stack"><div class="finance-report-card"><div class="finance-panel-title">Principalele riscuri la adresa stabilității financiare</div><div id="finRiskBoard"></div></div><div class="finance-report-card"><div class="finance-panel-title">Harta vulnerabilităților structurale și ciclice</div><div id="finVulnerabilityMap"></div></div></div></div></section>';
+    html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 2</div><div class="finance-zone-title">Scorecard prudențial și absorbția buffer-elor</div><div class="finance-zone-copy">Am combinat logica tabelului de indicatori bancari cu o vedere interactivă asupra amortizoarelor: bandă prudentă, mini-istoric, benchmark și reacția buffer-elor la schimbarea ipotezelor.</div></div></div><div class="finance-stability-grid"><div class="finance-control-panel"><div class="finance-panel-title">Amplificatori de coadă</div>' + financeSlider('concentrationRisk', 'Concentrare sectorială', finance.concentrationRisk, 10, 90, 1) + financeSlider('contagionRisk', 'Interconectare / contagiune', finance.contagionRisk, 5, 90, 1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + '<div class="finance-story" id="finStoryDistribution"></div></div><div class="finance-stability-stack"><div class="finance-report-card"><div class="finance-panel-title">Indicatori de risc ai sistemului bancar</div><div id="finScorecard"></div></div><div class="finance-report-card"><div class="finance-panel-title">Eroziunea buffer-elor pe ciclul financiar</div><div class="finance-chart" id="finValuationChart"></div><div class="finance-chart-legend"><span><i style="background:#73c9a6"></i>Buffer brut</span><span><i style="background:#f29b6d"></i>Buffer după stres</span></div><div class="finance-chart-caption">Modelul arată cum scad amortizoarele pe măsură ce presiunea se mută din credit spre housing, refinanțare și șoc sistemic.</div><div class="finance-stat-strip" id="finValuationStrip"></div></div></div></div></section>';
+    html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 3</div><div class="finance-zone-title">Scenarii macroprudențiale și panou de politici</div><div class="finance-zone-copy">Aici vezi transmisia șocului în capital, lichiditate și credit gap, dar și ce tip de reacție prudențială devine plauzibilă: CCyB, SyRB, O-SII sau întărirea MREL.</div></div></div><div class="finance-scenario-row"><div class="finance-scenario-card active" data-fin-scenario="base" onclick="setFinanceLabScenario(\'base\')"><div class="finance-scenario-name">Scenariu de bază</div><div class="finance-scenario-copy">Creditul încetinește ordonat, buffer-ele țin și refinanțarea rămâne deschisă.</div></div><div class="finance-scenario-card" data-fin-scenario="adverse" onclick="setFinanceLabScenario(\'adverse\')"><div class="finance-scenario-name">Scenariu advers</div><div class="finance-scenario-copy">Crește costul finanțării, housing-ul slăbește și canalele de contagiune se activează.</div></div><div class="finance-scenario-card" data-fin-scenario="crisis" onclick="setFinanceLabScenario(\'crisis\')"><div class="finance-scenario-name">Scenariu de criză</div><div class="finance-scenario-copy">Buffer-ele se consumă rapid, LCR-ul cade și credit gap-ul intră în zonă critică.</div></div></div><div class="finance-stability-grid"><div class="finance-control-panel"><div class="finance-panel-title">Parametri macro de stres</div>' + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + financeSlider('refinancingGap', 'Refinancing gap', finance.refinancingGap, 10, 80, 1) + '<div class="finance-story" id="finStoryStress"></div></div><div class="finance-stability-stack"><div class="finance-dual-grid"><div class="finance-report-card"><div class="finance-panel-title">Transmisia șocului sistemic</div><div class="finance-chart" id="finStressChart"></div><div class="finance-chart-caption">Prima ruptură poate apărea în capital, lichiditate, credit gap sau rețeaua de interdependențe.</div><div class="finance-stat-strip" id="finStressStrip"></div></div><div class="finance-report-card"><div class="finance-panel-title">Politici macroprudențiale și buffer-e</div><div class="finance-chart" id="finPolicyChart"></div><div class="finance-chart-caption">Panoul comprimă într-o singură vedere relația dintre risc și instrumente: CCyB, SyRB, O-SII și MREL.</div><div class="finance-policy-strip" id="finStabilityStrip"></div></div></div></div></div></section>';
+    html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 4</div><div class="finance-zone-title">Contagiune, distribuția pierderilor și vulnerabilități structurale</div><div class="finance-zone-copy">Ultimul bloc arată cum se conectează segmentele sistemului financiar și cât de groasă devine coada pierderilor atunci când crește interconectarea.</div></div></div><div class="finance-stability-grid"><div class="finance-control-panel"><div class="finance-panel-title">Canale structurale de vulnerabilitate</div>' + financeSlider('policyRate', 'Dobânda de politică monetară', finance.policyRate, 1, 12, 0.1) + financeSlider('inflation', 'Inflație', finance.inflation, 1, 15, 0.1) + financeSlider('leverage', 'Leverage sistemic', finance.leverage, 1, 10, 0.1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + '<div class="finance-story" id="finStoryStability"></div></div><div class="finance-stability-stack"><div class="finance-dual-grid"><div class="finance-report-card"><div class="finance-panel-title">Distribuția pierderilor sistemice</div><div class="finance-chart" id="finDistributionChart"></div><div class="finance-chart-caption">Curba se deplasează și se îngroașă pe măsură ce contagiunea, concentrarea și volatilitatea se suprapun.</div><div class="finance-stat-strip" id="finDistributionStrip"></div></div><div class="finance-report-card"><div class="finance-panel-title">Hartă a vulnerabilităților sistemice</div><div class="finance-chart" id="finStabilityChart"></div><div class="finance-chart-caption">Radarul îți arată dacă fragilitatea vine mai ales din capital, lichiditate, ciclul creditului, housing sau rețea.</div></div></div><div class="finance-report-card"><div class="finance-panel-title">Interdependențele segmentelor sistemului financiar</div><div class="finance-chart" id="finNetworkChart"></div><div class="finance-network-note">Dimensiunea nodurilor arată importanța segmentului, iar grosimea legăturilor arată unde poate circula șocul: bănci, IFN, fonduri, asigurări și canalul suveran.</div></div></div></div></section>';
+    html += '</div></div>';
+    el.innerHTML = html;
+    updateFinanceLabUI();
+    return;
+  }
   html += '<div class="finance-overview"><div class="finance-kpi"><div class="finance-kpi-label">' + (isStability ? 'Risc sistemic' : 'VPN curent') + '</div><div class="finance-kpi-value" id="finKpiNpv"></div></div><div class="finance-kpi"><div class="finance-kpi-label">' + (isStability ? 'Tail loss' : 'Probabilitate pierdere') + '</div><div class="finance-kpi-value" id="finKpiLoss"></div></div><div class="finance-kpi"><div class="finance-kpi-label">' + (isStability ? 'CCyB sugerat' : 'Capital sub stres') + '</div><div class="finance-kpi-value" id="finKpiCapital"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Scor stabilitate</div><div class="finance-kpi-value" id="finKpiStability"></div></div></div>';
   html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 1</div><div class="finance-zone-title">' + cfg.zone1 + '</div><div class="finance-zone-copy">' + cfg.zone1Copy + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">' + (isStability ? 'Motoarele ciclului financiar' : 'Controlează ipotezele') + '</div>' + (isStability ? financeSlider('creditGrowth', 'Creștere credit', finance.creditGrowth, 0, 20, 0.5) + financeSlider('householdDebt', 'Datorie gospodării / venit', finance.householdDebt, 20, 90, 1) + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('leverage', 'Leverage sistemic', finance.leverage, 1, 10, 0.1) : financeSlider('initialInvestment', 'Investiție inițială', finance.initialInvestment, 50000, 1000000, 10000) + financeSlider('annualCashflow', 'Cash flow anual', finance.annualCashflow, 10000, 250000, 5000) + financeSlider('discountRate', 'Rata de actualizare', finance.discountRate, 1, 20, 0.5) + financeSlider('years', 'Orizont (ani)', finance.years, 2, 10, 1) + financeSlider('growthRate', 'Creștere cash flow', finance.growthRate, -5, 15, 0.5)) + '<div class="finance-story" id="finStoryValuation"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">' + (isStability ? 'Eroziunea buffer-elor pe ciclul financiar' : 'Curba fluxurilor nominale vs. actualizate') + '</div><div class="finance-chart" id="finValuationChart"></div><div class="finance-chart-legend"><span><i style="background:#73c9a6"></i>' + (isStability ? 'Buffer brut' : 'Cash flow nominal') + '</span><span><i style="background:#f29b6d"></i>' + (isStability ? 'Buffer după stres' : 'Cash flow actualizat') + '</span></div><div class="finance-chart-caption">' + (isStability ? 'Vezi unde se consumă rezervele de reziliență când urcă ritmul creditului, leverage-ul și datoria gospodăriilor.' : 'Graficul arată cum scade valoarea cash flow-ului pe măsură ce îl aduci în prezent prin rata de actualizare.') + '</div><div class="finance-stat-strip" id="finValuationStrip"></div></div></div></section>';
   html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 2</div><div class="finance-zone-title">' + cfg.zone2 + '</div><div class="finance-zone-copy">' + cfg.zone2Copy + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">' + (isStability ? 'Amplificatori de coadă' : 'Reglează profilul de risc') + '</div>' + (isStability ? financeSlider('concentrationRisk', 'Concentrare sectorială', finance.concentrationRisk, 10, 90, 1) + financeSlider('contagionRisk', 'Interconectare / contagiune', finance.contagionRisk, 5, 90, 1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) : financeSlider('expectedReturn', 'Randament așteptat', finance.expectedReturn, -5, 25, 0.5) + financeSlider('volatility', 'Volatilitate', finance.volatility, 5, 45, 0.5) + financeSlider('exposure', 'Expunere economică', finance.exposure, 10, 200, 5)) + '<div class="finance-story" id="finStoryDistribution"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">' + (isStability ? 'Distribuția pierderilor sistemice' : 'Distribuția randamentelor') + '</div><div class="finance-chart" id="finDistributionChart"></div><div class="finance-chart-caption">' + (isStability ? 'Curba arată cât de groasă devine coada pierderilor când se suprapun concentrare, contagiune și volatilitate.' : 'Curba îți arată distribuția probabilă a rezultatelor, cu markeri pentru percentilele cheie.') + '</div><div class="finance-stat-strip" id="finDistributionStrip"></div></div></div></section>';
