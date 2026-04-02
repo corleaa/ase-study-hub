@@ -6049,10 +6049,34 @@ details[open] .detail-chevron {
   font-size: 0.82rem;
 }
 
+.finance-control-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .finance-control strong {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--text-primary);
+}
+
+.finance-control-number {
+  width: 92px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  text-align: right;
+}
+
+.finance-control-number:focus {
+  outline: none;
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px rgba(242,155,109,0.12);
 }
 
 .finance-control input[type="range"] {
@@ -7967,8 +7991,9 @@ function financeFieldDisplay(field, value) {
 }
 
 function financeSlider(field, label, value, min, max, step) {
+  var decimals = String(step).indexOf('.') >= 0 ? String(step).split('.')[1].length : 0;
   return '<div class="finance-control">'
-    + '<div class="finance-control-row"><label>' + label + '</label><strong data-finance-value-for="' + field + '">' + financeFieldDisplay(field, value) + '</strong></div>'
+    + '<div class="finance-control-row"><label>' + label + '</label><div class="finance-control-value"><strong data-finance-value-for="' + field + '">' + financeFieldDisplay(field, value) + '</strong><input class="finance-control-number" data-finance-number-for="' + field + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + Number(value).toFixed(decimals) + '" onchange="setFinanceLabValue(\'' + field + '\', this.value)" oninput="setFinanceLabValue(\'' + field + '\', this.value)"></div></div>'
     + '<input data-finance-input="' + field + '" type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '" oninput="setFinanceLabValue(\'' + field + '\', this.value)">'
     + '</div>';
 }
@@ -8304,7 +8329,7 @@ function getFinanceLabMetrics() {
     Object.assign({ title: 'Ciclul creditului și îndatorarea', copy: 'Creșterea creditului și datoria gospodăriilor pot împinge rapid sistemul într-o fază prociclică dacă buffer-ele rămân subțiri.' }, riskMeta(creditHeat)),
     Object.assign({ title: 'Contagiune și interconectare', copy: 'Legăturile dintre bănci, IFN și fonduri pot transmite șocul dintr-un nod în întregul sistem mai repede decât sugerează indicatorii agregați.' }, riskMeta(contagionPressure)),
     Object.assign({ title: 'Piața imobiliară și housing stress', copy: 'Fragilitatea crește când ratele, leverage-ul și povara datoriei gospodăriilor se comprimă simultan pe segmentul imobiliar.' }, riskMeta(housingFragility)),
-    Object.assign({ title: 'Reevaluări de piață și refinanțare', copy: 'Volatilitatea de piață și gap-ul de refinanțare pot eroda simultan lichiditatea și capitalul, mai ales în scenarii adverse.' }, riskMeta(Math.min(100, systemicRiskScore * 0.7 + refinancingGap * 0.7)))
+    Object.assign({ title: 'Reevaluări de piață și refinanțare', copy: 'Volatilitatea de piață și gap-ul de refinanțare pot eroda simultan lichiditatea și capitalul, mai ales în scenarii adverse.' }, riskMeta(Math.min(100, systemicRiskScore * 0.7 + finance.refinancingGap * 0.7)))
   ];
   var vulnerabilityCards = [
     { title: 'Vulnerabilitate ciclică', copy: 'Credit gap-ul și leverage-ul sistemic se amplifică reciproc când ritmul de creditare depășește fundamentele macro.', tone: Math.round(creditHeat) + '/100', color: 'linear-gradient(180deg,#d46a55,#b94655)' },
@@ -8342,7 +8367,9 @@ function financePulse(el) {
 }
 
 function setFinanceLabValue(field, value) {
-  getFinanceLabState()[field] = parseFloat(value);
+  var parsed = parseFloat(value);
+  if (!Number.isFinite(parsed)) return;
+  getFinanceLabState()[field] = parsed;
   scheduleFinanceLabUpdate();
 }
 
@@ -8359,6 +8386,10 @@ function updateFinanceLabUI() {
   Object.keys(finance).forEach(function(field) {
     var valueEl = document.querySelector('[data-finance-value-for="' + field + '"]');
     if (valueEl) valueEl.textContent = financeFieldDisplay(field, finance[field]);
+    var numberEl = document.querySelector('[data-finance-number-for="' + field + '"]');
+    if (numberEl && document.activeElement !== numberEl) numberEl.value = finance[field];
+    var rangeEl = document.querySelector('[data-finance-input="' + field + '"]');
+    if (rangeEl && document.activeElement !== rangeEl) rangeEl.value = finance[field];
   });
   var kpis = isStability
     ? [
