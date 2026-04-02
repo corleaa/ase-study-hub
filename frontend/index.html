@@ -6263,7 +6263,7 @@ details[open] .detail-chevron {
 
 .finance-stat-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
@@ -6273,6 +6273,7 @@ details[open] .detail-chevron {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 12px;
+  min-height: 92px;
 }
 
 .finance-stat-chip strong {
@@ -6324,6 +6325,28 @@ details[open] .detail-chevron {
   gap: 18px;
 }
 
+.finance-stability-grid--stacked {
+  grid-template-columns: 1fr;
+}
+
+.finance-control-panel--horizontal {
+  display: grid;
+  gap: 14px;
+}
+
+.finance-control-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.finance-control-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.finance-control-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .finance-stability-stack {
   display: grid;
   gap: 18px;
@@ -6354,6 +6377,14 @@ details[open] .detail-chevron {
 .finance-report-card .finance-chart {
   background: linear-gradient(180deg, rgba(230,236,244,0.95), rgba(247,249,252,0.75));
   border-color: #d5deea;
+}
+
+.finance-report-card--wide .finance-chart {
+  min-height: 300px;
+}
+
+.finance-report-card--wide .finance-chart svg {
+  height: 258px;
 }
 
 .finance-report-card .finance-story {
@@ -6537,7 +6568,7 @@ details[open] .detail-chevron {
 
 .finance-policy-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
 }
 
@@ -6583,6 +6614,11 @@ details[open] .detail-chevron {
   .finance-dual-grid,
   .finance-vuln-grid,
   .finance-policy-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-control-grid--4,
+  .finance-control-grid--2 {
     grid-template-columns: 1fr;
   }
 
@@ -8503,8 +8539,8 @@ function renderFinanceLab(el) {
     html += '<div class="finance-overview"><div class="finance-kpi"><div class="finance-kpi-label">Risc sistemic</div><div class="finance-kpi-value" id="finKpiNpv"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Tail loss</div><div class="finance-kpi-value" id="finKpiLoss"></div></div><div class="finance-kpi"><div class="finance-kpi-label">CCyB sugerat</div><div class="finance-kpi-value" id="finKpiCapital"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Scor stabilitate</div><div class="finance-kpi-value" id="finKpiStability"></div></div></div>';
     html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 1</div><div class="finance-zone-title">Board de riscuri și hartă de vulnerabilități</div><div class="finance-zone-copy">Inspirat din structura rapoartelor de stabilitate financiară: vezi imediat care sunt riscurile dominante, cât de severe sunt și unde se concentrează fragilitatea sistemică.</div></div></div><div class="finance-stability-grid"><div class="finance-control-panel"><div class="finance-panel-title">Motoarele ciclului financiar</div>' + financeSlider('creditGrowth', 'Creștere credit', finance.creditGrowth, 0, 20, 0.5) + financeSlider('householdDebt', 'Datorie gospodării / venit', finance.householdDebt, 20, 90, 1) + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('leverage', 'Leverage sistemic', finance.leverage, 1, 10, 0.1) + '<div class="finance-story" id="finStoryValuation"></div></div><div class="finance-stability-stack"><div class="finance-report-card"><div class="finance-panel-title">Principalele riscuri la adresa stabilității financiare</div><div id="finRiskBoard"></div></div><div class="finance-report-card"><div class="finance-panel-title">Harta vulnerabilităților structurale și ciclice</div><div id="finVulnerabilityMap"></div></div></div></div></section>';
     html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 2</div><div class="finance-zone-title">Scorecard prudențial și absorbția buffer-elor</div><div class="finance-zone-copy">Am combinat logica tabelului de indicatori bancari cu o vedere interactivă asupra amortizoarelor: bandă prudentă, mini-istoric, benchmark și reacția buffer-elor la schimbarea ipotezelor.</div></div></div><div class="finance-stability-grid"><div class="finance-control-panel"><div class="finance-panel-title">Amplificatori de coadă</div>' + financeSlider('concentrationRisk', 'Concentrare sectorială', finance.concentrationRisk, 10, 90, 1) + financeSlider('contagionRisk', 'Interconectare / contagiune', finance.contagionRisk, 5, 90, 1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + '<div class="finance-story" id="finStoryDistribution"></div></div><div class="finance-stability-stack"><div class="finance-report-card"><div class="finance-panel-title">Indicatori de risc ai sistemului bancar</div><div id="finScorecard"></div></div><div class="finance-report-card"><div class="finance-panel-title">Eroziunea buffer-elor pe ciclul financiar</div><div class="finance-chart" id="finValuationChart"></div><div class="finance-chart-legend"><span><i style="background:#73c9a6"></i>Buffer brut</span><span><i style="background:#f29b6d"></i>Buffer după stres</span></div><div class="finance-chart-caption">Modelul arată cum scad amortizoarele pe măsură ce presiunea se mută din credit spre housing, refinanțare și șoc sistemic.</div><div class="finance-stat-strip" id="finValuationStrip"></div></div></div></div></section>';
-    html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 3</div><div class="finance-zone-title">Scenarii macroprudențiale și panou de politici</div><div class="finance-zone-copy">Aici vezi transmisia șocului în capital, lichiditate și credit gap, dar și ce tip de reacție prudențială devine plauzibilă: CCyB, SyRB, O-SII sau întărirea MREL.</div></div></div><div class="finance-scenario-row"><div class="finance-scenario-card active" data-fin-scenario="base" onclick="setFinanceLabScenario(\'base\')"><div class="finance-scenario-name">Scenariu de bază</div><div class="finance-scenario-copy">Creditul încetinește ordonat, buffer-ele țin și refinanțarea rămâne deschisă.</div></div><div class="finance-scenario-card" data-fin-scenario="adverse" onclick="setFinanceLabScenario(\'adverse\')"><div class="finance-scenario-name">Scenariu advers</div><div class="finance-scenario-copy">Crește costul finanțării, housing-ul slăbește și canalele de contagiune se activează.</div></div><div class="finance-scenario-card" data-fin-scenario="crisis" onclick="setFinanceLabScenario(\'crisis\')"><div class="finance-scenario-name">Scenariu de criză</div><div class="finance-scenario-copy">Buffer-ele se consumă rapid, LCR-ul cade și credit gap-ul intră în zonă critică.</div></div></div><div class="finance-stability-grid"><div class="finance-control-panel"><div class="finance-panel-title">Parametri macro de stres</div>' + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + financeSlider('refinancingGap', 'Refinancing gap', finance.refinancingGap, 10, 80, 1) + '<div class="finance-story" id="finStoryStress"></div></div><div class="finance-stability-stack"><div class="finance-dual-grid"><div class="finance-report-card"><div class="finance-panel-title">Transmisia șocului sistemic</div><div class="finance-chart" id="finStressChart"></div><div class="finance-chart-caption">Prima ruptură poate apărea în capital, lichiditate, credit gap sau rețeaua de interdependențe.</div><div class="finance-stat-strip" id="finStressStrip"></div></div><div class="finance-report-card"><div class="finance-panel-title">Politici macroprudențiale și buffer-e</div><div class="finance-chart" id="finPolicyChart"></div><div class="finance-chart-caption">Panoul comprimă într-o singură vedere relația dintre risc și instrumente: CCyB, SyRB, O-SII și MREL.</div><div class="finance-policy-strip" id="finStabilityStrip"></div></div></div></div></div></section>';
-    html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 4</div><div class="finance-zone-title">Contagiune, distribuția pierderilor și vulnerabilități structurale</div><div class="finance-zone-copy">Ultimul bloc arată cum se conectează segmentele sistemului financiar și cât de groasă devine coada pierderilor atunci când crește interconectarea.</div></div></div><div class="finance-stability-grid"><div class="finance-control-panel"><div class="finance-panel-title">Canale structurale de vulnerabilitate</div>' + financeSlider('policyRate', 'Dobânda de politică monetară', finance.policyRate, 1, 12, 0.1) + financeSlider('inflation', 'Inflație', finance.inflation, 1, 15, 0.1) + financeSlider('leverage', 'Leverage sistemic', finance.leverage, 1, 10, 0.1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + '<div class="finance-story" id="finStoryStability"></div></div><div class="finance-stability-stack"><div class="finance-dual-grid"><div class="finance-report-card"><div class="finance-panel-title">Distribuția pierderilor sistemice</div><div class="finance-chart" id="finDistributionChart"></div><div class="finance-chart-caption">Curba se deplasează și se îngroașă pe măsură ce contagiunea, concentrarea și volatilitatea se suprapun.</div><div class="finance-stat-strip" id="finDistributionStrip"></div></div><div class="finance-report-card"><div class="finance-panel-title">Hartă a vulnerabilităților sistemice</div><div class="finance-chart" id="finStabilityChart"></div><div class="finance-chart-caption">Radarul îți arată dacă fragilitatea vine mai ales din capital, lichiditate, ciclul creditului, housing sau rețea.</div></div></div><div class="finance-report-card"><div class="finance-panel-title">Interdependențele segmentelor sistemului financiar</div><div class="finance-chart" id="finNetworkChart"></div><div class="finance-network-note">Dimensiunea nodurilor arată importanța segmentului, iar grosimea legăturilor arată unde poate circula șocul: bănci, IFN, fonduri, asigurări și canalul suveran.</div></div></div></div></section>';
+    html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 3</div><div class="finance-zone-title">Scenarii macroprudențiale și panou de politici</div><div class="finance-zone-copy">Aici vezi transmisia șocului în capital, lichiditate și credit gap, dar și ce tip de reacție prudențială devine plauzibilă: CCyB, SyRB, O-SII sau întărirea MREL.</div></div></div><div class="finance-scenario-row"><div class="finance-scenario-card active" data-fin-scenario="base" onclick="setFinanceLabScenario(\'base\')"><div class="finance-scenario-name">Scenariu de bază</div><div class="finance-scenario-copy">Creditul încetinește ordonat, buffer-ele țin și refinanțarea rămâne deschisă.</div></div><div class="finance-scenario-card" data-fin-scenario="adverse" onclick="setFinanceLabScenario(\'adverse\')"><div class="finance-scenario-name">Scenariu advers</div><div class="finance-scenario-copy">Crește costul finanțării, housing-ul slăbește și canalele de contagiune se activează.</div></div><div class="finance-scenario-card" data-fin-scenario="crisis" onclick="setFinanceLabScenario(\'crisis\')"><div class="finance-scenario-name">Scenariu de criză</div><div class="finance-scenario-copy">Buffer-ele se consumă rapid, LCR-ul cade și credit gap-ul intră în zonă critică.</div></div></div><div class="finance-stability-grid finance-stability-grid--stacked"><div class="finance-control-panel finance-control-panel--horizontal"><div class="finance-panel-title">Parametri macro de stres</div><div class="finance-control-grid finance-control-grid--4">' + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + financeSlider('refinancingGap', 'Refinancing gap', finance.refinancingGap, 10, 80, 1) + '</div><div class="finance-story" id="finStoryStress"></div></div><div class="finance-stability-stack"><div class="finance-dual-grid"><div class="finance-report-card finance-report-card--wide"><div class="finance-panel-title">Transmisia șocului sistemic</div><div class="finance-chart" id="finStressChart"></div><div class="finance-chart-caption">Prima ruptură poate apărea în capital, lichiditate, credit gap sau rețeaua de interdependențe.</div><div class="finance-stat-strip" id="finStressStrip"></div></div><div class="finance-report-card finance-report-card--wide"><div class="finance-panel-title">Politici macroprudențiale și buffer-e</div><div class="finance-chart" id="finPolicyChart"></div><div class="finance-chart-caption">Panoul comprimă într-o singură vedere relația dintre risc și instrumente: CCyB, SyRB, O-SII și MREL.</div><div class="finance-policy-strip" id="finStabilityStrip"></div></div></div></div></div></section>';
+    html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 4</div><div class="finance-zone-title">Contagiune, distribuția pierderilor și vulnerabilități structurale</div><div class="finance-zone-copy">Ultimul bloc arată cum se conectează segmentele sistemului financiar și cât de groasă devine coada pierderilor atunci când crește interconectarea.</div></div></div><div class="finance-stability-grid finance-stability-grid--stacked"><div class="finance-control-panel finance-control-panel--horizontal"><div class="finance-panel-title">Canale structurale de vulnerabilitate</div><div class="finance-control-grid finance-control-grid--4">' + financeSlider('policyRate', 'Dobânda de politică monetară', finance.policyRate, 1, 12, 0.1) + financeSlider('inflation', 'Inflație', finance.inflation, 1, 15, 0.1) + financeSlider('leverage', 'Leverage sistemic', finance.leverage, 1, 10, 0.1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + '</div><div class="finance-story" id="finStoryStability"></div></div><div class="finance-stability-stack"><div class="finance-dual-grid"><div class="finance-report-card finance-report-card--wide"><div class="finance-panel-title">Distribuția pierderilor sistemice</div><div class="finance-chart" id="finDistributionChart"></div><div class="finance-chart-caption">Curba se deplasează și se îngroașă pe măsură ce contagiunea, concentrarea și volatilitatea se suprapun.</div><div class="finance-stat-strip" id="finDistributionStrip"></div></div><div class="finance-report-card finance-report-card--wide"><div class="finance-panel-title">Hartă a vulnerabilităților sistemice</div><div class="finance-chart" id="finStabilityChart"></div><div class="finance-chart-caption">Radarul îți arată dacă fragilitatea vine mai ales din capital, lichiditate, ciclul creditului, housing sau rețea.</div></div></div><div class="finance-report-card finance-report-card--wide"><div class="finance-panel-title">Interdependențele segmentelor sistemului financiar</div><div class="finance-chart" id="finNetworkChart"></div><div class="finance-network-note">Dimensiunea nodurilor arată importanța segmentului, iar grosimea legăturilor arată unde poate circula șocul: bănci, IFN, fonduri, asigurări și canalul suveran.</div></div></div></div></section>';
     html += '</div></div>';
     el.innerHTML = html;
     updateFinanceLabUI();
