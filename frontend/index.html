@@ -8092,10 +8092,14 @@ function financeDistributionSvg(metrics) {
   var axisColor = isStability ? 'rgba(81,97,117,0.42)' : 'rgba(255,255,255,0.14)';
   var gridColor = isStability ? 'rgba(81,97,117,0.16)' : 'rgba(255,255,255,0.08)';
   var labelColor = isStability ? 'rgba(81,97,117,0.82)' : 'rgba(255,255,255,0.55)';
-  var minX = isStability ? 0 : -40;
-  var maxX = isStability ? 30 : 40;
   var center = isStability ? metrics.tailLossMedian : metrics.finance.expectedReturn;
   var spread = isStability ? Math.max(metrics.tailLossSpread, 0.0001) : Math.max(metrics.finance.volatility, 0.0001);
+  var minX = isStability
+    ? Math.max(0, Math.floor((center - spread * 2.5) / 5) * 5)
+    : -40;
+  var maxX = isStability
+    ? Math.max(30, Math.ceil((center + spread * 2.8) / 5) * 5)
+    : 40;
   var points = [];
   var maxDensity = 0;
   for (var i = 0; i <= 48; i++) {
@@ -8132,10 +8136,10 @@ function financeDistributionSvg(metrics) {
   }
   svg += '<path d="' + area + '" fill="url(#finAreaB)"/>';
   svg += '<path d="' + line + '" fill="none" stroke="#8ab8d8" stroke-width="' + (isStability ? '4' : '3') + '" stroke-linecap="round" stroke-linejoin="round"/>';
-  markers.forEach(function(marker) {
+  markers.forEach(function(marker, idx) {
     var mx = x(marker.value).toFixed(2);
     svg += '<line x1="' + mx + '" y1="' + padT + '" x2="' + mx + '" y2="' + (padT + plotH) + '" stroke="' + marker.color + '" stroke-width="2" stroke-dasharray="5 6"/>';
-    svg += '<text x="' + mx + '" y="' + (padT + 14) + '" text-anchor="middle" fill="' + marker.color + '" font-size="11" font-weight="700">' + marker.label + '</text>';
+    svg += '<text x="' + mx + '" y="' + (padT + 14 + idx * 2) + '" text-anchor="middle" fill="' + marker.color + '" font-size="11" font-weight="700">' + marker.label + '</text>';
   });
   svg += '<text x="' + padL + '" y="' + (height - 10) + '" fill="' + labelColor + '" font-size="11">' + financePct(minX, 0) + '</text>';
   if (zeroX !== null) {
@@ -8168,9 +8172,9 @@ function financeStressSvg(metrics) {
     svg += '<rect x="' + pad + '" y="34" width="' + (width - pad * 2) + '" height="52" rx="18" fill="rgba(94,166,140,0.08)"/>';
     svg += '<rect x="' + pad + '" y="86" width="' + (width - pad * 2) + '" height="54" rx="18" fill="rgba(233,187,116,0.10)"/>';
     svg += '<rect x="' + pad + '" y="140" width="' + (width - pad * 2) + '" height="58" rx="18" fill="rgba(224,141,134,0.10)"/>';
-    svg += '<text x="' + (width - pad) + '" y="52" text-anchor="end" fill="rgba(94,166,140,0.72)" font-size="11" font-weight="700">Zonă confortabilă</text>';
-    svg += '<text x="' + (width - pad) + '" y="108" text-anchor="end" fill="rgba(196,140,71,0.76)" font-size="11" font-weight="700">Presiune moderată</text>';
-    svg += '<text x="' + (width - pad) + '" y="164" text-anchor="end" fill="rgba(200,75,90,0.78)" font-size="11" font-weight="700">Zonă critică</text>';
+    svg += '<text x="' + (pad + 8) + '" y="52" text-anchor="start" fill="rgba(94,166,140,0.78)" font-size="11" font-weight="700">Zonă confortabilă</text>';
+    svg += '<text x="' + (pad + 8) + '" y="108" text-anchor="start" fill="rgba(196,140,71,0.80)" font-size="11" font-weight="700">Presiune moderată</text>';
+    svg += '<text x="' + (pad + 8) + '" y="164" text-anchor="start" fill="rgba(200,75,90,0.82)" font-size="11" font-weight="700">Zonă critică</text>';
   }
   svg += '<line x1="' + pad + '" y1="' + baseY + '" x2="' + (width - pad) + '" y2="' + baseY + '" stroke="' + axisColor + '" stroke-width="1"/>';
   items.forEach(function(item, idx) {
@@ -8287,6 +8291,9 @@ function financePolicySvg(metrics) {
   svg += '<rect x="' + padL + '" y="34" width="' + (width - padL - padR) + '" height="34" rx="16" fill="rgba(94,166,140,0.08)"/>';
   svg += '<rect x="' + padL + '" y="68" width="' + (width - padL - padR) + '" height="58" rx="16" fill="rgba(233,187,116,0.09)"/>';
   svg += '<rect x="' + padL + '" y="126" width="' + (width - padL - padR) + '" height="70" rx="16" fill="rgba(224,141,134,0.10)"/>';
+  svg += '<text x="' + (padL + 8) + '" y="56" text-anchor="start" fill="rgba(94,166,140,0.76)" font-size="11" font-weight="700">Buffere confortabile</text>';
+  svg += '<text x="' + (padL + 8) + '" y="98" text-anchor="start" fill="rgba(196,140,71,0.78)" font-size="11" font-weight="700">Calibrare atentă</text>';
+  svg += '<text x="' + (padL + 8) + '" y="154" text-anchor="start" fill="rgba(200,75,90,0.80)" font-size="11" font-weight="700">Intervenție necesară</text>';
   for (var g = 0; g <= 4; g++) {
     var gy = padT + ((height - padT - padB) / 4) * g;
     svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (width - padR) + '" y2="' + gy + '" stroke="rgba(86,102,122,0.16)" stroke-width="1"/>';
