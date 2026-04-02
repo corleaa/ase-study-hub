@@ -6263,6 +6263,46 @@ details[open] .detail-chevron {
   line-height: 1.5;
 }
 
+.finance-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.finance-mode-tab {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s, border-color 0.18s, background 0.18s, color 0.18s;
+}
+
+.finance-mode-tab:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-border);
+  color: var(--text-primary);
+}
+
+.finance-mode-tab.active {
+  background: var(--accent-muted);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.finance-live-bump {
+  animation: financeRefresh 0.34s ease;
+}
+
+@keyframes financeRefresh {
+  0% { transform: translateY(6px); opacity: 0.55; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
 .soft-badge {
   display: inline-flex;
   padding: 6px 10px;
@@ -7581,6 +7621,7 @@ function renderDailyGoals() {
 function getFinanceLabState() {
   if (!window.__studyHubFinanceLab) {
     window.__studyHubFinanceLab = {
+      mode: 'investments',
       initialInvestment: 300000,
       annualCashflow: 85000,
       discountRate: 9,
@@ -7601,6 +7642,92 @@ function getFinanceLabState() {
     };
   }
   return window.__studyHubFinanceLab;
+}
+
+function getFinanceLabModeConfig(mode) {
+  var configs = {
+    investments: {
+      title: 'Investments',
+      hero: 'Studio interactiv pentru investiții, risc și stabilitate',
+      copy: 'Construiești scenarii de investiții, vezi cash flow-urile actualizate, distribuțiile de randament și presiunea din stres într-un singur workspace.',
+      zone1: 'Time Value & Valuation',
+      zone1Copy: 'Pleci de la investiția inițială, vezi fluxurile pe ani și observi cum rata de actualizare comprimă valoarea prezentă.',
+      zone2: 'Risk & Distributions',
+      zone2Copy: 'Vezi distribuția rezultatelor, nu doar valoarea medie. Când volatilitatea crește, riscul se mută spre extreme.',
+      zone3: 'Stress Testing',
+      zone3Copy: 'Transformi un scenariu abstract într-o poveste concretă: cost mai mare al finanțării, portofoliu mai slab și presiune pe capital.',
+      zone4: 'Market & Stability',
+      zone4Copy: 'Legi dobânzile, inflația, leverage-ul și volatilitatea de stabilitatea generală.'
+    },
+    modeling: {
+      title: 'Modeling',
+      hero: 'Workspace pentru modelare financiară și sensitivity analysis',
+      copy: 'Lucrezi pe ipoteze, vezi efectul lor în timp real și poți folosi aceeași logică pentru forecast, valuation și scenarii de bază/adverse.',
+      zone1: 'Forecast & Valuation',
+      zone1Copy: 'Testezi ipoteze de creștere, discount și orizont ca într-un model financiar dinamic.',
+      zone2: 'Parameter Sensitivity',
+      zone2Copy: 'Înțelegi ce variabile mută cel mai mult rezultatul final și cum se lărgește banda de incertitudine.',
+      zone3: 'Model Stress',
+      zone3Copy: 'Aplici șocuri pe capital, lichiditate și refinanțare pentru a vedea ce rupe modelul primul.',
+      zone4: 'System Balance',
+      zone4Copy: 'Vezi dacă setul de ipoteze rămâne coerent într-un mediu financiar tensionat.'
+    },
+    analysis: {
+      title: 'Analysis',
+      hero: 'Analiză financiară vizuală cu scenarii și distribuții',
+      copy: 'Compari randamente, downside, presiune pe bilanț și stabilitate fără să sari între foi și formule ascunse.',
+      zone1: 'Cash Flow Analysis',
+      zone1Copy: 'Observi cum decizia de investiție se schimbă în funcție de discounting și profilul fluxurilor.',
+      zone2: 'Return Profile',
+      zone2Copy: 'Curba îți arată imediat dacă profilul de risc-randament devine prea agresiv.',
+      zone3: 'Balance Sheet Pressure',
+      zone3Copy: 'Testezi rezistența bilanțului când cresc pierderile, costul finanțării și nevoia de refinanțare.',
+      zone4: 'Market Conditions',
+      zone4Copy: 'Corelezi condițiile de piață cu stabilitatea structurală a instituției sau portofoliului.'
+    },
+    macroprudential: {
+      title: 'Macroprudential',
+      hero: 'Stabilitate macroprudențială și reziliență sistemică',
+      copy: 'Focusul trece de la proiect individual la sănătatea sistemului: capital, lichiditate, leverage, contagie și absorbția șocurilor.',
+      zone1: 'Capital & Buffers',
+      zone1Copy: 'Vezi cum buffer-ele absorb șocurile și cât de repede se erodează când condițiile se înrăutățesc.',
+      zone2: 'System Risk Distribution',
+      zone2Copy: 'Distribuția arată cum se mută masa probabilității când crește riscul sistemic.',
+      zone3: 'Macro Stress',
+      zone3Copy: 'Alegi scenarii de bază, adverse și de criză pentru a evalua reziliența macroprudențială.',
+      zone4: 'System Stability Map',
+      zone4Copy: 'Radarul sintetizează sănătatea sistemului pe capital, lichiditate, risc de piață și presiune pe îndatorare.'
+    },
+    monetary: {
+      title: 'Monetary Policy',
+      hero: 'Politici monetare, transmisie și stabilitate financiară',
+      copy: 'Vezi cum se propagă dobânzile, inflația și volatilitatea prin bilanțuri, randamente și presiunea de refinanțare.',
+      zone1: 'Discounting Under Policy Shift',
+      zone1Copy: 'Ratele de politică monetară modifică direct discounting-ul și valoarea prezentă a fluxurilor viitoare.',
+      zone2: 'Yield Distribution',
+      zone2Copy: 'Distribuția randamentelor se mută odată cu regimul de dobânzi și volatilități mai ridicate.',
+      zone3: 'Transmission Stress',
+      zone3Copy: 'Testezi cum intră șocul monetar în capital, lichiditate și profitabilitate.',
+      zone4: 'Policy Stability Map',
+      zone4Copy: 'Observi relația dintre rata de politică monetară, inflație, leverage și stabilitate.'
+    }
+  };
+  return configs[mode] || configs.investments;
+}
+
+function setFinanceLabMode(mode) {
+  var finance = getFinanceLabState();
+  finance.mode = mode;
+  var presets = {
+    investments: { discountRate: 9, growthRate: 4, expectedReturn: 11, volatility: 18, leverage: 4.2, policyRate: 6.5, inflation: 5.1, marketVol: 24 },
+    modeling: { discountRate: 8, growthRate: 3, expectedReturn: 9, volatility: 14, leverage: 3.8, policyRate: 5.5, inflation: 4.2, marketVol: 18 },
+    analysis: { discountRate: 10, growthRate: 2, expectedReturn: 7, volatility: 22, leverage: 4.8, policyRate: 6.8, inflation: 5.9, marketVol: 28 },
+    macroprudential: { discountRate: 11, growthRate: 1, expectedReturn: 5, volatility: 26, leverage: 6.2, capitalBuffer: 13, liquidityBuffer: 108, policyRate: 7.2, inflation: 6.4, marketVol: 31, refinancingGap: 44 },
+    monetary: { discountRate: 12, growthRate: 1.5, expectedReturn: 6, volatility: 24, leverage: 4.6, policyRate: 8.5, inflation: 7.1, marketVol: 29, refinancingGap: 38 }
+  };
+  Object.assign(finance, presets[mode] || presets.investments);
+  var page = document.getElementById('pageContent');
+  if (state.tab === 'finance' && page) renderFinanceLab(page);
 }
 
 function financeMoney(n) {
@@ -7823,6 +7950,13 @@ function scheduleFinanceLabUpdate() {
   });
 }
 
+function financePulse(el) {
+  if (!el) return;
+  el.classList.remove('finance-live-bump');
+  void el.offsetWidth;
+  el.classList.add('finance-live-bump');
+}
+
 function setFinanceLabValue(field, value) {
   getFinanceLabState()[field] = parseFloat(value);
   scheduleFinanceLabUpdate();
@@ -7848,7 +7982,7 @@ function updateFinanceLabUI() {
     ['finKpiStability', Math.round(metrics.stabilityScore) + '/100', metrics.stabilityScore > 65 ? 'var(--green)' : metrics.stabilityScore > 45 ? 'var(--amber)' : 'var(--red)']
   ].forEach(function(item) {
     var el = document.getElementById(item[0]);
-    if (el) { el.textContent = item[1]; el.style.color = item[2]; }
+    if (el) { el.textContent = item[1]; el.style.color = item[2]; financePulse(el); }
   });
   var valuationStory = document.getElementById('finStoryValuation');
   if (valuationStory) valuationStory.innerHTML = 'Exemplu real: tratează acest bloc ca pe evaluarea unui proiect de investiții sau a unei linii noi de business. În configurația actuală, VPN-ul este <strong style="color:' + (metrics.npv >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + financeMoney(metrics.npv) + '</strong>, iar payback-ul aproximativ este <strong>' + metrics.payback.toLocaleString('ro-RO', { maximumFractionDigits: 1 }) + ' ani</strong>.';
@@ -7866,12 +8000,12 @@ function updateFinanceLabUI() {
   };
   Object.keys(strips).forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.innerHTML = strips[id];
+    if (el) { el.innerHTML = strips[id]; financePulse(el); }
   });
-  var chartA = document.getElementById('finValuationChart'); if (chartA) chartA.innerHTML = financeLineChartSvg(metrics);
-  var chartB = document.getElementById('finDistributionChart'); if (chartB) chartB.innerHTML = financeDistributionSvg(metrics);
-  var chartC = document.getElementById('finStressChart'); if (chartC) chartC.innerHTML = financeStressSvg(metrics);
-  var chartD = document.getElementById('finStabilityChart'); if (chartD) chartD.innerHTML = financeStabilitySvg(metrics);
+  var chartA = document.getElementById('finValuationChart'); if (chartA) { chartA.innerHTML = financeLineChartSvg(metrics); financePulse(chartA); }
+  var chartB = document.getElementById('finDistributionChart'); if (chartB) { chartB.innerHTML = financeDistributionSvg(metrics); financePulse(chartB); }
+  var chartC = document.getElementById('finStressChart'); if (chartC) { chartC.innerHTML = financeStressSvg(metrics); financePulse(chartC); }
+  var chartD = document.getElementById('finStabilityChart'); if (chartD) { chartD.innerHTML = financeStabilitySvg(metrics); financePulse(chartD); }
   document.querySelectorAll('.finance-scenario-card').forEach(function(card) {
     card.classList.toggle('active', card.getAttribute('data-fin-scenario') === finance.scenario);
   });
@@ -7879,13 +8013,21 @@ function updateFinanceLabUI() {
 
 function renderFinanceLab(el) {
   var finance = getFinanceLabState();
+  var mode = finance.mode || 'investments';
+  var cfg = getFinanceLabModeConfig(mode);
   var html = '<div class="anim"><div class="finance-lab-shell">';
-  html += '<div class="dash-hero-v13" style="margin-bottom:0;"><div class="dash-hero-v13-content"><div class="dash-hero-v13-tag">' + icon('chart','xs') + ' Finance Lab</div><h1 style="font-size:1.65rem;">Studio interactiv pentru formule, risc și stabilitate</h1><p class="dash-hero-v13-sub">Nu doar calculezi. Vezi cum se construiesc valorile, cum se propagă șocurile și cum se schimbă distribuțiile când miști variabilele critice.</p></div></div>';
+  html += '<div class="dash-hero-v13" style="margin-bottom:0;"><div class="dash-hero-v13-content"><div class="dash-hero-v13-tag">' + icon('chart','xs') + ' Finance Lab · ' + cfg.title + '</div><h1 style="font-size:1.65rem;">' + cfg.hero + '</h1><p class="dash-hero-v13-sub">' + cfg.copy + '</p><div class="finance-mode-tabs">'
+    + '<button class="finance-mode-tab ' + (mode === 'investments' ? 'active' : '') + '" onclick="setFinanceLabMode(\'investments\')">Investiții</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'modeling' ? 'active' : '') + '" onclick="setFinanceLabMode(\'modeling\')">Modelare</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'analysis' ? 'active' : '') + '" onclick="setFinanceLabMode(\'analysis\')">Analiză</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'macroprudential' ? 'active' : '') + '" onclick="setFinanceLabMode(\'macroprudential\')">Macroprudențial</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'monetary' ? 'active' : '') + '" onclick="setFinanceLabMode(\'monetary\')">Politici Monetare</button>'
+    + '</div></div></div>';
   html += '<div class="finance-overview"><div class="finance-kpi"><div class="finance-kpi-label">VPN curent</div><div class="finance-kpi-value" id="finKpiNpv"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Probabilitate pierdere</div><div class="finance-kpi-value" id="finKpiLoss"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Capital sub stres</div><div class="finance-kpi-value" id="finKpiCapital"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Scor stabilitate</div><div class="finance-kpi-value" id="finKpiStability"></div></div></div>';
-  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 1</div><div class="finance-zone-title">Time Value & Valuation</div><div class="finance-zone-copy">Pleci de la investiția inițială, vezi fluxurile pe ani și observi cum rata de actualizare comprimă valoarea prezentă. Ideea este să înțelegi întâi mecanica, apoi formula.</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">Controlează ipotezele</div>' + financeSlider('initialInvestment', 'Investiție inițială', finance.initialInvestment, 50000, 1000000, 10000) + financeSlider('annualCashflow', 'Cash flow anual', finance.annualCashflow, 10000, 250000, 5000) + financeSlider('discountRate', 'Rata de actualizare', finance.discountRate, 1, 20, 0.5) + financeSlider('years', 'Orizont (ani)', finance.years, 2, 10, 1) + financeSlider('growthRate', 'Creștere cash flow', finance.growthRate, -5, 15, 0.5) + '<div class="finance-story" id="finStoryValuation"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">Curba fluxurilor nominale vs. actualizate</div><div class="finance-chart" id="finValuationChart"></div><div class="finance-chart-legend"><span><i style="background:#73c9a6"></i>Cash flow nominal</span><span><i style="background:#f29b6d"></i>Cash flow actualizat</span></div><div class="finance-chart-caption">Graficul arată cum scade valoarea cash flow-ului pe măsură ce îl aduci în prezent prin rata de actualizare.</div><div class="finance-stat-strip" id="finValuationStrip"></div></div></div></section>';
-  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 2</div><div class="finance-zone-title">Risk & Distributions</div><div class="finance-zone-copy">Aici vezi distribuția rezultatelor, nu doar valoarea medie. Când volatilitatea crește, masa de probabilitate se mută spre extreme și crește riscul de pierdere chiar dacă media rămâne bună.</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">Reglează profilul de risc</div>' + financeSlider('expectedReturn', 'Randament așteptat', finance.expectedReturn, -5, 25, 0.5) + financeSlider('volatility', 'Volatilitate', finance.volatility, 5, 45, 0.5) + financeSlider('exposure', 'Expunere economică', finance.exposure, 10, 200, 5) + '<div class="finance-story" id="finStoryDistribution"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">Distribuția randamentelor</div><div class="finance-chart" id="finDistributionChart"></div><div class="finance-chart-caption">Curba îți arată distribuția probabilă a rezultatelor, cu markeri pentru percentilele cheie.</div><div class="finance-stat-strip" id="finDistributionStrip"></div></div></div></section>';
-  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 3</div><div class="finance-zone-title">Stress Testing</div><div class="finance-zone-copy">Aici transformi un scenariu abstract într-o poveste concretă: finanțarea se scumpește, volatilitatea urcă, iar calitatea portofoliului se deteriorează. Vezi ce metrică cedează prima.</div></div></div><div class="finance-scenario-row"><div class="finance-scenario-card active" data-fin-scenario="base" onclick="setFinanceLabScenario(\'base\')"><div class="finance-scenario-name">Scenariu de bază</div><div class="finance-scenario-copy">Șocuri mici, piață ordonată, refinanțare normală.</div></div><div class="finance-scenario-card" data-fin-scenario="adverse" onclick="setFinanceLabScenario(\'adverse\')"><div class="finance-scenario-name">Scenariu advers</div><div class="finance-scenario-copy">Costul finanțării crește, lichiditatea se strânge, default-urile urcă.</div></div><div class="finance-scenario-card" data-fin-scenario="crisis" onclick="setFinanceLabScenario(\'crisis\')"><div class="finance-scenario-name">Scenariu de criză</div><div class="finance-scenario-copy">Volatilitate mare, pierderi accelerate și presiune pe capital.</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">Parametri bilanț și șoc</div>' + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + financeSlider('refinancingGap', 'Refinancing gap', finance.refinancingGap, 10, 80, 1) + '<div class="finance-story" id="finStoryStress"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">Impactul scenariului ales</div><div class="finance-chart" id="finStressChart"></div><div class="finance-chart-caption">Barele compară zonele cele mai sensibile din bilanț după șocul selectat.</div><div class="finance-stat-strip" id="finStressStrip"></div></div></div></section>';
-  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 4</div><div class="finance-zone-title">Market & Stability</div><div class="finance-zone-copy">Ultima zonă leagă dobânzile, inflația, leverage-ul și volatilitatea de stabilitatea generală. Ideea nu este să memorezi indicatorii, ci să vezi ce combinații împing sistemul într-o zonă fragilă.</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">Motoarele stabilității</div>' + financeSlider('policyRate', 'Dobânda de politică monetară', finance.policyRate, 1, 12, 0.1) + financeSlider('inflation', 'Inflație', finance.inflation, 1, 15, 0.1) + financeSlider('leverage', 'Leverage', finance.leverage, 1, 10, 0.1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + '<div class="finance-story" id="finStoryStability"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">Hartă de stabilitate</div><div class="finance-chart" id="finStabilityChart"></div><div class="finance-chart-caption">Radarul sintetizează starea sistemului pe 5 dimensiuni și arată rapid unde apare fragilitatea.</div><div class="finance-stat-strip" id="finStabilityStrip"></div></div></div></section>';
+  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 1</div><div class="finance-zone-title">' + cfg.zone1 + '</div><div class="finance-zone-copy">' + cfg.zone1Copy + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">Controlează ipotezele</div>' + financeSlider('initialInvestment', 'Investiție inițială', finance.initialInvestment, 50000, 1000000, 10000) + financeSlider('annualCashflow', 'Cash flow anual', finance.annualCashflow, 10000, 250000, 5000) + financeSlider('discountRate', 'Rata de actualizare', finance.discountRate, 1, 20, 0.5) + financeSlider('years', 'Orizont (ani)', finance.years, 2, 10, 1) + financeSlider('growthRate', 'Creștere cash flow', finance.growthRate, -5, 15, 0.5) + '<div class="finance-story" id="finStoryValuation"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">Curba fluxurilor nominale vs. actualizate</div><div class="finance-chart" id="finValuationChart"></div><div class="finance-chart-legend"><span><i style="background:#73c9a6"></i>Cash flow nominal</span><span><i style="background:#f29b6d"></i>Cash flow actualizat</span></div><div class="finance-chart-caption">Graficul arată cum scade valoarea cash flow-ului pe măsură ce îl aduci în prezent prin rata de actualizare.</div><div class="finance-stat-strip" id="finValuationStrip"></div></div></div></section>';
+  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 2</div><div class="finance-zone-title">' + cfg.zone2 + '</div><div class="finance-zone-copy">' + cfg.zone2Copy + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">Reglează profilul de risc</div>' + financeSlider('expectedReturn', 'Randament așteptat', finance.expectedReturn, -5, 25, 0.5) + financeSlider('volatility', 'Volatilitate', finance.volatility, 5, 45, 0.5) + financeSlider('exposure', 'Expunere economică', finance.exposure, 10, 200, 5) + '<div class="finance-story" id="finStoryDistribution"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">Distribuția randamentelor</div><div class="finance-chart" id="finDistributionChart"></div><div class="finance-chart-caption">Curba îți arată distribuția probabilă a rezultatelor, cu markeri pentru percentilele cheie.</div><div class="finance-stat-strip" id="finDistributionStrip"></div></div></div></section>';
+  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 3</div><div class="finance-zone-title">' + cfg.zone3 + '</div><div class="finance-zone-copy">' + cfg.zone3Copy + '</div></div></div><div class="finance-scenario-row"><div class="finance-scenario-card active" data-fin-scenario="base" onclick="setFinanceLabScenario(\'base\')"><div class="finance-scenario-name">Scenariu de bază</div><div class="finance-scenario-copy">Șocuri mici, piață ordonată, refinanțare normală.</div></div><div class="finance-scenario-card" data-fin-scenario="adverse" onclick="setFinanceLabScenario(\'adverse\')"><div class="finance-scenario-name">Scenariu advers</div><div class="finance-scenario-copy">Costul finanțării crește, lichiditatea se strânge, default-urile urcă.</div></div><div class="finance-scenario-card" data-fin-scenario="crisis" onclick="setFinanceLabScenario(\'crisis\')"><div class="finance-scenario-name">Scenariu de criză</div><div class="finance-scenario-copy">Volatilitate mare, pierderi accelerate și presiune pe capital.</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">Parametri bilanț și șoc</div>' + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + financeSlider('refinancingGap', 'Refinancing gap', finance.refinancingGap, 10, 80, 1) + '<div class="finance-story" id="finStoryStress"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">Impactul scenariului ales</div><div class="finance-chart" id="finStressChart"></div><div class="finance-chart-caption">Barele compară zonele cele mai sensibile din bilanț după șocul selectat.</div><div class="finance-stat-strip" id="finStressStrip"></div></div></div></section>';
+  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 4</div><div class="finance-zone-title">' + cfg.zone4 + '</div><div class="finance-zone-copy">' + cfg.zone4Copy + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">Motoarele stabilității</div>' + financeSlider('policyRate', 'Dobânda de politică monetară', finance.policyRate, 1, 12, 0.1) + financeSlider('inflation', 'Inflație', finance.inflation, 1, 15, 0.1) + financeSlider('leverage', 'Leverage', finance.leverage, 1, 10, 0.1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + '<div class="finance-story" id="finStoryStability"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">Hartă de stabilitate</div><div class="finance-chart" id="finStabilityChart"></div><div class="finance-chart-caption">Radarul sintetizează starea sistemului pe 5 dimensiuni și arată rapid unde apare fragilitatea.</div><div class="finance-stat-strip" id="finStabilityStrip"></div></div></div></section>';
   html += '</div></div>';
   el.innerHTML = html;
   updateFinanceLabUI();
