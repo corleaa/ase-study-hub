@@ -8311,6 +8311,100 @@ function financePolicySvg(metrics) {
   return svg + '</svg>';
 }
 
+function financeRiskLevelMeta(score) {
+  if (score >= 75) return { label: 'Foarte ridicat', color: '#c84b5a' };
+  if (score >= 55) return { label: 'Ridicat', color: '#de8b3d' };
+  if (score >= 30) return { label: 'Moderat', color: '#6f9fc9' };
+  return { label: 'Redus', color: '#5ea68c' };
+}
+
+function financeNetworkInfoPayload(key, metrics) {
+  var map = {
+    credit_boom: {
+      title: 'Credit boom',
+      score: Math.round(metrics.creditHeat),
+      what: 'Arată cât de mult ritmul creditării depășește o dinamică sustenabilă și începe să împingă sistemul într-o fază prociclică.',
+      high: 'La scor mare, creditarea accelerează mai repede decât fundamentele, iar riscul este acumularea de vulnerabilități care ies la suprafață după o corecție.',
+      low: 'La scor mic, ciclul creditului este mai temperat și presiunea sistemică venită din expansiunea bilanțurilor rămâne controlabilă.',
+      example: 'Exemplu: creditele ipotecare și de consum cresc rapid, prețurile activelor urcă, iar băncile relaxează standardele de creditare.'
+    },
+    market_vol: {
+      title: 'Volatilitate piață',
+      score: Math.round(metrics.finance.marketVol),
+      what: 'Măsoară cât de instabil devine mediul de piață pentru prețuri, finanțare și reevaluarea activelor.',
+      high: 'La scor mare, reevaluările sunt bruște, costul finanțării urcă și pierderile mark-to-market se pot transmite în bilanțuri.',
+      low: 'La scor mic, piețele rămân ordonate și mișcările de preț nu forțează ajustări rapide în sistem.',
+      example: 'Exemplu: randamentele obligațiunilor cresc repede, piețele de acțiuni corectează, iar costul de hedging și finanțare se scumpește.'
+    },
+    refinancing: {
+      title: 'Refinanțare',
+      score: Math.round(metrics.finance.refinancingGap),
+      what: 'Arată presiunea de rulare a pasivelor și cât de dependent este sistemul de accesul continuu la finanțare.',
+      high: 'La scor mare, nevoia de refinanțare devine un punct de fragilitate: dacă piețele se închid, stresul se mută rapid spre lichiditate.',
+      low: 'La scor mic, maturitățile și profilele de finanțare sunt mai bine distribuite și șocul de rulare este mai ușor de absorbit.',
+      example: 'Exemplu: o bancă sau un grup de instituții trebuie să rostogolească volume mari de datorie într-o perioadă cu spread-uri crescute.'
+    },
+    capital_liquidity: {
+      title: 'Capital & lichiditate',
+      score: Math.round(Math.max(0, 100 - metrics.stabilityScore)),
+      what: 'Acest canal arată cât de mult se transformă șocurile în presiune directă asupra amortizoarelor de capital și lichiditate.',
+      high: 'La scor mare, sistemul începe să consume buffer-ele și apare riscul ca șocul să nu mai fie absorbit, ci transmis mai departe.',
+      low: 'La scor mic, amortizoarele rămân funcționale și pot absorbi șocul fără să forțeze reacții defensive puternice.',
+      example: 'Exemplu: creșterea pierderilor și a haircuts-urilor reduce CET1 și LCR simultan, ceea ce restrânge capacitatea de creditare.'
+    },
+    contagion_channel: {
+      title: 'Canal de contagiune',
+      score: Math.round(metrics.contagionPressure),
+      what: 'Arată viteza cu care un șoc local poate fi transmis între segmente prin expuneri comune, finanțare, sentiment și reevaluări.',
+      high: 'La scor mare, un șoc într-un segment poate fi amplificat în restul sistemului, inclusiv prin efecte indirecte.',
+      low: 'La scor mic, legăturile există, dar propagarea rămâne limitată și mai lentă.',
+      example: 'Exemplu: pierderile dintr-o zonă de piață duc la retrageri din fonduri, costuri mai mari pentru bănci și presiune pe activele suverane.'
+    },
+    banks_ifn: {
+      title: 'Bănci & IFN',
+      score: Math.round(metrics.systemicRiskScore),
+      what: 'Indică presiunea relativă cu care șocul ajunge în nucleul intermedierii financiare.',
+      high: 'La scor mare, creditarea, calitatea activelor și costul de finanțare se pot deteriora simultan în intermedierea bancară și nebancară.',
+      low: 'La scor mic, segmentul rămâne mai rezilient și are spațiu să absoarbă șocul fără efecte sistemice puternice.',
+      example: 'Exemplu: băncile reduc oferta de credit, IFN-urile văd costuri mai mari, iar standardele de creditare se înăspresc.'
+    },
+    funds_insurance: {
+      title: 'Fonduri & asigurări',
+      score: Math.round(metrics.tailLossTail * 3),
+      what: 'Arată cât de mult se transferă șocul spre investitori instituționali și portofolii sensibile la reevaluare.',
+      high: 'La scor mare, cresc răscumpărările, pierderile de portofoliu și nevoia de ajustare a pozițiilor.',
+      low: 'La scor mic, acest segment rămâne mai stabil și nu devine amplificator major al șocului.',
+      example: 'Exemplu: ieșiri din fonduri și pierderi pe obligațiuni sau acțiuni creează presiune suplimentară pe piețe și lichiditate.'
+    },
+    sovereign: {
+      title: 'Canal suveran',
+      score: Math.round(metrics.housingFragility),
+      what: 'Reflectă legătura dintre stresul financiar, costul finanțării publice și efectele indirecte prin active suverane.',
+      high: 'La scor mare, spread-urile suverane, costul datoriei și expunerile sistemului la active publice devin un canal clar de transmitere.',
+      low: 'La scor mic, relația cu segmentul suveran rămâne stabilă și nu agravează propagarea șocului.',
+      example: 'Exemplu: randamentele titlurilor de stat cresc, portofoliile se reevaluează, iar costul de finanțare urcă pentru întregul sistem.'
+    }
+  };
+  return map[key];
+}
+
+function openFinanceNetworkInfo(key) {
+  var metrics = getFinanceLabMetrics();
+  var info = financeNetworkInfoPayload(key, metrics);
+  if (!info) return;
+  var level = financeRiskLevelMeta(info.score);
+  var body = '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">';
+  body += '<div class="modal-box" style="max-width:620px;">';
+  body += '<div class="modal-header"><div class="modal-title">' + escapeHtml(info.title) + '</div><button class="modal-close" onclick="closeModal()">✕</button></div>';
+  body += '<div style="display:grid;gap:16px;">';
+  body += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><span style="display:inline-flex;padding:7px 12px;border-radius:999px;background:' + level.color + '18;color:' + level.color + ';border:1px solid ' + level.color + '55;font-size:.76rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">' + level.label + '</span><span style="font-family:var(--font-mono);font-size:1rem;font-weight:800;color:var(--text-primary);">' + info.score + '/100</span></div>';
+  body += '<div style="color:var(--text-secondary);font-size:.92rem;line-height:1.7;">' + escapeHtml(info.what) + '</div>';
+  body += '<div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:18px;padding:14px 16px;color:var(--text-secondary);line-height:1.65;font-size:.88rem;"><strong style="display:block;color:var(--text-primary);margin-bottom:6px;">Interpretare la scorul actual</strong>' + escapeHtml(info.score >= 50 ? info.high : info.low) + '</div>';
+  body += '<div style="background:var(--accent-muted);border:1px solid var(--accent-border);border-radius:18px;padding:14px 16px;color:var(--text-secondary);line-height:1.65;font-size:.88rem;"><strong style="display:block;color:var(--text-primary);margin-bottom:6px;">Exemplu concret</strong>' + escapeHtml(info.example) + '</div>';
+  body += '</div></div></div>';
+  document.getElementById('modalContainer').innerHTML = body;
+}
+
 function financeNetworkSvg(metrics) {
   var width = 620, height = 280;
   var left = [
@@ -8327,36 +8421,47 @@ function financeNetworkSvg(metrics) {
     { title: 'Fonduri & asigurări', value: Math.round(metrics.tailLossTail * 3), color: '#5fb49c' },
     { title: 'Canal suveran', value: Math.round(metrics.housingFragility), color: '#6e7d91' }
   ];
-  function box(x, y, w, h, item) {
-    return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="18" fill="' + item.color + '" fill-opacity="0.14" stroke="' + item.color + '" stroke-opacity="0.5" stroke-width="2"/>'
+  function box(x, y, w, h, item, key) {
+    return '<g onclick="openFinanceNetworkInfo(\'' + key + '\')" style="cursor:pointer">'
+      + '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="18" fill="' + item.color + '" fill-opacity="0.14" stroke="' + item.color + '" stroke-opacity="0.5" stroke-width="2"/>'
       + '<text x="' + (x + 14) + '" y="' + (y + 22) + '" fill="#243348" font-size="12" font-weight="800">' + item.title + '</text>'
-      + '<text x="' + (x + 14) + '" y="' + (y + 44) + '" fill="' + item.color + '" font-size="18" font-weight="800">' + item.value + '/100</text>';
+      + '<text x="' + (x + 14) + '" y="' + (y + 44) + '" fill="' + item.color + '" font-size="18" font-weight="800">' + item.value + '/100</text>'
+      + '</g>';
   }
-  function arrow(x1, y1, x2, y2, color, label) {
-    var mx = (x1 + x2) / 2;
-    var my = (y1 + y2) / 2;
+  function arrow(x1, y1, x2, y2, color) {
     return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-opacity="0.72" stroke-width="4" marker-end="url(#finArrow)"/>'
-      + '<text x="' + mx + '" y="' + (my - 8) + '" text-anchor="middle" fill="' + color + '" font-size="11" font-weight="700">' + label + '</text>';
+  }
+  function badge(x, y, color, label) {
+    var width = Math.max(52, 10 + label.length * 7);
+    return '<g>'
+      + '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="24" rx="12" fill="#ffffff" fill-opacity="0.94" stroke="' + color + '" stroke-opacity="0.38"/>'
+      + '<text x="' + (x + width / 2) + '" y="' + (y + 16) + '" text-anchor="middle" fill="' + color + '" font-size="11" font-weight="700">' + label + '</text>'
+      + '</g>';
   }
   var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '"><defs><marker id="finArrow" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#7b8ba0"/></marker></defs>';
   svg += '<text x="38" y="28" fill="rgba(81,97,117,0.72)" font-size="11" font-weight="700">1. Surse de șoc</text>';
   svg += '<text x="262" y="28" fill="rgba(81,97,117,0.72)" font-size="11" font-weight="700">2. Canale de transmitere</text>';
   svg += '<text x="454" y="28" fill="rgba(81,97,117,0.72)" font-size="11" font-weight="700">3. Zone afectate</text>';
-  left.forEach(function(item, idx) {
-    svg += box(24, 48 + idx * 66, 150, 52, item);
-  });
-  middle.forEach(function(item, idx) {
-    svg += box(234, 76 + idx * 84, 152, 56, item);
-  });
-  right.forEach(function(item, idx) {
-    svg += box(446, 48 + idx * 66, 150, 52, item);
-  });
-  svg += arrow(174, 74, 234, 104, '#d79c63', Math.round(metrics.creditGapStress) + ' gap');
-  svg += arrow(174, 140, 234, 104, '#8b78cf', Math.round(metrics.finance.refinancingGap) + ' funding');
-  svg += arrow(174, 206, 234, 160, '#e08d86', Math.round(metrics.contagionPressure) + ' contagion');
-  svg += arrow(386, 104, 446, 74, '#4b83d1', Math.round(metrics.systemicRiskScore) + ' risc');
-  svg += arrow(386, 104, 446, 140, '#5fb49c', Math.round(metrics.tailLossTail * 3) + ' spillover');
-  svg += arrow(386, 160, 446, 206, '#6e7d91', Math.round(metrics.housingFragility) + ' sovereign');
+  svg += box(24, 48, 150, 52, left[0], 'credit_boom');
+  svg += box(24, 114, 150, 52, left[1], 'market_vol');
+  svg += box(24, 180, 150, 52, left[2], 'refinancing');
+  svg += box(234, 76, 152, 56, middle[0], 'capital_liquidity');
+  svg += box(234, 160, 152, 56, middle[1], 'contagion_channel');
+  svg += box(446, 48, 150, 52, right[0], 'banks_ifn');
+  svg += box(446, 114, 150, 52, right[1], 'funds_insurance');
+  svg += box(446, 180, 150, 52, right[2], 'sovereign');
+  svg += arrow(174, 74, 234, 104, '#d79c63');
+  svg += arrow(174, 140, 234, 104, '#8b78cf');
+  svg += arrow(174, 206, 234, 188, '#e08d86');
+  svg += arrow(386, 104, 446, 74, '#4b83d1');
+  svg += arrow(386, 104, 446, 140, '#5fb49c');
+  svg += arrow(386, 188, 446, 206, '#6e7d91');
+  svg += badge(180, 54, '#d79c63', Math.round(metrics.creditGapStress) + ' gap');
+  svg += badge(180, 122, '#8b78cf', Math.round(metrics.finance.refinancingGap) + ' funding');
+  svg += badge(178, 196, '#e08d86', Math.round(metrics.contagionPressure) + ' contagion');
+  svg += badge(392, 48, '#4b83d1', Math.round(metrics.systemicRiskScore) + ' risc');
+  svg += badge(392, 120, '#5fb49c', Math.round(metrics.tailLossTail * 3) + ' spillover');
+  svg += badge(392, 196, '#6e7d91', Math.round(metrics.housingFragility) + ' sovereign');
   return svg + '</svg>';
 }
 
