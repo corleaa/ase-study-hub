@@ -1042,6 +1042,7 @@ input, textarea, select { font-family: inherit; }
   flex: 1;
   padding: 10px 8px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* nav-section and nav-item moved to V1.3 section */
@@ -1659,6 +1660,7 @@ input, textarea, select { font-family: inherit; }
 .chat-messages {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -1970,6 +1972,7 @@ input, textarea, select { font-family: inherit; }
   transition: all 0.5s var(--ease);
   pointer-events: none;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .slide.active {
@@ -2357,6 +2360,7 @@ input, textarea, select { font-family: inherit; }
   transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
   pointer-events: none;
   overflow-y: auto;
+  overscroll-behavior: contain;
   color: #eceef5;
 }
 
@@ -3789,6 +3793,7 @@ input, textarea, select { font-family: inherit; }
   gap: 12px;
   position: relative;
   overflow: hidden;
+  min-height: 120px;
 }
 .home-tool-card::after {
   content: '';
@@ -3818,6 +3823,25 @@ input, textarea, select { font-family: inherit; }
   transition: transform 0.2s;
 }
 .home-tool-card:hover .home-tool-icon { transform: scale(1.08); }
+
+.home-tool-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.home-tool-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.home-tool-desc {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
 
 /* =============================================
    V1.3 — SIDEBAR IMPROVEMENTS
@@ -4702,6 +4726,7 @@ input, textarea, select { font-family: inherit; }
 .mentor-messages {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
@@ -4995,6 +5020,7 @@ input, textarea, select { font-family: inherit; }
 #cmdResults {
   max-height: 360px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px 0;
 }
 .cmd-section-label {
@@ -5078,7 +5104,7 @@ input, textarea, select { font-family: inherit; }
   transition: color 0.15s;
 }
 .notif-clear-btn:hover { color: var(--accent); }
-.notif-list { max-height: 380px; overflow-y: auto; }
+.notif-list { max-height: 380px; overflow-y: auto; overscroll-behavior: contain; }
 .notif-item {
   display: flex;
   align-items: flex-start;
@@ -5863,6 +5889,56 @@ details[open] .detail-chevron {
   border-radius: 22px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.next-step-card .summary-gen-btn {
+  width: 100%;
+  min-height: 46px;
+  justify-content: center;
+  margin-top: auto !important;
+}
+
+.home-tools-shell {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.home-tools-group {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.home-tools-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.home-tools-head strong {
+  display: block;
+  font-size: 0.98rem;
+  margin-bottom: 4px;
+}
+
+.home-tools-head span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.home-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .soft-badge {
@@ -5886,7 +5962,9 @@ details[open] .detail-chevron {
   .purpose-grid,
   .summary-deck-grid,
   .interactive-blocks,
-  .playground-bars {
+  .playground-bars,
+  .home-tools-shell,
+  .home-tools-grid {
     grid-template-columns: 1fr;
   }
 
@@ -7271,6 +7349,28 @@ function finResult(id, text) {
   if (el) el.textContent = text;
 }
 
+// Prevent nested scroll areas from pushing scroll into the main page on Safari/trackpads.
+document.addEventListener('wheel', function(e) {
+  if (e.ctrlKey) return;
+  if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+
+  var scrollParent = e.target.closest('.sidebar-nav, .chat-messages, .mentor-messages, .slide.active, .pres-viewer-slide.active, #cmdResults, .notif-list');
+  if (!scrollParent) return;
+
+  var canScroll = scrollParent.scrollHeight > scrollParent.clientHeight + 1;
+  if (!canScroll) {
+    e.preventDefault();
+    return;
+  }
+
+  var atTop = scrollParent.scrollTop <= 0;
+  var atBottom = scrollParent.scrollTop + scrollParent.clientHeight >= scrollParent.scrollHeight - 1;
+
+  if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 function renderDashboard(element) {
   const subjects = getSubjects();
   const hasSubjects = Object.keys(subjects).length > 0;
@@ -7462,24 +7562,42 @@ function renderDashboard(element) {
   html += '<div class="home-section-header">';
   html += '<div class="home-section-title">' + icon('cpu','sm') + ' Tool-uri AI</div>';
   html += '</div>';
-  html += '<div class="home-tools-grid">';
 
-  const tools = [
-    { tab:'quiz',        iconN:'brain',      color:'var(--accent)',  muted:'var(--accent-muted)',  border:'var(--accent-border)',  name:'Quiz Mode',        desc:'Grile generate din cursul tău' },
-    { tab:'flashcards',  iconN:'cards',      color:'var(--blue)',    muted:'var(--blue-muted)',    border:'rgba(56,189,248,.22)',   name:'Flashcards',       desc:'Spaced repetition · ' + (dueFC?'<span style="color:var(--amber);font-weight:700">'+dueFC+' scadente</span>':'0 scadente') },
-    { tab:'mindmap',     iconN:'map',        color:'var(--green)',   muted:'var(--green-muted)',   border:'rgba(16,217,160,.22)',   name:'Mind Map AI',      desc:'Hărți conceptuale vizuale' },
-    { tab:'examsim',     iconN:'graduation', color:'var(--purple)',  muted:'var(--purple-muted)',  border:'rgba(167,139,250,.22)',  name:'Exam Simulator',   desc:'Sesiune cronometrată cu feedback' },
-    { tab:'mentor',      iconN:'robot',      color:'var(--accent)',  muted:'var(--accent-muted)',  border:'var(--accent-border)',  name:'AI Mentor',        desc:generateAutoInsightShort() },
-    { tab:'calendar',    iconN:'calendar',   color:'var(--red)',     muted:'var(--red-muted)',     border:'rgba(239,69,101,.22)',   name:'Calendar Sesiune', desc:nextExam ? Math.round((new Date(nextExam.date)-new Date())/86400000)+'z · '+escapeHtml(nextExam.name) : 'Programează examene' },
-    { tab:'stats',       iconN:'chart',      color:'var(--blue)',    muted:'var(--blue-muted)',    border:'rgba(56,189,248,.22)',   name:'Statistici',       desc:'Progres detaliat & grafice' },
-    { tab:'achievements',iconN:'trophy',     color:'var(--amber)',   muted:'var(--amber-muted)',   border:'rgba(245,166,35,.22)',   name:'Realizări & XP',   desc:'Nivel '+(state.level||1)+' · '+(state.xp||0)+' XP total' },
+  const toolGroups = [
+    {
+      title: 'Învățare activă',
+      copy: 'Treci din înțelegere în practică și feedback, fără să sari între ecrane fără context.',
+      tools: [
+        { tab:'quiz',        iconN:'brain',      color:'var(--accent)',  muted:'var(--accent-muted)',  border:'var(--accent-border)',  name:'Quiz Mode',      desc:'Grile generate din cursul tău' },
+        { tab:'flashcards',  iconN:'cards',      color:'var(--blue)',    muted:'var(--blue-muted)',    border:'rgba(56,189,248,.22)', name:'Flashcards',     desc:'Spaced repetition · ' + (dueFC?'<span style="color:var(--amber);font-weight:700">'+dueFC+' scadente</span>':'0 scadente') },
+        { tab:'mentor',      iconN:'robot',      color:'var(--accent)',  muted:'var(--accent-muted)',  border:'var(--accent-border)',  name:'AI Mentor',      desc:generateAutoInsightShort() },
+        { tab:'examsim',     iconN:'graduation', color:'var(--purple)',  muted:'var(--purple-muted)',  border:'rgba(167,139,250,.22)',name:'Exam Simulator', desc:'Sesiune cronometrată cu feedback' }
+      ]
+    },
+    {
+      title: 'Planificare și insight',
+      copy: 'Vezi imaginea de ansamblu, organizează sesiunea și urmărește progresul fără ecrane aglomerate.',
+      tools: [
+        { tab:'mindmap',      iconN:'map',      color:'var(--green)',  muted:'var(--green-muted)',   border:'rgba(16,217,160,.22)', name:'Mind Map AI',      desc:'Hărți conceptuale vizuale' },
+        { tab:'calendar',     iconN:'calendar', color:'var(--red)',    muted:'var(--red-muted)',     border:'rgba(239,69,101,.22)', name:'Calendar Sesiune', desc:nextExam ? Math.round((new Date(nextExam.date)-new Date())/86400000)+'z · '+escapeHtml(nextExam.name) : 'Programează examene' },
+        { tab:'stats',        iconN:'chart',    color:'var(--blue)',   muted:'var(--blue-muted)',    border:'rgba(56,189,248,.22)', name:'Statistici',       desc:'Progres detaliat & grafice' },
+        { tab:'achievements', iconN:'trophy',   color:'var(--amber)',  muted:'var(--amber-muted)',   border:'rgba(245,166,35,.22)', name:'Realizări & XP',   desc:'Nivel '+(state.level||1)+' · '+(state.xp||0)+' XP total' }
+      ]
+    }
   ];
 
-  tools.forEach(t => {
-    html += '<div class="home-tool-card" onclick="navigateTo(\'' + t.tab + '\')" style="--tool-border:' + t.border + ';--tool-muted:' + t.muted + '">';
-    html += '<div class="home-tool-icon" style="background:' + t.muted + ';color:' + t.color + '">' + icon(t.iconN,'sm') + '</div>';
-    html += '<div><div class="home-tool-name">' + t.name + '</div><div class="home-tool-desc">' + t.desc + '</div></div>';
-    html += '</div>';
+  html += '<div class="home-tools-shell">';
+  toolGroups.forEach(function(group) {
+    html += '<section class="home-tools-group">';
+    html += '<div class="home-tools-head"><div><strong>' + group.title + '</strong><span>' + group.copy + '</span></div></div>';
+    html += '<div class="home-tools-grid">';
+    group.tools.forEach(function(t) {
+      html += '<div class="home-tool-card" onclick="navigateTo(\'' + t.tab + '\')" style="--tool-border:' + t.border + ';--tool-muted:' + t.muted + '">';
+      html += '<div class="home-tool-icon" style="background:' + t.muted + ';color:' + t.color + '">' + icon(t.iconN,'sm') + '</div>';
+      html += '<div class="home-tool-copy"><div class="home-tool-name">' + t.name + '</div><div class="home-tool-desc">' + t.desc + '</div></div>';
+      html += '</div>';
+    });
+    html += '</div></section>';
   });
   html += '</div>';
 
