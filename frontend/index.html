@@ -6228,7 +6228,7 @@ details[open] .detail-chevron {
 
 .finance-chart svg {
   width: 100%;
-  height: auto;
+  height: 220px;
   display: block;
 }
 
@@ -6360,6 +6360,19 @@ details[open] .detail-chevron {
   background: #eef3f9;
   border-color: #d5deea;
   color: #43546b;
+}
+
+.finance-report-card .finance-stat-chip {
+  background: #ffffff;
+  border-color: #d5deea;
+}
+
+.finance-report-card .finance-stat-chip strong {
+  color: #506077;
+}
+
+.finance-report-card .finance-stat-chip span {
+  color: #243348;
 }
 
 .finance-risk-board {
@@ -8040,6 +8053,9 @@ function financeDistributionSvg(metrics) {
   var plotW = width - padL - padR;
   var plotH = height - padT - padB;
   var isStability = metrics.finance.mode === 'stability';
+  var axisColor = isStability ? 'rgba(81,97,117,0.42)' : 'rgba(255,255,255,0.14)';
+  var gridColor = isStability ? 'rgba(81,97,117,0.16)' : 'rgba(255,255,255,0.08)';
+  var labelColor = isStability ? 'rgba(81,97,117,0.82)' : 'rgba(255,255,255,0.55)';
   var minX = isStability ? 0 : -40;
   var maxX = isStability ? 30 : 40;
   var center = isStability ? metrics.tailLossMedian : metrics.finance.expectedReturn;
@@ -8072,11 +8088,11 @@ function financeDistributionSvg(metrics) {
   }
   for (var g = 0; g <= 4; g++) {
     var gy = padT + (plotH / 4) * g;
-    svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (padL + plotW) + '" y2="' + gy + '" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>';
+    svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (padL + plotW) + '" y2="' + gy + '" stroke="' + gridColor + '" stroke-width="1"/>';
   }
-  svg += '<line x1="' + padL + '" y1="' + (padT + plotH) + '" x2="' + (padL + plotW) + '" y2="' + (padT + plotH) + '" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>';
+  svg += '<line x1="' + padL + '" y1="' + (padT + plotH) + '" x2="' + (padL + plotW) + '" y2="' + (padT + plotH) + '" stroke="' + axisColor + '" stroke-width="1"/>';
   if (zeroX !== null) {
-    svg += '<line x1="' + zeroX + '" y1="' + padT + '" x2="' + zeroX + '" y2="' + (padT + plotH) + '" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>';
+    svg += '<line x1="' + zeroX + '" y1="' + padT + '" x2="' + zeroX + '" y2="' + (padT + plotH) + '" stroke="' + axisColor + '" stroke-width="1.5"/>';
   }
   svg += '<path d="' + area + '" fill="url(#finAreaB)"/>';
   svg += '<path d="' + line + '" fill="none" stroke="#8ab8d8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
@@ -8085,16 +8101,19 @@ function financeDistributionSvg(metrics) {
     svg += '<line x1="' + mx + '" y1="' + padT + '" x2="' + mx + '" y2="' + (padT + plotH) + '" stroke="' + marker.color + '" stroke-width="2" stroke-dasharray="5 6"/>';
     svg += '<text x="' + mx + '" y="' + (padT + 14) + '" text-anchor="middle" fill="' + marker.color + '" font-size="11" font-weight="700">' + marker.label + '</text>';
   });
-  svg += '<text x="' + padL + '" y="' + (height - 10) + '" fill="rgba(255,255,255,0.55)" font-size="11">' + financePct(minX, 0) + '</text>';
+  svg += '<text x="' + padL + '" y="' + (height - 10) + '" fill="' + labelColor + '" font-size="11">' + financePct(minX, 0) + '</text>';
   if (zeroX !== null) {
-    svg += '<text x="' + zeroX + '" y="' + (height - 10) + '" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="11" font-weight="700">0%</text>';
+    svg += '<text x="' + zeroX + '" y="' + (height - 10) + '" text-anchor="middle" fill="' + (isStability ? '#243348' : 'rgba(255,255,255,0.85)') + '" font-size="11" font-weight="700">0%</text>';
   }
-  svg += '<text x="' + (width - padR) + '" y="' + (height - 10) + '" text-anchor="end" fill="rgba(255,255,255,0.55)" font-size="11">' + financePct(maxX, 0) + '</text>';
+  svg += '<text x="' + (width - padR) + '" y="' + (height - 10) + '" text-anchor="end" fill="' + labelColor + '" font-size="11">' + financePct(maxX, 0) + '</text>';
   return svg + '</svg>';
 }
 
 function financeStressSvg(metrics) {
   var width = 620, height = 250, pad = 24, baseY = 212, barW = 84;
+  var isStability = metrics.finance.mode === 'stability';
+  var axisColor = isStability ? 'rgba(81,97,117,0.24)' : 'rgba(255,255,255,0.16)';
+  var labelColor = isStability ? 'rgba(81,97,117,0.82)' : 'rgba(255,255,255,0.62)';
   var items = metrics.finance.mode === 'stability'
     ? [
       { label: 'CET1', value: Math.max(0, metrics.capitalRatio), color: metrics.capitalRatio > 10 ? '#73c9a6' : metrics.capitalRatio > 8 ? '#e9bb74' : '#e08d86', max: 18 },
@@ -8109,25 +8128,29 @@ function financeStressSvg(metrics) {
       { label: 'Drag', value: Math.max(0, metrics.earningsDrag), color: metrics.earningsDrag < 10 ? '#73c9a6' : metrics.earningsDrag < 18 ? '#e9bb74' : '#e08d86', max: 28 }
     ];
   var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '">';
-  svg += '<line x1="' + pad + '" y1="' + baseY + '" x2="' + (width - pad) + '" y2="' + baseY + '" stroke="rgba(255,255,255,0.16)" stroke-width="1"/>';
+  svg += '<line x1="' + pad + '" y1="' + baseY + '" x2="' + (width - pad) + '" y2="' + baseY + '" stroke="' + axisColor + '" stroke-width="1"/>';
   items.forEach(function(item, idx) {
     var x = 52 + idx * 138;
     var h = Math.max(16, (item.value / item.max) * 150);
     svg += '<rect x="' + x + '" y="' + (baseY - h) + '" width="' + barW + '" height="' + h + '" rx="18" fill="' + item.color + '" fill-opacity="0.84"/>';
     svg += '<text x="' + (x + barW / 2) + '" y="' + (baseY - h - 8) + '" text-anchor="middle" fill="' + item.color + '" font-size="12" font-weight="700">' + ((item.label === 'Drag' || item.label === 'Contagion') ? Math.round(item.value) + (item.label === 'Drag' ? 'bps' : '/100') : financePct(item.value, 1)) + '</text>';
-    svg += '<text x="' + (x + barW / 2) + '" y="' + (baseY + 20) + '" text-anchor="middle" fill="rgba(255,255,255,0.62)" font-size="11">' + item.label + '</text>';
+    svg += '<text x="' + (x + barW / 2) + '" y="' + (baseY + 20) + '" text-anchor="middle" fill="' + labelColor + '" font-size="11">' + item.label + '</text>';
   });
   return svg + '</svg>';
 }
 
 function financeStabilitySvg(metrics) {
   var width = 620, height = 260, cx = 310, cy = 132, radius = 90;
+  var isStability = metrics.finance.mode === 'stability';
+  var ringColor = isStability ? 'rgba(81,97,117,0.14)' : 'rgba(255,255,255,0.08)';
+  var axisColor = isStability ? 'rgba(81,97,117,0.22)' : 'rgba(255,255,255,0.12)';
+  var labelColor = isStability ? 'rgba(81,97,117,0.84)' : 'rgba(255,255,255,0.6)';
   var axes = [
-    { label: metrics.finance.mode === 'stability' ? 'Capital' : 'Stability', value: metrics.finance.mode === 'stability' ? Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) : metrics.stabilityScore },
+    { label: isStability ? 'Capital' : 'Stability', value: isStability ? Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) : metrics.stabilityScore },
     { label: 'Liquidity', value: Math.max(0, Math.min(100, metrics.finance.liquidityBuffer - 60)) },
-    { label: metrics.finance.mode === 'stability' ? 'Credit Cycle' : 'Capital', value: metrics.finance.mode === 'stability' ? Math.max(0, Math.min(100, 100 - metrics.creditHeat)) : Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) },
-    { label: metrics.finance.mode === 'stability' ? 'Housing' : 'Market Risk', value: metrics.finance.mode === 'stability' ? Math.max(0, Math.min(100, 100 - metrics.housingFragility)) : Math.max(0, Math.min(100, 100 - metrics.finance.marketVol * 1.7)) },
-    { label: metrics.finance.mode === 'stability' ? 'Network' : 'Debt Load', value: metrics.finance.mode === 'stability' ? Math.max(0, Math.min(100, 100 - metrics.contagionPressure)) : Math.max(0, Math.min(100, 100 - metrics.debtStress)) }
+    { label: isStability ? 'Credit Cycle' : 'Capital', value: isStability ? Math.max(0, Math.min(100, 100 - metrics.creditHeat)) : Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) },
+    { label: isStability ? 'Housing' : 'Market Risk', value: isStability ? Math.max(0, Math.min(100, 100 - metrics.housingFragility)) : Math.max(0, Math.min(100, 100 - metrics.finance.marketVol * 1.7)) },
+    { label: isStability ? 'Network' : 'Debt Load', value: isStability ? Math.max(0, Math.min(100, 100 - metrics.contagionPressure)) : Math.max(0, Math.min(100, 100 - metrics.debtStress)) }
   ];
   var polygon = '';
   var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '">';
@@ -8139,7 +8162,7 @@ function financeStabilitySvg(metrics) {
       var py = cy + Math.sin(angle) * radius * (ring / 4);
       ringPath += (idx ? ' L ' : 'M ') + px.toFixed(2) + ' ' + py.toFixed(2);
     });
-    svg += '<path d="' + ringPath + ' Z" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>';
+    svg += '<path d="' + ringPath + ' Z" fill="none" stroke="' + ringColor + '" stroke-width="1"/>';
   }
   axes.forEach(function(axis, idx) {
     var angle = -Math.PI / 2 + idx * (Math.PI * 2 / axes.length);
@@ -8148,8 +8171,8 @@ function financeStabilitySvg(metrics) {
     var px = cx + Math.cos(angle) * radius * (axis.value / 100);
     var py = cy + Math.sin(angle) * radius * (axis.value / 100);
     polygon += (idx ? ' L ' : 'M ') + px.toFixed(2) + ' ' + py.toFixed(2);
-    svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ex.toFixed(2) + '" y2="' + ey.toFixed(2) + '" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>';
-    svg += '<text x="' + (cx + Math.cos(angle) * (radius + 26)).toFixed(2) + '" y="' + (cy + Math.sin(angle) * (radius + 26)).toFixed(2) + '" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="11">' + axis.label + '</text>';
+    svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ex.toFixed(2) + '" y2="' + ey.toFixed(2) + '" stroke="' + axisColor + '" stroke-width="1"/>';
+    svg += '<text x="' + (cx + Math.cos(angle) * (radius + 26)).toFixed(2) + '" y="' + (cy + Math.sin(angle) * (radius + 26)).toFixed(2) + '" text-anchor="middle" fill="' + labelColor + '" font-size="11">' + axis.label + '</text>';
   });
   svg += '<path d="' + polygon + ' Z" fill="rgba(242,155,109,0.18)" stroke="#f29b6d" stroke-width="3"/>';
   return svg + '</svg>';
@@ -8291,7 +8314,7 @@ function getFinanceLabMetrics() {
     adverse: { title: 'Scenariu advers', copy: 'Costul finanțării crește, lichiditatea se strânge, default-urile urcă.' },
     crisis:  { title: 'Scenariu de criză', copy: 'Volatilitate mare, pierderi accelerate și presiune pe capital.' }
   };
-  var scenarioShock = finance.scenario === 'base' ? 0.45 : finance.scenario === 'adverse' ? 1 : 1.55;
+  var scenarioShock = finance.scenario === 'base' ? (isStability ? 0.15 : 0.45) : finance.scenario === 'adverse' ? (isStability ? 1.25 : 1) : (isStability ? 2.45 : 1.55);
   var capitalRatio = finance.capitalBuffer - finance.leverage * 0.72 - scenarioShock * (finance.stressShock / 14) - (isStability ? finance.concentrationRisk / 45 : 0);
   var liquidityCoverage = finance.liquidityBuffer - scenarioShock * (finance.refinancingGap / 2.6) + (finance.policyRate < 5 ? 4 : -2) - (isStability ? finance.contagionRisk / 5.5 : 0);
   var nplRate = 2.4 + scenarioShock * (finance.stressShock / 7.5) + finance.marketVol / 24;
@@ -8418,7 +8441,11 @@ function updateFinanceLabUI() {
     : 'Cu setările actuale, probabilitatea de pierdere este <strong style="color:' + (metrics.lossProbability < 35 ? 'var(--green)' : metrics.lossProbability < 55 ? 'var(--amber)' : 'var(--red)') + ';">' + financePct(metrics.lossProbability, 1) + '</strong>. Dacă vrei să înțelegi riscul vizual, urmărește cum se lățește curba când crești volatilitatea.';
   var stressStory = document.getElementById('finStoryStress');
   if (stressStory) stressStory.innerHTML = isStability
-    ? metrics.scenarioMeta[finance.scenario].title + ': ' + (metrics.capitalRatio <= 8 ? 'buffer-ul de capital intră sub zonă confortabilă și un CCyB mai mare sau restricții pe credit devin justificate.' : metrics.liquidityCoverage <= 100 ? 'prima ruptură apare în lichiditate și refinanțare; asta indică risc macroprudențial de propagare rapidă.' : 'sistemul rezistă scenariului, dar credit gap-ul și contagiunea rămân ridicate.')
+    ? (finance.scenario === 'base'
+      ? 'Scenariu de bază: buffer-ele rămân funcționale, iar presiunea sistemică este încă absorbabilă. Monitorizarea trebuie să rămână pe ciclul creditului și pe housing, nu pe măsuri restrictive imediate.'
+      : finance.scenario === 'adverse'
+        ? 'Scenariu advers: presiunea trece în zona de capital și lichiditate, iar calibrarea mai fermă a CCyB/SyRB devine justificată pentru a limita acumularea riscului sistemic.'
+        : 'Scenariu de criză: contagiunea și refinanțarea domină tabloul. Sistemul cere răspuns macroprudențial defensiv, cu conservarea buffer-elor și reducerea canalelor de propagare.')
     : metrics.scenarioMeta[finance.scenario].title + ': ' + (metrics.capitalRatio <= 8 ? 'presiunea pe capital devine critică și probabil ai nevoie de măsuri defensive.' : metrics.liquidityCoverage <= 100 ? 'lichiditatea devine primul punct fragil și trebuie redus refinancing gap-ul.' : 'instituția rezistă, dar costul de risc și profitabilitatea rămân sub presiune.');
   var stabilityStory = document.getElementById('finStoryStability');
   if (stabilityStory) stabilityStory.innerHTML = isStability
