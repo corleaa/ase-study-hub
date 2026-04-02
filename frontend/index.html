@@ -5941,6 +5941,259 @@ details[open] .detail-chevron {
   gap: 12px;
 }
 
+.finance-lab-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.finance-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.finance-kpi {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+}
+
+.finance-kpi-label {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.finance-kpi-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.finance-zone {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  padding: 22px;
+}
+
+.finance-zone-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.finance-zone-kicker {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.finance-zone-title {
+  font-size: 1.18rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.finance-zone-copy {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  max-width: 68ch;
+}
+
+.finance-zone-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+}
+
+.finance-control-panel,
+.finance-visual-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.finance-panel-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.finance-control {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.finance-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.finance-control label {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.finance-control strong {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
+.finance-control input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.finance-mini-note {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.finance-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.finance-bar-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 74px;
+  gap: 10px;
+  align-items: center;
+}
+
+.finance-bar-label,
+.finance-bar-value {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.finance-bar-track {
+  height: 10px;
+  background: var(--bg-overlay);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.finance-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 65%, white));
+}
+
+.finance-distribution {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 180px;
+  padding-top: 10px;
+}
+
+.finance-dist-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.finance-dist-bar {
+  width: 100%;
+  border-radius: 14px 14px 8px 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white), color-mix(in srgb, var(--accent) 68%, transparent));
+  border: 1px solid var(--accent-border);
+}
+
+.finance-dist-label {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.finance-scenario-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.finance-scenario-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s, transform 0.18s;
+}
+
+.finance-scenario-card.active {
+  border-color: var(--accent-border);
+  background: var(--accent-muted);
+  transform: translateY(-1px);
+}
+
+.finance-scenario-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.finance-scenario-copy {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.finance-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.finance-metric-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.finance-metric-card strong {
+  display: block;
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+}
+
+.finance-metric-card span {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.finance-story {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
 .soft-badge {
   display: inline-flex;
   padding: 6px 10px;
@@ -5964,7 +6217,11 @@ details[open] .detail-chevron {
   .interactive-blocks,
   .playground-bars,
   .home-tools-shell,
-  .home-tools-grid {
+  .home-tools-grid,
+  .finance-overview,
+  .finance-zone-grid,
+  .finance-scenario-row,
+  .finance-metric-grid {
     grid-template-columns: 1fr;
   }
 
@@ -7250,83 +7507,241 @@ function renderDailyGoals() {
   return '';
 }
 
-// ── Finance Lab inline (înlocuiește dependința de finance.js extern) ──
+// ── Finance Lab interactive studio ──
+function getFinanceLabState() {
+  if (!window.__studyHubFinanceLab) {
+    window.__studyHubFinanceLab = {
+      initialInvestment: 300000,
+      annualCashflow: 85000,
+      discountRate: 9,
+      years: 5,
+      growthRate: 4,
+      expectedReturn: 11,
+      volatility: 18,
+      exposure: 60,
+      scenario: 'adverse',
+      leverage: 4.2,
+      liquidityBuffer: 122,
+      capitalBuffer: 14.5,
+      stressShock: 38,
+      policyRate: 6.5,
+      inflation: 5.1,
+      marketVol: 24,
+      refinancingGap: 36
+    };
+  }
+  return window.__studyHubFinanceLab;
+}
+
+function rerenderFinanceLabIfVisible() {
+  if (state.tab !== 'finance') return;
+  var page = document.getElementById('pageContent');
+  if (page) renderFinanceLab(page);
+}
+
+function setFinanceLabValue(field, value) {
+  var finance = getFinanceLabState();
+  finance[field] = parseFloat(value);
+  rerenderFinanceLabIfVisible();
+}
+
+function setFinanceLabScenario(name) {
+  getFinanceLabState().scenario = name;
+  rerenderFinanceLabIfVisible();
+}
+
+function financeMoney(n) {
+  return n.toLocaleString('ro-RO', { maximumFractionDigits: 0 }) + ' RON';
+}
+
+function financePct(n, digits) {
+  var precision = digits == null ? 1 : digits;
+  return n.toLocaleString('ro-RO', { minimumFractionDigits: precision, maximumFractionDigits: precision }) + '%';
+}
+
+function financeSlider(field, label, value, min, max, step, suffix) {
+  return '<div class="finance-control">'
+    + '<div class="finance-control-row"><label>' + label + '</label><strong>' + value + (suffix || '') + '</strong></div>'
+    + '<input type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '" oninput="setFinanceLabValue(\'' + field + '\', this.value)">'
+    + '</div>';
+}
+
+function normalCdfApprox(z) {
+  var t = 1 / (1 + 0.2316419 * Math.abs(z));
+  var d = 0.3989423 * Math.exp(-z * z / 2);
+  var prob = 1 - d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z >= 0 ? prob : 1 - prob;
+}
+
 function renderFinanceLab(el) {
-  el.innerHTML = '<div class="anim">' +
-    '<div class="dash-hero-v13" style="margin-bottom:20px;">' +
-      '<div class="dash-hero-v13-content">' +
-        '<div class="dash-hero-v13-tag">' + icon('chart','xs') + ' Finance Lab</div>' +
-        '<h1 style="font-size:1.5rem;">Calculatoare Financiare</h1>' +
-        '<p class="dash-hero-v13-sub">Unelte rapide pentru calcule financiare uzuale la ASE</p>' +
-      '</div>' +
-    '</div>' +
-    // Cards grid
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">' +
+  var finance = getFinanceLabState();
+  var rate = finance.discountRate / 100;
+  var pvFlows = [];
+  var totalPV = 0;
+  var totalNominal = 0;
+  for (var year = 1; year <= finance.years; year++) {
+    var nominal = finance.annualCashflow * Math.pow(1 + finance.growthRate / 100, year - 1);
+    var discounted = nominal / Math.pow(1 + rate, year);
+    pvFlows.push({ year: year, nominal: nominal, discounted: discounted });
+    totalPV += discounted;
+    totalNominal += nominal;
+  }
+  var npv = totalPV - finance.initialInvestment;
+  var futureValue = finance.initialInvestment * Math.pow(1 + rate, finance.years);
+  var payback = finance.initialInvestment / Math.max(finance.annualCashflow, 1);
+  var roi = ((totalNominal - finance.initialInvestment) / Math.max(finance.initialInvestment, 1)) * 100;
 
-      // VPV / NPV
-      finCard('Valoare Prezentă Netă (VPN)', [
-        { id:'fl_cf',   label:'Cash flow anual (RON)',     placeholder:'10000' },
-        { id:'fl_r',    label:'Rata de actualizare (%)',   placeholder:'8' },
-        { id:'fl_n',    label:'Număr de ani',              placeholder:'5' },
-        { id:'fl_inv',  label:'Investiție inițială (RON)', placeholder:'30000' },
-      ], 'calcVPN', 'fl_vpn_result') +
+  var spread = Math.max(0.9, finance.volatility / 11);
+  var distWeights = [-3, -2, -1, 0, 1, 2, 3].map(function(bucket) {
+    return Math.exp(-Math.pow(bucket / spread, 2) / 2);
+  });
+  var maxWeight = Math.max.apply(null, distWeights);
+  var lossProbability = normalCdfApprox((0 - finance.expectedReturn) / Math.max(finance.volatility, 0.0001)) * 100;
+  var p10 = finance.expectedReturn - 1.28 * finance.volatility;
+  var p50 = finance.expectedReturn;
+  var p90 = finance.expectedReturn + 1.28 * finance.volatility;
+  var expectedPnl = finance.exposure * finance.expectedReturn / 100;
 
-      // Valoare viitoare
-      finCard('Valoare Viitoare (FV)', [
-        { id:'fv_pv',  label:'Valoare prezentă (RON)',    placeholder:'10000' },
-        { id:'fv_r',   label:'Rata dobânzii (%/an)',      placeholder:'6' },
-        { id:'fv_n',   label:'Număr de ani',              placeholder:'10' },
-      ], 'calcFV', 'fv_result') +
-
-      // Rată lunară credit
-      finCard('Rată Lunară Credit (PMT)', [
-        { id:'pmt_p',  label:'Principal (RON)',           placeholder:'100000' },
-        { id:'pmt_r',  label:'Dobândă anuală (%)',        placeholder:'7' },
-        { id:'pmt_n',  label:'Durata (luni)',             placeholder:'120' },
-      ], 'calcPMT', 'pmt_result') +
-
-      // ROI
-      finCard('Return on Investment (ROI)', [
-        { id:'roi_gain', label:'Câștig net (RON)',        placeholder:'15000' },
-        { id:'roi_cost', label:'Cost investiție (RON)',   placeholder:'50000' },
-      ], 'calcROI', 'roi_result') +
-
-    '</div></div>';
-
-  // Attach calculator logic after render
-  window.calcVPN = function() {
-    var cf  = parseFloat(document.getElementById('fl_cf')?.value)  || 0;
-    var r   = (parseFloat(document.getElementById('fl_r')?.value)   || 0) / 100;
-    var n   = parseInt(document.getElementById('fl_n')?.value)      || 0;
-    var inv = parseFloat(document.getElementById('fl_inv')?.value)  || 0;
-    if (!r || !n) { finResult('fl_vpn_result', '— (date insuficiente)'); return; }
-    var vpn = 0;
-    for (var t = 1; t <= n; t++) vpn += cf / Math.pow(1 + r, t);
-    vpn -= inv;
-    finResult('fl_vpn_result', 'VPN = ' + vpn.toLocaleString('ro-RO', {maximumFractionDigits:2}) + ' RON' + (vpn > 0 ? ' ✓ Proiect acceptabil' : ' ✗ Proiect neacceptabil'));
+  var scenarioMeta = {
+    base:    { title: 'Scenariu de bază', copy: 'Șocuri mici, piață ordonată, refinanțare normală.' },
+    adverse: { title: 'Scenariu advers', copy: 'Costul finanțării crește, lichiditatea se strânge, default-urile urcă.' },
+    crisis:  { title: 'Scenariu de criză', copy: 'Volatilitate mare, pierderi accelerate și presiune pe capital.' }
   };
-  window.calcFV = function() {
-    var pv = parseFloat(document.getElementById('fv_pv')?.value) || 0;
-    var r  = (parseFloat(document.getElementById('fv_r')?.value) || 0) / 100;
-    var n  = parseInt(document.getElementById('fv_n')?.value)    || 0;
-    var fv = pv * Math.pow(1 + r, n);
-    finResult('fv_result', 'FV = ' + fv.toLocaleString('ro-RO', {maximumFractionDigits:2}) + ' RON');
-  };
-  window.calcPMT = function() {
-    var p  = parseFloat(document.getElementById('pmt_p')?.value) || 0;
-    var rm = (parseFloat(document.getElementById('pmt_r')?.value) || 0) / 100 / 12;
-    var n  = parseInt(document.getElementById('pmt_n')?.value)   || 0;
-    if (!rm || !n) { finResult('pmt_result', '— (date insuficiente)'); return; }
-    var pmt = p * rm * Math.pow(1+rm,n) / (Math.pow(1+rm,n) - 1);
-    finResult('pmt_result', 'Rată lunară = ' + pmt.toLocaleString('ro-RO', {maximumFractionDigits:2}) + ' RON');
-  };
-  window.calcROI = function() {
-    var gain = parseFloat(document.getElementById('roi_gain')?.value) || 0;
-    var cost = parseFloat(document.getElementById('roi_cost')?.value) || 0;
-    if (!cost) { finResult('roi_result', '— (cost 0)'); return; }
-    var roi = (gain / cost) * 100;
-    finResult('roi_result', 'ROI = ' + roi.toLocaleString('ro-RO', {maximumFractionDigits:2}) + '%');
-  };
+  var scenarioShock = finance.scenario === 'base' ? 0.45 : finance.scenario === 'adverse' ? 1 : 1.55;
+  var capitalRatio = finance.capitalBuffer - finance.leverage * 0.72 - scenarioShock * (finance.stressShock / 14);
+  var liquidityCoverage = finance.liquidityBuffer - scenarioShock * (finance.refinancingGap / 2.6) + (finance.policyRate < 5 ? 4 : -2);
+  var nplRate = 2.4 + scenarioShock * (finance.stressShock / 7.5) + finance.marketVol / 24;
+  var earningsDrag = scenarioShock * finance.marketVol * 0.24 + finance.policyRate * 0.7;
+
+  var stabilityScore = 100
+    - finance.leverage * 7.5
+    - finance.marketVol * 0.9
+    - finance.refinancingGap * 0.8
+    + finance.capitalBuffer * 2.3
+    + finance.liquidityBuffer * 0.14
+    - finance.inflation * 2.1;
+  stabilityScore = Math.max(0, Math.min(100, stabilityScore));
+  var repricingPressure = finance.policyRate * 4.5 + finance.inflation * 3.2;
+  var debtStress = finance.leverage * 13 + finance.policyRate * 3.5;
+  var shockAbsorption = finance.capitalBuffer * 4 + finance.liquidityBuffer * 0.36 - finance.marketVol * 1.2;
+
+  var maxDiscountedFlow = Math.max.apply(null, pvFlows.map(function(flow) { return flow.discounted; }));
+  var maxScenarioMetric = Math.max(capitalRatio, liquidityCoverage, nplRate, earningsDrag, 1);
+  var overviewTone = npv >= 0 && stabilityScore >= 55 ? 'Poziție rezonabilă pentru un scenariu de lucru.' : 'Modelul arată presiune și merită stresat înainte de decizie.';
+
+  var html = '<div class="anim"><div class="finance-lab-shell">';
+  html += '<div class="dash-hero-v13" style="margin-bottom:0;">'
+    + '<div class="dash-hero-v13-content">'
+    + '<div class="dash-hero-v13-tag">' + icon('chart','xs') + ' Finance Lab</div>'
+    + '<h1 style="font-size:1.65rem;">Studio interactiv pentru formule, risc și stabilitate</h1>'
+    + '<p class="dash-hero-v13-sub">Nu doar calculezi. Vezi cum se construiesc valorile, cum se propagă șocurile și cum se schimbă distribuțiile când miști variabilele critice.</p>'
+    + '</div></div>';
+
+  html += '<div class="finance-overview">';
+  html += '<div class="finance-kpi"><div class="finance-kpi-label">VPN curent</div><div class="finance-kpi-value" style="color:' + (npv >= 0 ? 'var(--green)' : 'var(--red)') + '">' + financeMoney(npv) + '</div></div>';
+  html += '<div class="finance-kpi"><div class="finance-kpi-label">Probabilitate pierdere</div><div class="finance-kpi-value" style="color:' + (lossProbability < 35 ? 'var(--green)' : lossProbability < 55 ? 'var(--amber)' : 'var(--red)') + '">' + financePct(lossProbability, 1) + '</div></div>';
+  html += '<div class="finance-kpi"><div class="finance-kpi-label">Capital sub stres</div><div class="finance-kpi-value" style="color:' + (capitalRatio > 10 ? 'var(--green)' : capitalRatio > 8 ? 'var(--amber)' : 'var(--red)') + '">' + financePct(capitalRatio, 1) + '</div></div>';
+  html += '<div class="finance-kpi"><div class="finance-kpi-label">Scor stabilitate</div><div class="finance-kpi-value" style="color:' + (stabilityScore > 65 ? 'var(--green)' : stabilityScore > 45 ? 'var(--amber)' : 'var(--red)') + '">' + Math.round(stabilityScore) + '/100</div></div>';
+  html += '</div>';
+
+  html += '<section class="finance-zone">';
+  html += '<div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 1</div><div class="finance-zone-title">Time Value & Valuation</div><div class="finance-zone-copy">Pleci de la investiția inițială, vezi fluxurile pe ani și observi cum rata de actualizare comprimă valoarea prezentă. Ideea este să înțelegi întâi mecanica, apoi formula.</div></div></div>';
+  html += '<div class="finance-zone-grid">';
+  html += '<div class="finance-control-panel"><div class="finance-panel-title">Controlează ipotezele</div>';
+  html += financeSlider('initialInvestment', 'Investiție inițială', finance.initialInvestment, 50000, 1000000, 10000, ' RON');
+  html += financeSlider('annualCashflow', 'Cash flow anual', finance.annualCashflow, 10000, 250000, 5000, ' RON');
+  html += financeSlider('discountRate', 'Rata de actualizare', finance.discountRate, 1, 20, 0.5, '%');
+  html += financeSlider('years', 'Orizont (ani)', finance.years, 2, 10, 1, '');
+  html += financeSlider('growthRate', 'Creștere cash flow', finance.growthRate, -5, 15, 0.5, '%');
+  html += '<div class="finance-story">Exemplu real: tratează acest bloc ca pe evaluarea unui proiect de investiții sau a unei linii noi de business. Când crești rata de actualizare, aceeași serie de cash flow-uri valorează mai puțin astăzi.</div>';
+  html += '</div>';
+  html += '<div class="finance-visual-panel"><div class="finance-panel-title">Descompunere an cu an</div><div class="finance-bars">';
+  pvFlows.forEach(function(flow) {
+    html += '<div class="finance-bar-row"><div class="finance-bar-label">Anul ' + flow.year + '</div><div class="finance-bar-track"><div class="finance-bar-fill" style="width:' + Math.max(6, flow.discounted / maxDiscountedFlow * 100) + '%;"></div></div><div class="finance-bar-value">' + Math.round(flow.discounted / 1000) + 'k</div></div>';
+  });
+  html += '</div><div class="finance-metric-grid" style="margin-top:16px;">';
+  html += '<div class="finance-metric-card"><strong>Valoare viitoare</strong><span>' + financeMoney(futureValue) + '</span></div>';
+  html += '<div class="finance-metric-card"><strong>Payback aproximativ</strong><span>' + payback.toLocaleString('ro-RO', { maximumFractionDigits: 1 }) + ' ani</span></div>';
+  html += '<div class="finance-metric-card"><strong>ROI nominal</strong><span>' + financePct(roi, 1) + '</span></div>';
+  html += '<div class="finance-metric-card"><strong>Interpretare</strong><span>' + (npv >= 0 ? 'Fluxurile actualizate acoperă investiția și lasă valoare netă pozitivă.' : 'Fluxurile actualizate nu acoperă suficient investiția la rata cerută.') + '</span></div>';
+  html += '</div></div></div></section>';
+
+  html += '<section class="finance-zone">';
+  html += '<div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 2</div><div class="finance-zone-title">Risk & Distributions</div><div class="finance-zone-copy">Aici vezi distribuția rezultatelor, nu doar valoarea medie. Când volatilitatea crește, masa de probabilitate se mută spre extreme și crește riscul de pierdere chiar dacă media rămâne bună.</div></div></div>';
+  html += '<div class="finance-zone-grid">';
+  html += '<div class="finance-control-panel"><div class="finance-panel-title">Reglează profilul de risc</div>';
+  html += financeSlider('expectedReturn', 'Randament așteptat', finance.expectedReturn, -5, 25, 0.5, '%');
+  html += financeSlider('volatility', 'Volatilitate', finance.volatility, 5, 45, 0.5, '%');
+  html += financeSlider('exposure', 'Expunere economică', finance.exposure, 10, 200, 5, ' mil. RON');
+  html += '<div class="finance-story">Exemplu real: folosește blocul pentru a compara un portofoliu conservator cu unul agresiv. Mută volatilitatea și vezi cum se schimbă probabilitatea de rezultat negativ.</div>';
+  html += '</div>';
+  html += '<div class="finance-visual-panel"><div class="finance-panel-title">Distribuția rezultatelor</div><div class="finance-distribution">';
+  [-3, -2, -1, 0, 1, 2, 3].forEach(function(bucket, idx) {
+    var bucketReturn = finance.expectedReturn + bucket * (finance.volatility / 2.2);
+    html += '<div class="finance-dist-col"><div class="finance-dist-bar" style="height:' + Math.max(20, distWeights[idx] / maxWeight * 140) + 'px;"></div><div class="finance-dist-label">' + financePct(bucketReturn, 0) + '</div></div>';
+  });
+  html += '</div><div class="finance-metric-grid" style="margin-top:16px;">';
+  html += '<div class="finance-metric-card"><strong>P10</strong><span>' + financePct(p10, 1) + '</span></div>';
+  html += '<div class="finance-metric-card"><strong>P50</strong><span>' + financePct(p50, 1) + '</span></div>';
+  html += '<div class="finance-metric-card"><strong>P90</strong><span>' + financePct(p90, 1) + '</span></div>';
+  html += '<div class="finance-metric-card"><strong>P&L așteptat</strong><span>' + financeMoney(expectedPnl * 1000000) + '</span></div>';
+  html += '</div><div class="finance-story">Cu setările actuale, probabilitatea de pierdere este <strong style="color:' + (lossProbability < 35 ? 'var(--green)' : lossProbability < 55 ? 'var(--amber)' : 'var(--red)') + ';">' + financePct(lossProbability, 1) + '</strong>. Dacă vrei să înțelegi riscul vizual, urmărește cât de lată și cât de joasă devine distribuția.</div></div></div></section>';
+
+  html += '<section class="finance-zone">';
+  html += '<div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 3</div><div class="finance-zone-title">Stress Testing</div><div class="finance-zone-copy">Aici transformi un scenariu abstract într-o poveste concretă: finanțarea se scumpește, volatilitatea urcă, iar calitatea portofoliului se deteriorează. Vezi ce metrică cedează prima.</div></div></div>';
+  html += '<div class="finance-scenario-row">';
+  ['base','adverse','crisis'].forEach(function(name) {
+    var meta = scenarioMeta[name];
+    html += '<div class="finance-scenario-card ' + (finance.scenario === name ? 'active' : '') + '" onclick="setFinanceLabScenario(\'' + name + '\')"><div class="finance-scenario-name">' + meta.title + '</div><div class="finance-scenario-copy">' + meta.copy + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div class="finance-zone-grid">';
+  html += '<div class="finance-control-panel"><div class="finance-panel-title">Parametri bilanț și șoc</div>';
+  html += financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5, '%');
+  html += financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1, '%');
+  html += financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1, '');
+  html += financeSlider('refinancingGap', 'Refinancing gap', finance.refinancingGap, 10, 80, 1, '%');
+  html += '<div class="finance-story">Exemplu real: tratează scenariul advers ca pe o combinație de cost mai mare al finanțării, retrageri de lichiditate și creștere a creditelor neperformante.</div>';
+  html += '</div>';
+  html += '<div class="finance-visual-panel"><div class="finance-panel-title">Cum arată stresul în metrici</div><div class="finance-bars">';
+  [
+    ['Capital ratio', capitalRatio, '%', capitalRatio > 10 ? 'var(--green)' : capitalRatio > 8 ? 'var(--amber)' : 'var(--red)'],
+    ['Liquidity', liquidityCoverage, '%', liquidityCoverage > 110 ? 'var(--green)' : liquidityCoverage > 100 ? 'var(--amber)' : 'var(--red)'],
+    ['NPL', nplRate, '%', nplRate < 6 ? 'var(--green)' : nplRate < 10 ? 'var(--amber)' : 'var(--red)'],
+    ['Earnings drag', earningsDrag, ' bps', earningsDrag < 10 ? 'var(--green)' : earningsDrag < 18 ? 'var(--amber)' : 'var(--red)']
+  ].forEach(function(metric) {
+    html += '<div class="finance-bar-row"><div class="finance-bar-label">' + metric[0] + '</div><div class="finance-bar-track"><div class="finance-bar-fill" style="width:' + Math.max(6, Math.abs(metric[1]) / maxScenarioMetric * 100) + '%;background:linear-gradient(90deg,' + metric[3] + ', color-mix(in srgb,' + metric[3] + ' 60%, white));"></div></div><div class="finance-bar-value">' + (metric[2] === ' bps' ? Math.round(metric[1]) : financePct(metric[1], 1)) + (metric[2] === ' bps' ? ' bps' : '') + '</div></div>';
+  });
+  html += '</div><div class="finance-story">' + scenarioMeta[finance.scenario].title + ': ' + (capitalRatio <= 8 ? 'presiunea pe capital devine critică și probabil ai nevoie de măsuri defensive.' : liquidityCoverage <= 100 ? 'lichiditatea devine primul punct fragil și trebuie redus refinancing gap-ul.' : 'instituția rezistă, dar costul de risc și profitabilitatea rămân sub presiune.') + '</div></div></div></section>';
+
+  html += '<section class="finance-zone">';
+  html += '<div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 4</div><div class="finance-zone-title">Market & Stability</div><div class="finance-zone-copy">Ultima zonă leagă dobânzile, inflația, leverage-ul și volatilitatea de stabilitatea generală. Ideea nu este să memorezi indicatorii, ci să vezi ce combinații împing sistemul într-o zonă fragilă.</div></div></div>';
+  html += '<div class="finance-zone-grid">';
+  html += '<div class="finance-control-panel"><div class="finance-panel-title">Motoarele stabilității</div>';
+  html += financeSlider('policyRate', 'Dobânda de politică monetară', finance.policyRate, 1, 12, 0.1, '%');
+  html += financeSlider('inflation', 'Inflație', finance.inflation, 1, 15, 0.1, '%');
+  html += financeSlider('leverage', 'Leverage', finance.leverage, 1, 10, 0.1, 'x');
+  html += financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1, '%');
+  html += '<div class="finance-story">Exemplu real: un mix de dobânzi mari, inflație persistentă și leverage ridicat comprimă stabilitatea chiar dacă activele încă par profitabile.</div>';
+  html += '</div>';
+  html += '<div class="finance-visual-panel"><div class="finance-panel-title">Tablou de stabilitate</div><div class="finance-metric-grid">';
+  html += '<div class="finance-metric-card"><strong>Scor stabilitate</strong><span>' + Math.round(stabilityScore) + '/100</span></div>';
+  html += '<div class="finance-metric-card"><strong>Presiune repricing</strong><span>' + Math.round(repricingPressure) + ' bps</span></div>';
+  html += '<div class="finance-metric-card"><strong>Debt stress</strong><span>' + Math.round(debtStress) + '/100</span></div>';
+  html += '<div class="finance-metric-card"><strong>Capacitate absorbție șoc</strong><span>' + Math.round(shockAbsorption) + '/100</span></div>';
+  html += '</div><div class="finance-bars" style="margin-top:16px;">';
+  [
+    ['Stability', stabilityScore, 'var(--green)'],
+    ['Repricing', Math.min(100, repricingPressure), 'var(--amber)'],
+    ['Debt stress', Math.min(100, debtStress), 'var(--red)'],
+    ['Shock absorption', Math.max(0, Math.min(100, shockAbsorption)), 'var(--blue)']
+  ].forEach(function(row) {
+    html += '<div class="finance-bar-row"><div class="finance-bar-label">' + row[0] + '</div><div class="finance-bar-track"><div class="finance-bar-fill" style="width:' + Math.max(6, row[1]) + '%;background:linear-gradient(90deg,' + row[2] + ', color-mix(in srgb,' + row[2] + ' 58%, white));"></div></div><div class="finance-bar-value">' + Math.round(row[1]) + '/100</div></div>';
+  });
+  html += '</div><div class="finance-story">' + overviewTone + ' Dacă vrei să testezi o criză de stabilitate, urcă leverage-ul și volatilitatea în același timp; dacă vrei o normalizare, coboară dobânda și îmbunătățește bufferul de lichiditate.</div></div></div></section>';
+
+  html += '</div></div>';
+  el.innerHTML = html;
 }
 
 function finCard(title, fields, calcFn, resultId) {
