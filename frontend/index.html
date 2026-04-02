@@ -7668,8 +7668,8 @@ function financeDistributionSvg(metrics) {
   var width = 620, height = 250, padL = 30, padR = 30, padT = 18, padB = 36;
   var plotW = width - padL - padR;
   var plotH = height - padT - padB;
-  var minX = metrics.finance.expectedReturn - metrics.finance.volatility * 3.2;
-  var maxX = metrics.finance.expectedReturn + metrics.finance.volatility * 3.2;
+  var minX = -40;
+  var maxX = 40;
   var points = [];
   var maxDensity = 0;
   for (var i = 0; i <= 48; i++) {
@@ -7686,9 +7686,9 @@ function financeDistributionSvg(metrics) {
   });
   var area = line + ' L ' + x(maxX).toFixed(2) + ' ' + (padT + plotH) + ' L ' + x(minX).toFixed(2) + ' ' + (padT + plotH) + ' Z';
   var markers = [
-    { label: 'P10', value: metrics.p10, color: '#e9bb74' },
-    { label: 'P50', value: metrics.p50, color: '#f29b6d' },
-    { label: 'P90', value: metrics.p90, color: '#73c9a6' }
+    { label: 'P10', value: Math.max(minX, Math.min(maxX, metrics.p10)), color: '#e9bb74' },
+    { label: 'P50', value: Math.max(minX, Math.min(maxX, metrics.p50)), color: '#f29b6d' },
+    { label: 'P90', value: Math.max(minX, Math.min(maxX, metrics.p90)), color: '#73c9a6' }
   ];
   var zeroX = minX <= 0 && maxX >= 0 ? x(0) : null;
   var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '"><defs><linearGradient id="finAreaB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8ab8d8" stop-opacity="0.42"/><stop offset="100%" stop-color="#8ab8d8" stop-opacity="0.04"/></linearGradient></defs>';
