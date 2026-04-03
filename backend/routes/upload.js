@@ -27,6 +27,7 @@ const {
   MIN_EXTRACTED_CHARS,
 } = require('../middleware/uploadValidator');
 const { logger } = require('../utils/logger');
+const { uploadResponse } = require('../utils/apiContracts');
 
 // Auth first → rate limit keyed to user ID → multer
 router.post('/',
@@ -86,13 +87,11 @@ router.post('/',
         truncated: rawText.length > MAX_EXTRACTED_CHARS,
       });
 
-      res.json({
+      res.json(uploadResponse({
         text,
         filename: originalname,
         size,
-        chars: text.length,
-        extractedChars: text.length,
-      });
+      }));
     } catch (e) {
       // Wrap multer / parser errors with safe messages
       if (e.code === 'LIMIT_FILE_SIZE') {

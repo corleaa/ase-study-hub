@@ -17,10 +17,11 @@
 const path     = require('path');
 const Database = require('better-sqlite3');
 
-const DB_PATH = path.join(__dirname, '..', 'studyhub.db');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'studyhub.db');
 let db;
 
 const MAX_SESSIONS_PER_USER = 5;
+const USAGE_LOG_RETENTION_DAYS = Number(process.env.USAGE_LOG_RETENTION_DAYS || 35);
 
 // ─────────────────────────────────────────────────────────────────
 // INIT
@@ -29,6 +30,9 @@ function initDb() {
   db = new Database(DB_PATH);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
+  db.pragma('synchronous = NORMAL');
+  db.pragma('busy_timeout = 5000');
+  db.pragma('temp_store = MEMORY');
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -66,8 +70,14 @@ function initDb() {
     CREATE INDEX IF NOT EXISTS idx_ai_calls_user_feature
       ON ai_calls(user_id, feature, called_at);
 
+    CREATE INDEX IF NOT EXISTS idx_ai_calls_feature_time
+      ON ai_calls(feature, called_at);
+
     CREATE INDEX IF NOT EXISTS idx_guest_ai_calls_ip_feature
       ON guest_ai_calls(ip_hash, feature, called_at);
+
+    CREATE INDEX IF NOT EXISTS idx_guest_ai_calls_feature_time
+      ON guest_ai_calls(feature, called_at);
 
     CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user
       ON refresh_tokens(user_id, expires_at);
@@ -80,6 +90,7 @@ function initDb() {
 
   // Remove expired tokens on startup
   cleanExpiredTokens();
+  cleanUsageLogs();
 
   return db;
 }
@@ -202,6 +213,19 @@ function cleanExpiredTokens() {
     .run();
 }
 
+function cleanUsageLogs(retentionDays = USAGE_LOG_RETENTION_DAYS) {
+  const retention = Number(retentionDays);
+  if (!Number.isFinite(retention) || retention <= 0) return;
+
+  getDb()
+    .prepare("DELETE FROM ai_calls WHERE called_at < datetime('now', ? || ' days')")
+    .run(`-${retention}`);
+
+  getDb()
+    .prepare("DELETE FROM guest_ai_calls WHERE called_at < datetime('now', ? || ' days')")
+    .run(`-${retention}`);
+}
+
 // ─────────────────────────────────────────────────────────────────
 // AI CALL TRACKING (for perUserLimiter)
 // ─────────────────────────────────────────────────────────────────
@@ -266,6 +290,7 @@ module.exports = {
   invalidateAllUserSessions,
   deleteRefreshToken,
   cleanExpiredTokens,
+  cleanUsageLogs,
   // AI call tracking
   logApiCall,
   countRecentCalls,

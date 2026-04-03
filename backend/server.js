@@ -24,7 +24,7 @@ const path         = require('path');
 const fs           = require('fs');
 
 const { logger }         = require('./utils/logger');
-const { initDb, cleanExpiredTokens } = require('./db/client');
+const { initDb, cleanExpiredTokens, cleanUsageLogs } = require('./db/client');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 // ── Startup guards ────────────────────────────────────────────────
@@ -188,6 +188,9 @@ initDb();
 setInterval(() => {
   try { cleanExpiredTokens(); } catch (e) {
     logger.error('cleanExpiredTokens failed', { err: e.message });
+  }
+  try { cleanUsageLogs(); } catch (e) {
+    logger.error('cleanUsageLogs failed', { err: e.message });
   }
 }, 6 * 60 * 60 * 1000).unref();   // .unref() so this doesn't keep process alive
 

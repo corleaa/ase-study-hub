@@ -15,14 +15,25 @@
 'use strict';
 
 const router      = require('express').Router();
-const Anthropic   = require('@anthropic-ai/sdk');
 const { optionalAuth } = require('../middleware/authenticate');
 const { validate, validateAiResponse } = require('../middleware/validate');
 const { aiIpLimiter, perUserLimiter }  = require('../middleware/rateLimiter');
 const { logApiCall } = require('../db/client');
 const { logger }     = require('../utils/logger');
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const {
+  askMessages,
+  askSingleTurn,
+  askStructuredJson,
+  normalizeChatPayload,
+} = require('../services/aiService');
+const { getCached, setCached } = require('../services/aiCache');
+const {
+  chatResponse,
+  quizResponse,
+  flashcardsResponse,
+  examResponse,
+  summaryResponse,
+} = require('../utils/apiContracts');
 
 // ── Shared middleware stack for all AI routes ─────────────────────
 // Order: IP limit → optional auth (guest allowed) → per-tier limit
@@ -32,39 +43,6 @@ const aiGuard = (feature) => [
   perUserLimiter(feature),
 ];
 
-// ── Core Claude call ──────────────────────────────────────────────
-async function askClaude(system, userContent, maxTokens = 2000) {
-  const response = await client.messages.create({
-    model:      'claude-sonnet-4-20250514',
-    max_tokens: Math.min(maxTokens, 8000),
-    system,
-    messages:   [{ role: 'user', content: userContent }],
-  });
-  return response.content[0]?.text || '';
-}
-
-// ── Strip markdown code fences from JSON responses ────────────────
-function stripJsonFences(raw) {
-  return raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
-}
-
-// ── Compatibility mappers for legacy frontend contracts ───────────
-function toLegacyQuizQuestion(question) {
-  if (question.type === 'tf') {
-    return {
-      ...question,
-      q: question.question,
-      options: ['Adevărat', 'Fals'],
-      correct: question.correct ? 0 : 1,
-    };
-  }
-
-  return {
-    ...question,
-    q: question.question,
-  };
-}
-
 // ─────────────────────────────────────────────────────────────────
 // POST /api/ai/chat
 // ─────────────────────────────────────────────────────────────────
@@ -73,46 +51,11 @@ router.post('/chat',
   validate('chat'),
   async (req, res, next) => {
     try {
-      const { system, messages, max_tokens } = (() => {
-        const b = req.body;
-
-        // Format 2: index.html callAI sends { system, messages[], max_tokens }
-        if (b.messages && Array.isArray(b.messages)) {
-          const sysPrompt = b.system || 'Ești un asistent de studiu util și concis. Răspunde în română.';
-          const msgs = b.messages
-            .filter(m => m.role === 'user' || m.role === 'assistant')
-            .map(m => ({ role: m.role, content: String(m.content || '').slice(0, 8000) }));
-          return { system: sysPrompt, messages: msgs, max_tokens: b.max_tokens || 1500 };
-        }
-
-        // Format 1: mentor.js sends { message, subjectName, history }
-        const sysPrompt = b.systemPrompt
-          || `Ești un asistent de studiu util și concis pentru materia ${b.subjectName}. Răspunde în română.`;
-        const history = (b.history || []).map(m => ({
-          role:    m.role === 'assistant' ? 'assistant' : 'user',
-          content: String(m.content || '').slice(0, 4000),
-        }));
-        const allMessages = [
-          ...history,
-          { role: 'user', content: b.message || '' },
-        ];
-        return { system: sysPrompt, messages: allMessages, max_tokens: b.max_tokens || 1500 };
-      })();
-
-      const response = await client.messages.create({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: Math.min(max_tokens, 3000),
-        system,
-        messages,
-      });
-
-      const content = response.content[0]?.text || '';
+      const { system, messages, maxTokens } = normalizeChatPayload(req.body);
+      const content = await askMessages({ system, messages, maxTokens });
       logApiCall(req.user?.id ?? null, 'chat', req.clientIpHash);
-
-      // Return both keys for frontend compatibility
-      res.json({ content, response: content });
+      res.json(chatResponse(content));
     } catch (e) {
-      console.error('AI CHAT ERROR FULL:', e);
       next(e);
     }
   }
@@ -127,6 +70,7 @@ router.post('/quiz',
   async (req, res, next) => {
     try {
       const { subjectName, context, count, type } = req.body;
+      const cachePayload = { subjectName, context, count, type };
 
       const typeMap = {
         grile:    'multiple choice cu 4 variante (a, b, c, d), un singur răspuns corect',
@@ -142,17 +86,23 @@ Format pentru multiple choice:
 Format pentru adevărat/fals:
 {"type":"tf","question":"...","correct":true,"explanation":"..."}`;
 
-      const userMsg = `Context:\n${context}\n\nGenerează exact ${count} întrebări despre ${subjectName}.`;
-      const raw     = await askClaude(system, userMsg, 4000);
-      const clean   = stripJsonFences(raw);
+      const cachedQuestions = getCached('quiz', cachePayload);
+      if (cachedQuestions) {
+        logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash);
+        return res.json(quizResponse(cachedQuestions));
+      }
 
       let questions;
       try {
-        questions = JSON.parse(clean);
+        questions = await askStructuredJson({
+          system,
+          userContent: `Context:\n${context}\n\nGenerează exact ${count} întrebări despre ${subjectName}.`,
+          maxTokens: 4000,
+        });
         if (!Array.isArray(questions)) throw new Error('Not an array');
       } catch {
         logger.warn('Quiz: AI returned invalid JSON', { userId: req.user?.id, subjectName });
-        return res.status(500).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
+        return res.status(502).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
       }
 
       // Validate AI response structure
@@ -165,10 +115,8 @@ Format pentru adevărat/fals:
         return res.status(502).json({ error: 'AI a returnat date neașteptate. Încearcă din nou.' });
       }
 
-      const legacyQuestions = validation.data.map(toLegacyQuizQuestion);
-
       logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash);
-      res.json({ questions: legacyQuestions });
+      res.json(quizResponse(setCached('quiz', cachePayload, validation.data)));
     } catch (e) {
       next(e);
     }
@@ -184,22 +132,29 @@ router.post('/flashcards',
   async (req, res, next) => {
     try {
       const { subjectName, context, count } = req.body;
+      const cachePayload = { subjectName, context, count };
 
       const system = `Ești profesor de ${subjectName}. Generezi flashcard-uri pentru memorare.
 Răspunde EXCLUSIV cu un JSON array valid. Niciun text în afara JSON-ului. Fără markdown, fără backticks.
 Format: [{"front":"Întrebare sau termen","back":"Răspuns sau definiție"}]`;
 
-      const userMsg = `Context:\n${context}\n\nGenerează exact ${count} flashcard-uri despre ${subjectName}.`;
-      const raw     = await askClaude(system, userMsg, 3000);
-      const clean   = stripJsonFences(raw);
+      const cachedFlashcards = getCached('flashcards', cachePayload);
+      if (cachedFlashcards) {
+        logApiCall(req.user?.id ?? null, 'flashcards', req.clientIpHash);
+        return res.json(flashcardsResponse(cachedFlashcards));
+      }
 
       let flashcards;
       try {
-        flashcards = JSON.parse(clean);
+        flashcards = await askStructuredJson({
+          system,
+          userContent: `Context:\n${context}\n\nGenerează exact ${count} flashcard-uri despre ${subjectName}.`,
+          maxTokens: 3000,
+        });
         if (!Array.isArray(flashcards)) throw new Error('Not an array');
       } catch {
         logger.warn('Flashcards: AI returned invalid JSON', { userId: req.user?.id });
-        return res.status(500).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
+        return res.status(502).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
       }
 
       const validation = validateAiResponse('flashcards', flashcards);
@@ -212,10 +167,7 @@ Format: [{"front":"Întrebare sau termen","back":"Răspuns sau definiție"}]`;
       }
 
       logApiCall(req.user?.id ?? null, 'flashcards', req.clientIpHash);
-      res.json({
-        flashcards: validation.data,
-        cards: validation.data,
-      });
+      res.json(flashcardsResponse(setCached('flashcards', cachePayload, validation.data)));
     } catch (e) {
       next(e);
     }
@@ -231,22 +183,29 @@ router.post('/exam',
   async (req, res, next) => {
     try {
       const { subjectName, context, count, minutes } = req.body;
+      const cachePayload = { subjectName, context, count, minutes };
 
       const system = `Ești profesor de ${subjectName}. Generezi un subiect de examen complet.
 Răspunde EXCLUSIV cu un JSON array valid. Niciun text în afara JSON-ului. Fără markdown, fără backticks.
 Format: [{"type":"mc","question":"...","options":["a) ...","b) ...","c) ...","d) ..."],"correct":0,"explanation":"..."}]`;
 
-      const userMsg = `Context:\n${context}\n\nGenerează un examen de ${minutes} minute cu ${count} întrebări despre ${subjectName}.`;
-      const raw     = await askClaude(system, userMsg, 5000);
-      const clean   = stripJsonFences(raw);
+      const cachedExam = getCached('exam', cachePayload);
+      if (cachedExam) {
+        logApiCall(req.user?.id ?? null, 'exam', req.clientIpHash);
+        return res.json(examResponse(cachedExam, minutes));
+      }
 
       let questions;
       try {
-        questions = JSON.parse(clean);
+        questions = await askStructuredJson({
+          system,
+          userContent: `Context:\n${context}\n\nGenerează un examen de ${minutes} minute cu ${count} întrebări despre ${subjectName}.`,
+          maxTokens: 5000,
+        });
         if (!Array.isArray(questions)) throw new Error('Not an array');
       } catch {
         logger.warn('Exam: AI returned invalid JSON', { userId: req.user?.id });
-        return res.status(500).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
+        return res.status(502).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
       }
 
       const validation = validateAiResponse('exam', questions);
@@ -259,7 +218,7 @@ Format: [{"type":"mc","question":"...","options":["a) ...","b) ...","c) ...","d)
       }
 
       logApiCall(req.user?.id ?? null, 'exam', req.clientIpHash);
-      res.json({ questions: validation.data, minutes });
+      res.json(examResponse(setCached('exam', cachePayload, validation.data), minutes));
     } catch (e) {
       next(e);
     }
@@ -275,15 +234,20 @@ router.post('/summarize',
   async (req, res, next) => {
     try {
       const { text, subjectName, title } = req.body;
+      const cachePayload = { text, subjectName, title };
 
       const system = `Ești profesor de ${subjectName}. Rezumi și structurezi material de studiu în română.
 Creează un rezumat clar, structurat, cu titluri și bullet points. Folosește format Markdown.`;
 
-      const userMsg = `${title ? `Titlu: ${title}\n\n` : ''}Text de rezumat:\n${text}`;
-      const summary = await askClaude(system, userMsg, 2000);
+      const cachedSummary = getCached('summarize', cachePayload);
+      const summary = cachedSummary || await askSingleTurn(
+        system,
+        `${title ? `Titlu: ${title}\n\n` : ''}Text de rezumat:\n${text}`,
+        2000,
+      );
 
       logApiCall(req.user?.id ?? null, 'summarize', req.clientIpHash);
-      res.json({ summary });
+      res.json(summaryResponse(cachedSummary || setCached('summarize', cachePayload, summary)));
     } catch (e) {
       next(e);
     }
