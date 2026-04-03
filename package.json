@@ -5,11 +5,15 @@
   "private": true,
   "scripts": {
     "install:backend": "cd backend && npm install",
-    "init-db":         "node init-db.js",
-    "dev":             "cd backend && npm run dev",
-    "start":           "cd backend && npm start"
+    "init-db": "node init-db.js",
+    "dev": "cd backend && npm run dev",
+    "start": "cd backend && npm start",
+    "test:e2e": "playwright test"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
   }
 }
