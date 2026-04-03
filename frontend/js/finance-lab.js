@@ -637,9 +637,9 @@ function financeStabilityHeroHtml(metrics) {
     + '<div class="finance-gauge-status" id="finStressGaugeBadge" style="--finance-gauge-color:' + status.color + ';"><i></i>' + status.label + ' mode</div>'
     + '<div class="finance-gauge-summary" id="finStressGaugeSummary">' + financeShockNarrative(metrics) + '</div>'
     + '<div class="finance-gauge-mini">'
-    + '<div class="finance-gauge-mini-card"><strong>NPL Pressure</strong><span id="finMiniNpl">' + financePct(metrics.nplPressure, 1) + '</span></div>'
-    + '<div class="finance-gauge-mini-card"><strong>Datorie publică</strong><span id="finMiniDebt">' + financePct(metrics.publicDebt, 1) + '</span></div>'
-    + '<div class="finance-gauge-mini-card"><strong>Tail loss</strong><span id="finMiniTail">' + financePct(metrics.tailLossTail, 1) + '</span></div>'
+    + '<div class="finance-gauge-mini-card"><strong>Stres Stat</strong><span id="finMiniNpl">' + Math.round(metrics.stateSectorStress) + '/100</span></div>'
+    + '<div class="finance-gauge-mini-card"><strong>Stres Bănci</strong><span id="finMiniDebt">' + Math.round(metrics.banksSectorStress) + '/100</span></div>'
+    + '<div class="finance-gauge-mini-card"><strong>Stres Pop.</strong><span id="finMiniTail">' + Math.round(metrics.householdsSectorStress) + '/100</span></div>'
     + '</div></div></div>'
     + '<div class="finance-sim-explainer" id="finShockExplainer"><strong>Lanțul de propagare:</strong> ' + financeShockNarrative(metrics) + '</div>'
     + '</div></div>'
@@ -881,13 +881,14 @@ function getFinanceLabMetrics() {
   var linkStateBanks = Math.max(0, Math.min(100, stateSectorStress * 0.78));
   var linkBanksFirms = Math.max(0, Math.min(100, (banksSectorStress + firmsSectorStress) / 2));
   var linkFirmsHouseholds = Math.max(0, Math.min(100, (firmsSectorStress + householdsSectorStress) / 2));
-  var systemStressGauge = Math.max(0, Math.min(100,
-    systemicRiskScore * 0.36
-    + tailLossTail * 1.4
-    + nplPressure * 1.2
-    + publicDebt * 0.12
-    + scenarioShock * 10
-  ));
+  var systemStressGauge = financeClamp(100 * (
+    0.25 * sNormShock +
+    0.20 * sNormContagion +
+    0.20 * sNormMarket +
+    0.15 * sNormBudget +
+    0.10 * sNormRate +
+    0.10 * sNormLeverage
+  ), 0, 100);
   var repricingPressure = finance.policyRate * 4.5 + finance.inflation * 3.2;
   var debtStress = finance.leverage * 13 + finance.policyRate * 3.5;
   var shockAbsorption = finance.capitalBuffer * 4 + finance.liquidityBuffer * 0.36 - finance.marketVol * 1.2;
@@ -1093,11 +1094,11 @@ function updateFinanceLabUI() {
     var gaugeSummary = document.getElementById('finStressGaugeSummary');
     if (gaugeSummary) gaugeSummary.textContent = financeShockNarrative(metrics);
     var miniNpl = document.getElementById('finMiniNpl');
-    if (miniNpl) miniNpl.textContent = financePct(metrics.nplPressure, 1);
+    if (miniNpl) miniNpl.textContent = Math.round(metrics.stateSectorStress) + '/100';
     var miniDebt = document.getElementById('finMiniDebt');
-    if (miniDebt) miniDebt.textContent = financePct(metrics.publicDebt, 1);
+    if (miniDebt) miniDebt.textContent = Math.round(metrics.banksSectorStress) + '/100';
     var miniTail = document.getElementById('finMiniTail');
-    if (miniTail) miniTail.textContent = financePct(metrics.tailLossTail, 1);
+    if (miniTail) miniTail.textContent = Math.round(metrics.householdsSectorStress) + '/100';
     var shockExplainer = document.getElementById('finShockExplainer');
     if (shockExplainer) shockExplainer.innerHTML = '<strong>Lanțul de propagare:</strong> ' + financeShockNarrative(metrics);
 
