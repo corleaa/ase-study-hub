@@ -239,6 +239,7 @@
   place-items: center;
   background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), rgba(14,21,34,0.96));
   border: 1px solid rgba(255,255,255,0.06);
+  z-index: 3;
 }
 
 .finance-gauge-label {
@@ -267,11 +268,13 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 84px;
+  width: 72px;
   height: 4px;
   transform-origin: 0 50%;
   transform: rotate(-130deg);
   transition: transform 0.9s cubic-bezier(.22,.61,.36,1);
+  z-index: 2;
+  opacity: 0.9;
 }
 
 .finance-gauge-needle::before {
@@ -295,6 +298,7 @@
   border-radius: 50%;
   background: #eef4ff;
   box-shadow: 0 0 0 6px rgba(255,255,255,0.08);
+  z-index: 4;
 }
 
 .finance-gauge-glow {
@@ -363,6 +367,11 @@
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
   padding: 12px;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-wrap: anywhere;
 }
 
 .finance-gauge-mini-card strong {
@@ -372,13 +381,15 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   margin-bottom: 6px;
+  line-height: 1.35;
 }
 
 .finance-gauge-mini-card span {
   color: #f7faff;
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 0.96rem;
   font-weight: 800;
+  line-height: 1.2;
 }
 
 .finance-sim-controls {
@@ -468,6 +479,12 @@
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--node-color, #73c9a6) 34%, rgba(255,255,255,0.08));
   box-shadow: 0 0 24px color-mix(in srgb, var(--node-color, #73c9a6) 18%, transparent);
+}
+
+.finance-propagation-node.is-very-hot {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--node-color, #73c9a6) 52%, rgba(255,255,255,0.08));
+  box-shadow: 0 0 32px color-mix(in srgb, var(--node-color, #73c9a6) 28%, transparent);
 }
 
 .finance-propagation-node strong,
@@ -694,7 +711,7 @@
   padding: 7px 10px;
   font-family: var(--font-mono);
   font-size: 0.76rem;
-  text-align: right;
+  text-align: center;
 }
 
 .finance-control-number:focus {
@@ -847,20 +864,20 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--bg-overlay) 76%, transparent), transparent);
   border: 1px solid var(--border);
   padding: 12px;
-  min-height: 260px;
+  min-height: 290px;
 }
 
 .finance-chart svg {
   width: 100%;
-  height: 220px;
+  height: 248px;
   display: block;
 }
 
 .finance-chart-caption {
   margin-top: 10px;
   color: var(--text-secondary);
-  font-size: 0.78rem;
-  line-height: 1.55;
+  font-size: 0.84rem;
+  line-height: 1.62;
 }
 
 .finance-chart-legend {
@@ -908,8 +925,8 @@
 
 .finance-stat-chip span {
   color: var(--text-secondary);
-  font-size: 0.75rem;
-  line-height: 1.5;
+  font-size: 0.82rem;
+  line-height: 1.55;
 }
 
 .finance-mode-tabs {
@@ -1004,11 +1021,11 @@
 }
 
 .finance-report-card--wide .finance-chart {
-  min-height: 320px;
+  min-height: 348px;
 }
 
 .finance-report-card--wide .finance-chart svg {
-  height: 280px;
+  height: 308px;
 }
 
 .finance-report-card .finance-story {

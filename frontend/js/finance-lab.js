@@ -205,9 +205,9 @@ function financeDistributionSvg(metrics) {
   var plotW = width - padL - padR;
   var plotH = height - padT - padB;
   var isStability = metrics.finance.mode === 'stability';
-  var axisColor = isStability ? 'rgba(60,74,95,0.55)' : 'rgba(255,255,255,0.14)';
-  var gridColor = isStability ? 'rgba(60,74,95,0.16)' : 'rgba(255,255,255,0.08)';
-  var labelColor = isStability ? 'rgba(55,69,89,0.96)' : 'rgba(255,255,255,0.55)';
+  var axisColor = isStability ? 'rgba(37,51,70,0.68)' : 'rgba(255,255,255,0.14)';
+  var gridColor = isStability ? 'rgba(56,73,96,0.22)' : 'rgba(255,255,255,0.08)';
+  var labelColor = isStability ? 'rgba(39,53,73,0.98)' : 'rgba(255,255,255,0.55)';
   var center = isStability ? metrics.tailLossMedian : metrics.finance.expectedReturn;
   var spread = isStability ? Math.max(metrics.tailLossSpread, 0.0001) : Math.max(metrics.finance.volatility, 0.0001);
   var minX = isStability
@@ -251,11 +251,11 @@ function financeDistributionSvg(metrics) {
     svg += '<line x1="' + zeroX + '" y1="' + padT + '" x2="' + zeroX + '" y2="' + (padT + plotH) + '" stroke="' + axisColor + '" stroke-width="1.5"/>';
   }
   svg += '<path class="fin-anim-fade" d="' + area + '" fill="url(#finAreaB)"/>';
-  svg += '<path class="fin-anim-draw" d="' + line + '" fill="none" stroke="#8ab8d8" stroke-width="' + (isStability ? '4' : '3') + '" stroke-linecap="round" stroke-linejoin="round"/>';
+  svg += '<path class="fin-anim-draw" d="' + line + '" fill="none" stroke="#79add6" stroke-width="' + (isStability ? '4.8' : '3') + '" stroke-linecap="round" stroke-linejoin="round"/>';
   markers.forEach(function(marker, idx) {
     var mx = x(marker.value).toFixed(2);
     svg += '<line class="fin-anim-link" x1="' + mx + '" y1="' + padT + '" x2="' + mx + '" y2="' + (padT + plotH) + '" stroke="' + marker.color + '" stroke-width="2" stroke-dasharray="5 6"/>';
-    svg += '<text class="fin-anim-fade" x="' + mx + '" y="' + (padT + 14 + idx * 2) + '" text-anchor="middle" fill="' + marker.color + '" font-size="11" font-weight="700">' + marker.label + '</text>';
+    svg += '<text class="fin-anim-fade" x="' + mx + '" y="' + (padT + 14 + idx * 2) + '" text-anchor="middle" fill="' + marker.color + '" font-size="12" font-weight="800">' + marker.label + '</text>';
   });
   svg += '<text x="' + padL + '" y="' + (height - 10) + '" fill="' + labelColor + '" font-size="11">' + financePct(minX, 0) + '</text>';
   if (zeroX !== null) {
@@ -268,8 +268,8 @@ function financeDistributionSvg(metrics) {
 function financeStressSvg(metrics) {
   var width = 620, height = 250, pad = 24, baseY = 212, barW = 84;
   var isStability = metrics.finance.mode === 'stability';
-  var axisColor = isStability ? 'rgba(60,74,95,0.28)' : 'rgba(255,255,255,0.16)';
-  var labelColor = isStability ? 'rgba(55,69,89,0.92)' : 'rgba(255,255,255,0.62)';
+  var axisColor = isStability ? 'rgba(42,57,78,0.42)' : 'rgba(255,255,255,0.16)';
+  var labelColor = isStability ? 'rgba(34,47,67,0.98)' : 'rgba(255,255,255,0.62)';
   var items = metrics.finance.mode === 'stability'
     ? [
       { label: 'CET1', value: Math.max(0, metrics.capitalRatio), color: metrics.capitalRatio > 10 ? '#73c9a6' : metrics.capitalRatio > 8 ? '#e9bb74' : '#e08d86', max: 18 },
@@ -288,17 +288,17 @@ function financeStressSvg(metrics) {
     svg += '<rect x="' + pad + '" y="34" width="' + (width - pad * 2) + '" height="52" rx="18" fill="rgba(94,166,140,0.10)"/>';
     svg += '<rect x="' + pad + '" y="86" width="' + (width - pad * 2) + '" height="54" rx="18" fill="rgba(233,187,116,0.13)"/>';
     svg += '<rect x="' + pad + '" y="140" width="' + (width - pad * 2) + '" height="58" rx="18" fill="rgba(224,141,134,0.13)"/>';
-    svg += '<text x="' + (pad + 10) + '" y="54" text-anchor="start" fill="rgba(82,143,119,0.92)" font-size="12" font-weight="800">Zonă sigură</text>';
-    svg += '<text x="' + (pad + 10) + '" y="108" text-anchor="start" fill="rgba(196,140,71,0.92)" font-size="12" font-weight="800">Supraveghere</text>';
-    svg += '<text x="' + (pad + 10) + '" y="164" text-anchor="start" fill="rgba(200,75,90,0.92)" font-size="12" font-weight="800">Zonă critică</text>';
+    svg += '<text x="' + (pad + 12) + '" y="54" text-anchor="start" fill="rgba(76,127,106,0.98)" font-size="13" font-weight="900">Zonă sigură</text>';
+    svg += '<text x="' + (pad + 12) + '" y="108" text-anchor="start" fill="rgba(187,125,51,0.98)" font-size="13" font-weight="900">Supraveghere</text>';
+    svg += '<text x="' + (pad + 12) + '" y="164" text-anchor="start" fill="rgba(190,66,84,0.98)" font-size="13" font-weight="900">Zonă critică</text>';
   }
   svg += '<line x1="' + pad + '" y1="' + baseY + '" x2="' + (width - pad) + '" y2="' + baseY + '" stroke="' + axisColor + '" stroke-width="1"/>';
   items.forEach(function(item, idx) {
     var x = 52 + idx * 138;
     var h = Math.max(16, (item.value / item.max) * 150);
     svg += '<rect class="fin-anim-bar" x="' + x + '" y="' + (baseY - h) + '" width="' + barW + '" height="' + h + '" rx="18" fill="' + item.color + '" fill-opacity="0.88" stroke="rgba(36,51,72,0.14)" stroke-width="2"/>';
-    svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (baseY - h - 8) + '" text-anchor="middle" fill="' + item.color + '" font-size="12" font-weight="700">' + ((item.label === 'Drag' || item.label === 'Contagion') ? Math.round(item.value) + (item.label === 'Drag' ? 'bps' : '/100') : financePct(item.value, 1)) + '</text>';
-    svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (baseY + 20) + '" text-anchor="middle" fill="' + labelColor + '" font-size="11">' + item.label + '</text>';
+    svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (baseY - h - 8) + '" text-anchor="middle" fill="' + item.color + '" font-size="14" font-weight="800">' + ((item.label === 'Drag' || item.label === 'Contagion') ? Math.round(item.value) + (item.label === 'Drag' ? 'bps' : '/100') : financePct(item.value, 1)) + '</text>';
+    svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (baseY + 22) + '" text-anchor="middle" fill="' + labelColor + '" font-size="12" font-weight="700">' + item.label + '</text>';
   });
   return svg + '</svg>';
 }
@@ -306,9 +306,9 @@ function financeStressSvg(metrics) {
 function financeStabilitySvg(metrics) {
   var width = 620, height = 260, cx = 310, cy = 132, radius = 90;
   var isStability = metrics.finance.mode === 'stability';
-  var ringColor = isStability ? 'rgba(36,51,72,0.16)' : 'rgba(255,255,255,0.08)';
-  var axisColor = isStability ? 'rgba(36,51,72,0.26)' : 'rgba(255,255,255,0.12)';
-  var labelColor = isStability ? 'rgba(51,64,84,0.98)' : 'rgba(255,255,255,0.6)';
+  var ringColor = isStability ? 'rgba(39,55,76,0.24)' : 'rgba(255,255,255,0.08)';
+  var axisColor = isStability ? 'rgba(33,47,66,0.42)' : 'rgba(255,255,255,0.12)';
+  var labelColor = isStability ? 'rgba(38,52,73,0.98)' : 'rgba(255,255,255,0.6)';
   var axes = [
     { label: isStability ? 'Capital' : 'Stability', value: isStability ? Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) : metrics.stabilityScore },
     { label: 'Liquidity', value: Math.max(0, Math.min(100, metrics.finance.liquidityBuffer - 60)) },
@@ -336,11 +336,14 @@ function financeStabilitySvg(metrics) {
     var py = cy + Math.sin(angle) * radius * (axis.value / 100);
     polygon += (idx ? ' L ' : 'M ') + px.toFixed(2) + ' ' + py.toFixed(2);
     svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ex.toFixed(2) + '" y2="' + ey.toFixed(2) + '" stroke="' + axisColor + '" stroke-width="1"/>';
-    svg += '<text x="' + (cx + Math.cos(angle) * (radius + 26)).toFixed(2) + '" y="' + (cy + Math.sin(angle) * (radius + 26)).toFixed(2) + '" text-anchor="middle" fill="' + labelColor + '" font-size="11">' + axis.label + '</text>';
+    svg += '<text x="' + (cx + Math.cos(angle) * (radius + 30)).toFixed(2) + '" y="' + (cy + Math.sin(angle) * (radius + 30)).toFixed(2) + '" text-anchor="middle" fill="' + labelColor + '" font-size="12" font-weight="700">' + axis.label + '</text>';
+    if (isStability) {
+      svg += '<text x="' + (cx + Math.cos(angle) * (radius + 30)).toFixed(2) + '" y="' + (cy + Math.sin(angle) * (radius + 44)).toFixed(2) + '" text-anchor="middle" fill="rgba(67,82,103,0.92)" font-size="11" font-weight="700">' + Math.round(axis.value) + '/100</text>';
+    }
   });
-  svg += '<path d="' + polygon + ' Z" fill="rgba(242,155,109,0.18)" stroke="' + (isStability ? '#29384b' : '#f29b6d') + '" stroke-width="3.4"/>';
+  svg += '<path d="' + polygon + ' Z" fill="rgba(242,155,109,0.20)" stroke="' + (isStability ? '#243348' : '#f29b6d') + '" stroke-width="3.8"/>';
   if (isStability) {
-    svg += '<path d="' + polygon + ' Z" fill="none" stroke="#f29b6d" stroke-width="2.2"/>';
+    svg += '<path d="' + polygon + ' Z" fill="none" stroke="#f29b6d" stroke-width="2.6"/>';
   }
   return svg + '</svg>';
 }
@@ -356,7 +359,15 @@ function financeSparklineSvg(values, color) {
     var y = height - pad - ((v - min) / span) * (height - pad * 2);
     path += (i ? ' L ' : 'M ') + x.toFixed(2) + ' ' + y.toFixed(2);
   });
-  return '<svg viewBox="0 0 ' + width + ' ' + height + '"><path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var lx = pad + (values.length - 1) * ((width - pad * 2) / (values.length - 1));
+  var ly = height - pad - ((values[values.length - 1] - min) / span) * (height - pad * 2);
+  return '<svg viewBox="0 0 ' + width + ' ' + height + '"><path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="' + lx.toFixed(2) + '" cy="' + ly.toFixed(2) + '" r="2.8" fill="' + color + '"/></svg>';
+}
+
+function financeHistorySeries(current, deltas) {
+  return deltas.map(function(delta) {
+    return Math.max(0, current + delta);
+  });
 }
 
 function financeStabilityRiskBoardHtml(metrics) {
@@ -407,9 +418,9 @@ function financePolicySvg(metrics) {
   svg += '<rect x="' + padL + '" y="34" width="' + (width - padL - padR) + '" height="34" rx="16" fill="rgba(94,166,140,0.08)"/>';
   svg += '<rect x="' + padL + '" y="68" width="' + (width - padL - padR) + '" height="58" rx="16" fill="rgba(233,187,116,0.09)"/>';
   svg += '<rect x="' + padL + '" y="126" width="' + (width - padL - padR) + '" height="70" rx="16" fill="rgba(224,141,134,0.10)"/>';
-  svg += '<text x="' + (padL + 8) + '" y="56" text-anchor="start" fill="rgba(94,166,140,0.76)" font-size="11" font-weight="700">Buffere confortabile</text>';
-  svg += '<text x="' + (padL + 8) + '" y="98" text-anchor="start" fill="rgba(196,140,71,0.78)" font-size="11" font-weight="700">Calibrare atentă</text>';
-  svg += '<text x="' + (padL + 8) + '" y="154" text-anchor="start" fill="rgba(200,75,90,0.80)" font-size="11" font-weight="700">Intervenție necesară</text>';
+  svg += '<text x="' + (padL + 8) + '" y="56" text-anchor="start" fill="rgba(76,127,106,0.92)" font-size="13" font-weight="900">Buffere confortabile</text>';
+  svg += '<text x="' + (padL + 8) + '" y="98" text-anchor="start" fill="rgba(187,125,51,0.94)" font-size="13" font-weight="900">Calibrare atentă</text>';
+  svg += '<text x="' + (padL + 8) + '" y="154" text-anchor="start" fill="rgba(190,66,84,0.94)" font-size="13" font-weight="900">Intervenție necesară</text>';
   for (var g = 0; g <= 4; g++) {
     var gy = padT + ((height - padT - padB) / 4) * g;
     svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (width - padR) + '" y2="' + gy + '" stroke="rgba(86,102,122,0.16)" stroke-width="1"/>';
@@ -419,10 +430,15 @@ function financePolicySvg(metrics) {
     var baseH = (item.base / maxVal) * (height - padT - padB);
     var topH = (item.top / maxVal) * (height - padT - padB);
     var yBase = height - padB - baseH;
-    svg += '<rect class="fin-anim-bar" x="' + x + '" y="' + yBase.toFixed(2) + '" width="' + barW + '" height="' + baseH.toFixed(2) + '" rx="16" fill="' + item.color + '" fill-opacity="0.92" stroke="rgba(36,51,72,0.14)" stroke-width="2"/>';
+    svg += '<rect class="fin-anim-bar" x="' + x + '" y="' + yBase.toFixed(2) + '" width="' + barW + '" height="' + baseH.toFixed(2) + '" rx="16" fill="' + item.color + '" fill-opacity="0.92" stroke="rgba(36,51,72,0.18)" stroke-width="2"/>';
     svg += '<rect class="fin-anim-fade" x="' + x + '" y="' + (yBase - topH).toFixed(2) + '" width="' + barW + '" height="' + topH.toFixed(2) + '" rx="16" fill="' + item.color + '" fill-opacity="0.28"/>';
-    svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (height - 8) + '" text-anchor="middle" fill="rgba(81,97,117,0.85)" font-size="11">' + item.label + '</text>';
-    svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (yBase - topH - 8).toFixed(2) + '" text-anchor="middle" fill="' + item.color + '" font-size="12" font-weight="700">' + item.base.toLocaleString('ro-RO', { maximumFractionDigits: 1 }) + (item.label === 'MREL' ? '%' : '%') + '</text>';
+    if (item.label !== 'MREL') {
+      svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (height - 34) + '" text-anchor="middle" fill="rgba(73,89,110,0.86)" font-size="10" font-weight="700">buffer</text>';
+    } else {
+      svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (height - 34) + '" text-anchor="middle" fill="rgba(73,89,110,0.86)" font-size="10" font-weight="700">resoluție</text>';
+    }
+    svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (height - 8) + '" text-anchor="middle" fill="rgba(46,60,80,0.92)" font-size="12" font-weight="700">' + item.label + '</text>';
+    svg += '<text class="fin-anim-fade" x="' + (x + barW / 2) + '" y="' + (yBase - topH - 8).toFixed(2) + '" text-anchor="middle" fill="' + item.color + '" font-size="14" font-weight="800">' + item.base.toLocaleString('ro-RO', { maximumFractionDigits: 1 }) + (item.label === 'MREL' ? '%' : '%') + '</text>';
   });
   return svg + '</svg>';
 }
@@ -845,12 +861,12 @@ function getFinanceLabMetrics() {
     { title: 'Gospodării și imobiliare', copy: 'Dobânzile ridicate și povara datoriei apasă simultan pe consum, default și piața rezidențială.', tone: Math.round(housingFragility) + '/100', color: 'linear-gradient(180deg,#4ea29d,#318a85)' }
   ];
   var scorecard = [
-    { label: 'CET1 sub stres', band: '>10% confort | 8-10% watch | <8% critic', history: [12.8, 13.6, 13.1, 12.6, 12.2, 11.8, Math.max(0, capitalRatio)], value: financePct(capitalRatio, 1), benchmark: 'UE 17,8%', color: capitalRatio > 10 ? '#5ea68c' : capitalRatio > 8 ? '#de8b3d' : '#c84b5a' },
-    { label: 'LCR sub stres', band: '>110% confort | 100-110% watch | <100% critic', history: [138, 144, 132, 126, 120, 116, Math.max(0, liquidityCoverage)], value: financePct(liquidityCoverage, 1), benchmark: 'UE 161,6%', color: liquidityCoverage > 110 ? '#5ea68c' : liquidityCoverage > 100 ? '#de8b3d' : '#c84b5a' },
-    { label: 'Credit gap', band: '<6 moderat | 6-10 ridicat | >10 sever', history: [4.1, 4.8, 5.2, 6.4, 7.3, 8.2, creditGapStress], value: financePct(creditGapStress, 1), benchmark: 'Prag intern 6%', color: creditGapStress < 6 ? '#5ea68c' : creditGapStress < 10 ? '#de8b3d' : '#c84b5a' },
-    { label: 'Tail loss sever', band: '<12% redus | 12-18% watch | >18% sever', history: [7.4, 8.1, 9.8, 10.4, 12.2, 13.5, tailLossTail], value: financePct(tailLossTail, 1), benchmark: 'Scenariu intern', color: tailLossTail < 12 ? '#5ea68c' : tailLossTail < 18 ? '#de8b3d' : '#c84b5a' },
-    { label: 'Scor risc sistemic', band: '<35 redus | 35-55 watch | >55 ridicat', history: [28, 31, 34, 39, 45, 49, systemicRiskScore], value: Math.round(systemicRiskScore) + '/100', benchmark: 'Țintă <35', color: systemicRiskScore < 35 ? '#5ea68c' : systemicRiskScore < 55 ? '#de8b3d' : '#c84b5a' },
-    { label: 'CCyB sugerat', band: '<1.5% redus | 1.5-2.5% watch | >2.5% activ', history: [0.5, 0.5, 1.0, 1.0, 1.0, 1.1, ccybNeed], value: financePct(ccybNeed, 1), benchmark: 'RO 1,0%', color: ccybNeed < 1.5 ? '#5ea68c' : ccybNeed < 2.5 ? '#de8b3d' : '#c84b5a' }
+    { label: 'CET1 sub stres', band: '>10% confort | 8-10% watch | <8% critic', history: financeHistorySeries(Math.max(0, capitalRatio), [4.8, 4.1, 3.4, 2.6, 1.8, 0.9, 0]), value: financePct(capitalRatio, 1), benchmark: 'UE 17,8%', color: capitalRatio > 10 ? '#5ea68c' : capitalRatio > 8 ? '#de8b3d' : '#c84b5a' },
+    { label: 'LCR sub stres', band: '>110% confort | 100-110% watch | <100% critic', history: financeHistorySeries(Math.max(0, liquidityCoverage), [33, 40, 27, 19, 11, 6, 0]), value: financePct(liquidityCoverage, 1), benchmark: 'UE 161,6%', color: liquidityCoverage > 110 ? '#5ea68c' : liquidityCoverage > 100 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Credit gap', band: '<6 moderat | 6-10 ridicat | >10 sever', history: financeHistorySeries(creditGapStress, [-3.5, -2.7, -2.1, -1.3, -0.8, -0.3, 0]), value: financePct(creditGapStress, 1), benchmark: 'Prag intern 6%', color: creditGapStress < 6 ? '#5ea68c' : creditGapStress < 10 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Tail loss sever', band: '<12% redus | 12-18% watch | >18% sever', history: financeHistorySeries(tailLossTail, [-8.2, -6.1, -4.7, -3.0, -1.8, -0.7, 0]), value: financePct(tailLossTail, 1), benchmark: 'Scenariu intern', color: tailLossTail < 12 ? '#5ea68c' : tailLossTail < 18 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Scor risc sistemic', band: '<35 redus | 35-55 watch | >55 ridicat', history: financeHistorySeries(systemicRiskScore, [-24, -18, -13, -8, -5, -2, 0]), value: Math.round(systemicRiskScore) + '/100', benchmark: 'Țintă <35', color: systemicRiskScore < 35 ? '#5ea68c' : systemicRiskScore < 55 ? '#de8b3d' : '#c84b5a' },
+    { label: 'CCyB sugerat', band: '<1.5% redus | 1.5-2.5% watch | >2.5% activ', history: financeHistorySeries(ccybNeed, [-0.8, -0.7, -0.5, -0.4, -0.2, -0.1, 0]), value: financePct(ccybNeed, 1), benchmark: 'RO 1,0%', color: ccybNeed < 1.5 ? '#5ea68c' : ccybNeed < 2.5 ? '#de8b3d' : '#c84b5a' }
   ];
   var overviewTone = isStability
     ? (stabilityScore >= 62 ? 'Sistemul rămâne absorbant, dar amortizoarele trebuie monitorizate în jurul creditului, refinanțării și pieței.' : 'Fragilitatea sistemică se acumulează prea repede; buffer-ele nu mai compensează complet ciclul creditului și canalele de contagiune.')
@@ -1009,8 +1025,9 @@ function updateFinanceLabUI() {
       var nodeVal = document.getElementById('finNode' + item[0] + 'Val');
       if (node) {
         node.style.setProperty('--node-color', item[2]);
-        node.style.setProperty('--node-glow', (0.16 + Math.min(0.5, item[1] / 140)).toFixed(2));
+        node.style.setProperty('--node-glow', (0.18 + Math.min(0.62, item[1] / 110)).toFixed(2));
         node.classList.toggle('is-hot', item[1] >= 52);
+        node.classList.toggle('is-very-hot', item[1] >= 72);
       }
       if (nodeVal) nodeVal.textContent = Math.round(item[1]) + '/100';
     });
