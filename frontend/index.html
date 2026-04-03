@@ -8534,8 +8534,8 @@ function getFinanceLabMetrics() {
     { label: 'Credit boom', nominal: Math.max(0, finance.capitalBuffer * 1.6 + finance.liquidityBuffer * 0.2), discounted: Math.max(0, finance.capitalBuffer * 1.35 + finance.liquidityBuffer * 0.14 - creditHeat * 0.22) },
     { label: 'Housing', nominal: Math.max(0, finance.capitalBuffer * 1.55 + finance.liquidityBuffer * 0.18), discounted: Math.max(0, finance.capitalBuffer * 1.18 + finance.liquidityBuffer * 0.12 - housingFragility * 0.19) },
     { label: 'Funding', nominal: Math.max(0, finance.capitalBuffer * 1.48 + finance.liquidityBuffer * 0.16), discounted: Math.max(0, finance.capitalBuffer * 1.05 + finance.liquidityBuffer * 0.1 - finance.refinancingGap * 0.26 - contagionPressure * 0.1) },
-    { label: 'Shock', nominal: Math.max(0, finance.capitalBuffer * 1.42 + finance.liquidityBuffer * 0.13), discounted: Math.max(0, finance.capitalBuffer + finance.liquidityBuffer * 0.08 - systemicRiskScore * 0.14) },
-    { label: 'Buffer left', nominal: Math.max(0, finance.capitalBuffer * 1.35 + finance.liquidityBuffer * 0.11), discounted: Math.max(0, finance.capitalBuffer * 0.92 + finance.liquidityBuffer * 0.07 - systemicRiskScore * 0.1) }
+    { label: 'Shock', nominal: Math.max(0, finance.capitalBuffer * 1.42 + finance.liquidityBuffer * 0.13), discounted: Math.max(0, finance.capitalBuffer + finance.liquidityBuffer * 0.08 - systemicRiskScore * 0.14 - finance.stressShock * 0.11) },
+    { label: 'Buffer left', nominal: Math.max(0, finance.capitalBuffer * 1.35 + finance.liquidityBuffer * 0.11), discounted: Math.max(0, finance.capitalBuffer * 0.92 + finance.liquidityBuffer * 0.07 - systemicRiskScore * 0.1 - finance.stressShock * 0.09) }
   ];
   function riskMeta(score) {
     if (score >= 70) return { level: 'Sever', color: '#c84b5a', bg: 'rgba(200,75,90,0.12)', trend: '↑ ridicat' };
@@ -14702,5 +14702,6 @@ window.addEventListener('sh:session-expired', handleSessionExpired);
 })();
 </script>
 <script src="js/learning-layers.js"></script>
+<script src="js/finance-charts.js"></script>
 </body>
 </html>
