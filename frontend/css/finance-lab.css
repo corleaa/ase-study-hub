@@ -915,16 +915,16 @@
 }
 
 .finance-report-card .finance-chart {
-  background: linear-gradient(180deg, rgba(230,236,244,0.95), rgba(247,249,252,0.75));
+  background: linear-gradient(180deg, rgba(229,236,245,0.98), rgba(246,249,253,0.88));
   border-color: #d5deea;
 }
 
 .finance-report-card--wide .finance-chart {
-  min-height: 300px;
+  min-height: 320px;
 }
 
 .finance-report-card--wide .finance-chart svg {
-  height: 258px;
+  height: 280px;
 }
 
 .finance-report-card .finance-story {
