@@ -16,13 +16,13 @@ function renderProductIdentityCards() {
 
 function renderDashboardNextSteps() {
   const steps = [
-    { badge: '1', title: 'Generează un rezumat vizual', copy: 'Începe cu o fișă de învățare. Este baza pentru înțelegere, recapitulare și exemple concrete.', action: "navigateTo('dashboard')", label: 'Alege o materie' },
-    { badge: '2', title: 'Testează ideile importante', copy: 'Treci rapid din rezumat în quiz. Vezi unde înțelegi bine și unde ai nevoie de clarificare.', action: "navigateTo('quiz')", label: 'Deschide quiz' },
-    { badge: '3', title: 'Fixează în memorie', copy: 'Mută conceptele în flashcards pentru recapitulări scurte, dese și ușor de urmărit.', action: "navigateTo('flashcards')", label: 'Studiază flashcards' }
+    { badge: '1', title: 'Generează un rezumat vizual', copy: 'Începe cu o fișă de învățare. Este baza pentru înțelegere, recapitulare și exemple concrete.', action: 'subjects', label: 'Alege o materie' },
+    { badge: '2', title: 'Testează ideile importante', copy: 'Treci rapid din rezumat în quiz. Vezi unde înțelegi bine și unde ai nevoie de clarificare.', action: 'quiz', label: 'Deschide quiz' },
+    { badge: '3', title: 'Fixează în memorie', copy: 'Mută conceptele în flashcards pentru recapitulări scurte, dese și ușor de urmărit.', action: 'flashcards', label: 'Studiază flashcards' }
   ];
   return '<div class="dashboard-next-steps">' + steps.map(function(step) {
     return '<div class="next-step-card"><span class="soft-badge">Pasul ' + step.badge + '</span><div class="section-title" style="font-size:1.02rem;margin-top:12px;">'
-      + step.title + '</div><div class="section-copy" style="font-size:.86rem;">' + step.copy + '</div><button class="summary-gen-btn" style="margin-top:16px;" onclick="' + step.action + '">' + step.label + '</button></div>';
+      + step.title + '</div><div class="section-copy" style="font-size:.86rem;">' + step.copy + '</div><button class="summary-gen-btn" style="margin-top:16px;" data-dashboard-action="' + step.action + '">' + step.label + '</button></div>';
   }).join('') + '</div>';
 }
 
@@ -56,9 +56,9 @@ function renderLearningPlayground(subjectKey, subject) {
     const stableDemand = Math.max(12, Math.round(play.demand - (play.price - 10) * 2));
     return '<div class="graph-playground"><div class="section-kicker">Interactive Graph</div><div class="section-title">Elasticitate explicată vizual</div><div class="section-copy">Mișcă variabilele și vezi separat prețul, cererea și venitul. Așa înțelegi graficul ca relație reală, nu doar ca teorie.</div>'
       + '<div class="slider-grid">'
-      + '<div class="slider-card"><label><span>Preț</span><strong>' + play.price + ' lei</strong></label><input type="range" min="4" max="20" value="' + play.price + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'price\',this.value)"></div>'
-      + '<div class="slider-card"><label><span>Cerere de bază</span><strong>' + play.demand + ' unități</strong></label><input type="range" min="30" max="110" value="' + play.demand + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'demand\',this.value)"></div>'
-      + '<div class="slider-card"><label><span>Sensibilitate</span><strong>' + play.sensitivity + '%</strong></label><input type="range" min="10" max="90" value="' + play.sensitivity + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'sensitivity\',this.value)"></div>'
+      + '<div class="slider-card"><label><span>Preț</span><strong>' + play.price + ' lei</strong></label><input type="range" min="4" max="20" value="' + play.price + '" data-playground-subject="' + subjectKey + '" data-playground-field="price"></div>'
+      + '<div class="slider-card"><label><span>Cerere de bază</span><strong>' + play.demand + ' unități</strong></label><input type="range" min="30" max="110" value="' + play.demand + '" data-playground-subject="' + subjectKey + '" data-playground-field="demand"></div>'
+      + '<div class="slider-card"><label><span>Sensibilitate</span><strong>' + play.sensitivity + '%</strong></label><input type="range" min="10" max="90" value="' + play.sensitivity + '" data-playground-subject="' + subjectKey + '" data-playground-field="sensitivity"></div>'
       + '<div class="slider-card"><label><span>Scenariu</span><strong>Piață de cafea</strong></label><div class="section-copy" style="font-size:.82rem;">Prețul crește, clienții reacționează diferit în funcție de cât de elastică este cererea.</div></div>'
       + '</div>'
       + '<div class="playground-stage"><div class="decompose-steps"><div class="decompose-step"><span class="step-no">1</span><strong>Prețul urcă</strong><p class="section-copy" style="font-size:.82rem;">Valoarea produsului pleacă din controlul tău direct.</p></div><div class="decompose-step"><span class="step-no">2</span><strong>Cererea reacționează</strong><p class="section-copy" style="font-size:.82rem;">Sensibilitatea arată cât de repede scad cumpărătorii.</p></div><div class="decompose-step"><span class="step-no">3</span><strong>Venitul se schimbă</strong><p class="section-copy" style="font-size:.82rem;">Abia la final vezi dacă noul preț ajută sau nu.</p></div></div>'
@@ -71,9 +71,9 @@ function renderLearningPlayground(subjectKey, subject) {
   const overload = Math.max(5, Math.round(play.difficulty * 0.8 + play.chunk * 6 - play.repetition * 8));
   return '<div class="graph-playground"><div class="section-kicker">Interactive Graph</div><div class="section-title">Cum se construiește retenția</div><div class="section-copy">Experimentează cu dimensiunea unui bloc de studiu, numărul de repetiții și dificultatea. Vezi separat ce ajută și ce obosește memoria.</div>'
     + '<div class="slider-grid">'
-    + '<div class="slider-card"><label><span>Bloc de studiu</span><strong>' + play.chunk + ' idei</strong></label><input type="range" min="1" max="8" value="' + play.chunk + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'chunk\',this.value)"></div>'
-    + '<div class="slider-card"><label><span>Repetiții</span><strong>' + play.repetition + ' treceri</strong></label><input type="range" min="1" max="6" value="' + play.repetition + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'repetition\',this.value)"></div>'
-    + '<div class="slider-card"><label><span>Dificultate</span><strong>' + play.difficulty + '%</strong></label><input type="range" min="20" max="95" value="' + play.difficulty + '" oninput="setPlaygroundValue(\'' + subjectKey + '\',\'difficulty\',this.value)"></div>'
+    + '<div class="slider-card"><label><span>Bloc de studiu</span><strong>' + play.chunk + ' idei</strong></label><input type="range" min="1" max="8" value="' + play.chunk + '" data-playground-subject="' + subjectKey + '" data-playground-field="chunk"></div>'
+    + '<div class="slider-card"><label><span>Repetiții</span><strong>' + play.repetition + ' treceri</strong></label><input type="range" min="1" max="6" value="' + play.repetition + '" data-playground-subject="' + subjectKey + '" data-playground-field="repetition"></div>'
+    + '<div class="slider-card"><label><span>Dificultate</span><strong>' + play.difficulty + '%</strong></label><input type="range" min="20" max="95" value="' + play.difficulty + '" data-playground-subject="' + subjectKey + '" data-playground-field="difficulty"></div>'
     + '<div class="slider-card"><label><span>Scenariu</span><strong>Capitol înainte de examen</strong></label><div class="section-copy" style="font-size:.82rem;">Dacă pui prea multe idei într-un bloc mare, înțelegerea scade chiar dacă petreci mai mult timp.</div></div>'
     + '</div>'
     + '<div class="playground-stage"><div class="decompose-steps"><div class="decompose-step"><span class="step-no">1</span><strong>Fragmentare</strong><p class="section-copy" style="font-size:.82rem;">Mai puține idei pe bloc înseamnă mai puțină încărcare mentală.</p></div><div class="decompose-step"><span class="step-no">2</span><strong>Repetiție</strong><p class="section-copy" style="font-size:.82rem;">Fiecare revenire întărește traseul până când informația devine familiară.</p></div><div class="decompose-step"><span class="step-no">3</span><strong>Aplicare</strong><p class="section-copy" style="font-size:.82rem;">Retenția bună apare când blocul e clar, iar dificultatea rămâne gestionabilă.</p></div></div>'
@@ -122,14 +122,14 @@ function renderOnboarding() {
   html += '<summary>' + icon('key','xs') + ' ' + (state.apiKey ? '[OK] API Anthropic configurat' : 'Pasul 1 — Configurează API Anthropic (pentru AI)') + '</summary>';
   html += '<p style="font-size:.82rem;color:var(--text-secondary);margin-top:10px;">API key-ul e necesar pentru AI Tutor, Quiz, Flashcards și prezentări. Obțin gratuit de la <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent);">console.anthropic.com</a>.</p>';
   html += '<div class="api-row"><input type="password" class="api-inp" id="apiKeyInput" placeholder="configurat automat de server" value="' + (state.apiKey || '') + '">';
-  html += '<button class="api-save" onclick="saveApiKey()">Salvează</button></div>';
+  html += '<button class="api-save" data-dashboard-action="save-api">Salvează</button></div>';
   html += '<div class="api-status" id="apiStatus"></div></details>';
 
   // Optiuni onboarding
   html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:32px;" class="anim anim-d2">';
 
   // Optiunea 1: Adauga manual
-  html += '<div style="background:var(--bg-raised);border:2px solid var(--accent-border);border-radius:var(--radius);padding:28px 24px;text-align:center;cursor:pointer;transition:all .2s;" onclick="openSubjectManager()" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--accent-border)\'">';
+  html += '<div style="background:var(--bg-raised);border:2px solid var(--accent-border);border-radius:var(--radius);padding:28px 24px;text-align:center;cursor:pointer;transition:all .2s;" data-dashboard-action="open-subject-manager" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--accent-border)\'">';
   html += '<div style="margin-bottom:12px;">' + iconBadge('plus','muted','lg') + '</div>';
   html += '<div style="font-weight:700;font-size:1.05rem;margin-bottom:6px;">Adaugă materiile tale</div>';
   html += '<div style="font-size:.82rem;color:var(--text-secondary);">Creează materii personalizate cu icon, culoare și descriere proprie. Recomandat dacă nu ești la ASE.</div>';
@@ -137,7 +137,7 @@ function renderOnboarding() {
   html += '</div>';
 
   // Optiunea 2: Import ASE template
-  html += '<div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;text-align:center;cursor:pointer;transition:all .2s;" onclick="importASETemplate()" onmouseover="this.style.borderColor=\'var(--border-hover)\'" onmouseout="this.style.borderColor=\'var(--border)\'">';
+  html += '<div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;text-align:center;cursor:pointer;transition:all .2s;" data-dashboard-action="import-ase" onmouseover="this.style.borderColor=\'var(--border-hover)\'" onmouseout="this.style.borderColor=\'var(--border)\'">';
   html += '<div style="margin-bottom:12px;">' + iconBadge('building','','lg') + '</div>';
   html += '<div style="font-weight:700;font-size:1.05rem;margin-bottom:6px;">Importă template ASE</div>';
   html += '<div style="font-size:.82rem;color:var(--text-secondary);">Pornește cu materiile ASE pre-configurate (MAP, Python & ML, Banking, Econometrie, MCCP). Le poți edita sau șterge după.</div>';
@@ -232,7 +232,7 @@ function renderDashboard(element) {
     html += '<div class="api-key-banner-title">Conectează Claude AI pentru a debloca toate funcționalitățile</div>';
     html += '<div class="api-key-banner-sub">Quiz, Flashcards AI, Prezentări, Mind Maps și Mentor necesită un API key Anthropic gratuit.</div>';
     html += '</div>';
-    html += '<button class="api-key-banner-btn" onclick="navigateTo(\'settings\')">' + icon('key','xs') + ' Configurează</button>';
+    html += '<button class="api-key-banner-btn" data-nav-tab="settings">' + icon('key','xs') + ' Configurează</button>';
     html += '</div>';
   }
 
@@ -246,8 +246,8 @@ function renderDashboard(element) {
   html += '<div class="clarity-title">' + greet + '</div>';
   html += '<p class="clarity-copy">Study Hub este construit pentru patru lucruri foarte clare: rezumate structurate, flashcards, quiz-uri și învățare interactivă. Totul pornește din materia ta și se transformă în explicații mai ușor de înțeles.</p>';
   html += '<div class="clarity-actions" style="margin-top:18px;">';
-  html += '<button class="summary-gen-btn" onclick="openSubjectManager()">' + icon('plus','xs') + ' Adaugă materie</button>';
-  html += '<button class="quiz-nav-btn primary" onclick="navigateTo(\'quiz\')">' + icon('brain','xs') + ' Începe un quiz</button>';
+  html += '<button class="summary-gen-btn" data-dashboard-action="open-subject-manager">' + icon('plus','xs') + ' Adaugă materie</button>';
+  html += '<button class="quiz-nav-btn primary" data-nav-tab="quiz">' + icon('brain','xs') + ' Începe un quiz</button>';
   html += '</div>';
   html += '<div class="clarity-pill-row" style="margin-top:18px;">';
   html += '<div class="clarity-pill">' + icon('layers2','xs') + '<span>Rezumate explicate pe niveluri</span></div>';
@@ -294,13 +294,13 @@ function renderDashboard(element) {
   // Flashcards due
   if (dueFC > 0) {
     html += '<div class="dsb-divider"></div>';
-    html += '<div class="dsb-item clickable" onclick="navigateTo(\'flashcards\')" style="cursor:pointer;"><span style="color:var(--amber)">' + icon('cards','xs') + '</span><div><div class="dsb-val" style="color:var(--amber)">' + dueFC + '</div><div class="dsb-label">De revizuit</div></div></div>';
+    html += '<div class="dsb-item clickable" data-nav-tab="flashcards" style="cursor:pointer;"><span style="color:var(--amber)">' + icon('cards','xs') + '</span><div><div class="dsb-val" style="color:var(--amber)">' + dueFC + '</div><div class="dsb-label">De revizuit</div></div></div>';
   }
   // Next exam
   if (nextExam) {
     const examDays = Math.round((new Date(nextExam.date)-new Date())/86400000);
     html += '<div class="dsb-divider"></div>';
-    html += '<div class="dsb-item clickable" onclick="navigateTo(\'calendar\')" style="cursor:pointer;margin-left:auto;"><span style="color:' + (examDays<=3?'var(--red)':'var(--blue)') + '">' + icon('calendar','xs') + '</span><div><div class="dsb-val" style="color:' + (examDays<=3?'var(--red)':'var(--blue)') + '">' + examDays + 'z</div><div class="dsb-label" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(nextExam.name) + '</div></div></div>';
+    html += '<div class="dsb-item clickable" data-nav-tab="calendar" style="cursor:pointer;margin-left:auto;"><span style="color:' + (examDays<=3?'var(--red)':'var(--blue)') + '">' + icon('calendar','xs') + '</span><div><div class="dsb-val" style="color:' + (examDays<=3?'var(--red)':'var(--blue)') + '">' + examDays + 'z</div><div class="dsb-label" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(nextExam.name) + '</div></div></div>';
   }
   html += '</div>';
 
@@ -335,7 +335,7 @@ function renderDashboard(element) {
     // Demo banner subtil
     html += '<div style="background:var(--amber-muted);border:1px solid rgba(245,166,35,.25);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">';
     html += '<div style="font-size:.82rem;color:var(--text-secondary);flex:1;">' + icon('alert','xs') + ' Acestea sunt <strong style="color:var(--amber)">materii demo</strong> — personalizează sau înlocuiește-le cu ale tale.</div>';
-    html += '<button onclick="openSubjectManager()" style="padding:5px 12px;background:var(--amber);color:#fff;border:none;border-radius:var(--radius-xs);font-weight:600;font-size:.75rem;cursor:pointer;white-space:nowrap;">Personalizează</button>';
+    html += '<button data-dashboard-action="open-subject-manager" style="padding:5px 12px;background:var(--amber);color:#fff;border:none;border-radius:var(--radius-xs);font-weight:600;font-size:.75rem;cursor:pointer;white-space:nowrap;">Personalizează</button>';
     html += '</div>';
   }
 
@@ -345,7 +345,7 @@ function renderDashboard(element) {
   // ── MATERII PE GRUPE ──────────────────────
   html += '<div class="home-section-header">';
   html += '<div class="home-section-title">' + icon('book','sm') + ' Materiile mele</div>';
-  html += '<button class="home-section-action" onclick="openSubjectManager()">' + icon('settings','xs') + ' Gestionează</button>';
+  html += '<button class="home-section-action" data-dashboard-action="open-subject-manager">' + icon('settings','xs') + ' Gestionează</button>';
   html += '</div>';
 
   const groups = getSubjectGroupsForDisplay(subjects);
@@ -353,7 +353,7 @@ function renderDashboard(element) {
     html += '<div class="subject-group">';
     html += '<div class="subject-group-label">';
     html += '<span class="subject-group-name">' + icon('layers','xs') + ' ' + escapeHtml(group.name) + '</span>';
-    html += '<button class="subject-group-edit" onclick="editGroupName(\'' + group.id + '\')">' + icon('edit','xs') + ' Redenumește</button>';
+    html += '<button class="subject-group-edit" data-group-edit="' + group.id + '">' + icon('edit','xs') + ' Redenumește</button>';
     html += '</div>';
     html += '<div class="subject-group-grid">';
 
@@ -368,7 +368,7 @@ function renderDashboard(element) {
       const fcCount = (state.flashcardDecks && state.flashcardDecks[key] || []).length;
       const qCount = (state.quizHistory && state.quizHistory[key] || []).length;
 
-      html += '<div class="home-subj-card" onclick="navigateTo(\'' + key + '\')" style="--subj-accent:' + theme.accent + ';--subj-border:' + theme.border + '">';
+      html += '<div class="home-subj-card" data-subject-nav="' + key + '" style="--subj-accent:' + theme.accent + ';--subj-border:' + theme.border + '">';
       // Top: icon + percent
       html += '<div class="home-subj-top">';
       html += subjectIconBadge(subj, 32);
@@ -394,7 +394,7 @@ function renderDashboard(element) {
       html += '</div>';
     });
 
-    html += '<div class="home-add-subj-card" onclick="openSubjectManager()">' + icon('plus','sm') + '<span>Adaugă materie</span></div>';
+    html += '<div class="home-add-subj-card" data-dashboard-action="open-subject-manager">' + icon('plus','sm') + '<span>Adaugă materie</span></div>';
     html += '</div></div>';
   });
 
@@ -432,7 +432,7 @@ function renderDashboard(element) {
     html += '<div class="home-tools-head"><div><strong>' + group.title + '</strong><span>' + group.copy + '</span></div></div>';
     html += '<div class="home-tools-grid">';
     group.tools.forEach(function(t) {
-      html += '<div class="home-tool-card" onclick="navigateTo(\'' + t.tab + '\')" style="--tool-border:' + t.border + ';--tool-muted:' + t.muted + '">';
+      html += '<div class="home-tool-card" data-nav-tab="' + t.tab + '" style="--tool-border:' + t.border + ';--tool-muted:' + t.muted + '">';
       html += '<div class="home-tool-icon" style="background:' + t.muted + ';color:' + t.color + '">' + icon(t.iconN,'sm') + '</div>';
       html += '<div class="home-tool-copy"><div class="home-tool-name">' + t.name + '</div><div class="home-tool-desc">' + t.desc + '</div></div>';
       html += '</div>';
@@ -443,6 +443,52 @@ function renderDashboard(element) {
 
   html += '</div>';
   element.innerHTML = html;
+  setupDashboardPageInteractions(element);
+}
+
+function setupDashboardPageInteractions(element) {
+  if (element.__dashboardInteractionsBound) return;
+  element.__dashboardInteractionsBound = true;
+
+  element.addEventListener('click', function(e) {
+    const actionEl = e.target.closest('[data-dashboard-action]');
+    if (actionEl) {
+      const action = actionEl.getAttribute('data-dashboard-action');
+      if (action === 'open-subject-manager' || action === 'subjects') openSubjectManager();
+      else if (action === 'quiz') navigateTo('quiz');
+      else if (action === 'flashcards') navigateTo('flashcards');
+      else if (action === 'save-api') saveApiKey();
+      else if (action === 'import-ase') importASETemplate();
+      return;
+    }
+
+    const tabEl = e.target.closest('[data-nav-tab]');
+    if (tabEl) {
+      navigateTo(tabEl.getAttribute('data-nav-tab'));
+      return;
+    }
+
+    const subjectEl = e.target.closest('[data-subject-nav]');
+    if (subjectEl) {
+      navigateTo(subjectEl.getAttribute('data-subject-nav'));
+      return;
+    }
+
+    const groupEl = e.target.closest('[data-group-edit]');
+    if (groupEl) {
+      editGroupName(groupEl.getAttribute('data-group-edit'));
+    }
+  });
+
+  element.addEventListener('input', function(e) {
+    const input = e.target.closest('[data-playground-field]');
+    if (!input) return;
+    setPlaygroundValue(
+      input.getAttribute('data-playground-subject'),
+      input.getAttribute('data-playground-field'),
+      input.value
+    );
+  });
 }
 
 // ── Subject groups helpers ──────────────────

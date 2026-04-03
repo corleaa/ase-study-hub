@@ -5987,7 +5987,7 @@ details[open] .detail-chevron {
 <div id="authModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:32px;position:relative;box-shadow:var(--shadow);">
     <!-- Close button -->
-    <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1;padding:4px;">✕</button>
+    <button data-app-action="close-auth-modal" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1;padding:4px;">✕</button>
 
     <div class="auth-brand">
       <img class="auth-brand-mark" src="/assets/logos/study-hub-logo-concept-a-layered-s.svg" alt="Study Hub logo">
@@ -5998,12 +5998,12 @@ details[open] .detail-chevron {
     <div id="authError" style="display:none;background:var(--red-muted);border:1px solid rgba(239,69,101,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;color:var(--red);font-size:.85rem;"></div>
 
     <div style="display:flex;gap:8px;margin-bottom:20px;">
-      <button id="authTabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:.87rem;font-family:inherit;">Autentificare</button>
-      <button id="authTabRegister" onclick="switchAuthTab('register')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.87rem;font-family:inherit;">Cont nou</button>
+      <button id="authTabLogin" data-app-action="switch-auth-tab" data-auth-tab="login" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:.87rem;font-family:inherit;">Autentificare</button>
+      <button id="authTabRegister" data-app-action="switch-auth-tab" data-auth-tab="register" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.87rem;font-family:inherit;">Cont nou</button>
     </div>
     <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);font-size:.9rem;margin-bottom:12px;box-sizing:border-box;font-family:inherit;">
     <input id="authPassword" type="password" placeholder="Parolă (min. 8 caractere)" autocomplete="current-password" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);font-size:.9rem;margin-bottom:16px;box-sizing:border-box;font-family:inherit;">
-    <button id="authSubmitBtn" onclick="submitAuth()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;">Intră în cont</button>
+    <button id="authSubmitBtn" data-app-action="submit-auth" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;">Intră în cont</button>
 
     <p style="text-align:center;color:var(--text-muted);font-size:.76rem;margin-top:14px;">Fără abonament. Cont gratuit pentru acces extins.</p>
   </div>
@@ -6012,12 +6012,12 @@ details[open] .detail-chevron {
 <!-- ── UPGRADE MODAL ──────────────────────────────────────────────── -->
 <div id="upgradeModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:360px;background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:28px;position:relative;box-shadow:var(--shadow);text-align:center;">
-    <button onclick="closeUpgradeModal()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1;padding:4px;">✕</button>
+    <button data-app-action="close-upgrade-modal" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1;padding:4px;">✕</button>
     <div style="font-size:2rem;margin-bottom:12px;">🚀</div>
     <div id="upgradeModalTitle" style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;margin-bottom:8px;">Limită atinsă</div>
     <p id="upgradeModalMsg" style="color:var(--text-secondary);font-size:.88rem;margin-bottom:20px;line-height:1.55;"></p>
-    <button id="upgradeModalCta" onclick="openAuthModal();closeUpgradeModal();" style="width:100%;padding:11px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;">Creează cont gratuit</button>
-    <button onclick="closeUpgradeModal()" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:.88rem;cursor:pointer;font-family:inherit;">Continuă ca Guest</button>
+    <button id="upgradeModalCta" data-app-action="upgrade-open-auth" style="width:100%;padding:11px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;">Creează cont gratuit</button>
+    <button data-app-action="close-upgrade-modal" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:.88rem;cursor:pointer;font-family:inherit;">Continuă ca Guest</button>
   </div>
 </div>
 
@@ -6027,7 +6027,7 @@ details[open] .detail-chevron {
 <div class="app" id="app">
 
   <!-- SIDEBAR BACKDROP (mobile) -->
-  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" data-app-action="close-sidebar"></div>
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
@@ -6040,9 +6040,9 @@ details[open] .detail-chevron {
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
     <div class="sidebar-footer">
-      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Schimbă tema"></button>
-      <button class="theme-btn" onclick="openCommandPalette()" title="⌘K" style="flex:0;padding:7px 9px;"><span class="icon icon-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span></button>
-      <button class="logout-btn" onclick="handleLogout()" title="Delogare"><span class="icon icon-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span></button>
+      <button class="theme-btn" data-app-action="toggle-theme" id="themeBtn" title="Schimbă tema"></button>
+      <button class="theme-btn" data-app-action="open-command-palette" title="⌘K" style="flex:0;padding:7px 9px;"><span class="icon icon-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span></button>
+      <button class="logout-btn" data-app-action="handle-logout" title="Delogare"><span class="icon icon-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span></button>
     </div>
   </aside>
 
@@ -6050,12 +6050,12 @@ details[open] .detail-chevron {
   <div class="content">
     <header class="topbar">
       <div style="display:flex;align-items:center;gap:12px;">
-        <button class="menu-toggle" onclick="openSidebarMobile()"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></span></button>
+        <button class="menu-toggle" data-app-action="open-sidebar-mobile"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></span></button>
         <span class="topbar-title" id="topbarTitle">Dashboard</span>
       </div>
       <div class="topbar-right">
-        <button class="topbar-kbd-hint" onclick="openCommandPalette()" title="Command Palette">⌘K</button>
-        <button class="topbar-notif-btn" id="topbarNotifBtn" onclick="openNotifPanel()" title="Notificări">
+        <button class="topbar-kbd-hint" data-app-action="open-command-palette" title="Command Palette">⌘K</button>
+        <button class="topbar-notif-btn" id="topbarNotifBtn" data-app-action="open-notif-panel" title="Notificări">
           <span class="icon icon-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
           <span class="topbar-notif-dot" id="topbarNotifDot"></span>
         </button>
@@ -6079,7 +6079,7 @@ details[open] .detail-chevron {
 <div id="modalContainer"></div>
 
 <!-- POMODORO DONE POPUP -->
-<div id="pomoDoneOverlay" onclick="if(event.target===this)closePomoDone()">
+<div id="pomoDoneOverlay" data-app-overlay="close-pomo-done">
   <div id="pomoDonePopup">
     <div class="pomo-done-icon-wrap" id="pomoDoneRing" style="background:rgba(79,110,247,0.1);border:1.5px solid rgba(79,110,247,0.25);">
       <span class="icon icon-md" id="pomoDoneIcon" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
@@ -6087,9 +6087,9 @@ details[open] .detail-chevron {
     <div class="pomo-done-title" id="pomoDoneTitle">Sesiune terminată!</div>
     <div class="pomo-done-sub" id="pomoDoneSub">Ia o pauză de 5 minute. Ai muncit bine.</div>
     <div class="pomo-done-actions">
-      <button class="pomo-done-btn" onclick="closePomoDone()">Închide</button>
-      <button class="pomo-done-btn" onclick="pomoRestartSame()">Repetă</button>
-      <button class="pomo-done-btn primary" id="pomoDoneNext" onclick="pomoDoneStartNext()">Pornește pauza</button>
+      <button class="pomo-done-btn" data-app-action="close-pomo-done">Închide</button>
+      <button class="pomo-done-btn" data-app-action="pomo-restart-same">Repetă</button>
+      <button class="pomo-done-btn primary" id="pomoDoneNext" data-app-action="pomo-done-start-next">Pornește pauza</button>
     </div>
   </div>
 </div>
@@ -6099,14 +6099,14 @@ details[open] .detail-chevron {
   <div class="pres-viewer-header">
     <div class="pres-viewer-title" id="presViewerTitle">Prezentare</div>
     <div class="pres-viewer-controls">
-      <button class="pres-viewer-btn" id="pvPrev" onclick="pvNavigate(-1)" title="← Prev">
+      <button class="pres-viewer-btn" id="pvPrev" data-app-action="pv-prev" title="← Prev">
         <span class="icon icon-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
       </button>
       <span class="pres-viewer-counter" id="pvCounter">1 / 1</span>
-      <button class="pres-viewer-btn" id="pvNext" onclick="pvNavigate(1)" title="Next →">
+      <button class="pres-viewer-btn" id="pvNext" data-app-action="pv-next" title="Next →">
         <span class="icon icon-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
       </button>
-      <button class="pres-viewer-btn close-btn" onclick="closePresentationViewer()" title="Închide (Esc)">
+      <button class="pres-viewer-btn close-btn" data-app-action="close-presentation-viewer" title="Închide (Esc)">
         <span class="icon icon-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
       </button>
     </div>
@@ -6122,7 +6122,7 @@ details[open] .detail-chevron {
 <div id="notifPanel">
   <div class="notif-header">
     <span class="notif-header-title">Notificări</span>
-    <button class="notif-clear-btn" onclick="clearAllNotifs()">Marchează toate ca citite</button>
+    <button class="notif-clear-btn" data-app-action="clear-all-notifs">Marchează toate ca citite</button>
   </div>
   <div class="notif-list" id="notifList"><div class="notif-empty">Nicio notificare nouă</div></div>
 </div>
@@ -6160,11 +6160,11 @@ details[open] .detail-chevron {
       <div class="onb-title">Alege materiile tale</div>
       <div class="onb-desc">Importă pachetul ASE pre-configurat sau pornești cu un profil gol pentru orice facultate.</div>
       <div class="onb-feature-grid" style="grid-template-columns:1fr;">
-        <button onclick="onbImportASE()" style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:left;transition:border-color .15s;font-family:var(--font-body);" onmouseover="this.style.borderColor='var(--accent-border)'" onmouseout="this.style.borderColor='var(--border)'">
+        <button data-app-action="onb-import-ase" style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:left;transition:border-color .15s;font-family:var(--font-body);" onmouseover="this.style.borderColor='var(--accent-border)'" onmouseout="this.style.borderColor='var(--border)'">
           <div class="onb-feature-icon"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h1"/><path d="M14 9h1"/><path d="M9 14h1"/><path d="M14 14h1"/><path d="M9 19v-3h6v3"/></svg></span></div>
           <div><div style="font-weight:600;font-size:.88rem;color:var(--text-primary);">Template ASE</div><div style="font-size:.76rem;color:var(--text-muted);margin-top:2px;">MAP · Python & ML · Banking · Econometrie · MCCP</div></div>
         </button>
-        <button onclick="onbSkipSubjects()" style="display:flex;align-items:center;gap:14px;padding:16px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:left;font-family:var(--font-body);">
+        <button data-app-action="onb-skip-subjects" style="display:flex;align-items:center;gap:14px;padding:16px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:left;font-family:var(--font-body);">
           <div class="onb-feature-icon" style="background:var(--bg-overlay);color:var(--text-muted)"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></div>
           <div><div style="font-weight:600;font-size:.88rem;color:var(--text-primary);">Adaugă manual</div><div style="font-size:.76rem;color:var(--text-muted);margin-top:2px;">Configurez materiile după preferință</div></div>
         </button>
@@ -6192,24 +6192,24 @@ details[open] .detail-chevron {
       </div>
     </div>
     <div class="onb-actions">
-      <button class="onb-btn-skip" onclick="closeOnboarding()" id="onbSkipBtn">Sari peste</button>
+      <button class="onb-btn-skip" data-app-action="close-onboarding" id="onbSkipBtn">Sari peste</button>
       <div class="onb-dots" id="onbDots">
         <div class="onb-dot active"></div>
         <div class="onb-dot"></div>
         <div class="onb-dot"></div>
         <div class="onb-dot"></div>
       </div>
-      <button class="onb-btn-primary" onclick="onbNext()" id="onbNextBtn">Continuă</button>
+      <button class="onb-btn-primary" data-app-action="onb-next" id="onbNextBtn">Continuă</button>
     </div>
   </div>
 </div>
 
 <!-- KEYBOARD SHORTCUTS PANEL -->
-<div id="shortcutsPanel" onclick="if(event.target===this)closeShortcuts()">
+<div id="shortcutsPanel" data-app-overlay="close-shortcuts">
   <div id="shortcutsBox">
     <div class="shortcuts-header">
       <span class="shortcuts-title">Keyboard Shortcuts</span>
-      <button class="shortcuts-close" onclick="closeShortcuts()"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
+      <button class="shortcuts-close" data-app-action="close-shortcuts"><span class="icon icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></button>
     </div>
     <div class="shortcuts-grid">
       <div class="shortcut-item"><span class="shortcut-label">Command Palette</span><div class="shortcut-keys"><span class="shortcut-key">⌘</span><span class="shortcut-key">K</span></div></div>
@@ -6228,12 +6228,11 @@ details[open] .detail-chevron {
 </div>
 
 <!-- COMMAND PALETTE -->
-<div id="cmdPaletteOverlay" onclick="if(event.target===this)closeCommandPalette()">
+<div id="cmdPaletteOverlay" data-app-overlay="close-command-palette">
   <div id="cmdPalette">
     <div class="cmd-search-row">
       <span class="icon icon-md" style="color:var(--text-muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-      <input id="cmdInput" placeholder="Caută sau navighează..." autocomplete="off"
-        oninput="renderCmdResults(this.value)">
+      <input id="cmdInput" placeholder="Caută sau navighează..." autocomplete="off">
       <span class="cmd-kbd">ESC</span>
     </div>
     <div id="cmdResults"></div>
@@ -6249,6 +6248,7 @@ details[open] .detail-chevron {
 // Replaces direct Anthropic fetch calls with server-side proxy
 // Auto-set apiKey so UI doesn't show "configure API key" warnings
 document.addEventListener('DOMContentLoaded', function() {
+  try { setupAppShellInteractions(); } catch(e) {}
   setTimeout(function() {
     if (window.state) {
       window.state.apiKey = 'backend';
@@ -6814,20 +6814,20 @@ function renderSidebar() {
   html += '<div class="nav-section">Materii' + (isFirstRun() ? ' <span style="font-size:.6rem;background:var(--amber-muted);color:var(--amber);padding:1px 5px;border-radius:4px;vertical-align:middle;">demo</span>' : '') + '</div>';
 
   if (Object.keys(subjects).length === 0) {
-    html += '<button class="nav-item" onclick="openSubjectManager()" style="border:1px dashed var(--border);margin:4px 10px;width:calc(100% - 20px);justify-content:center;color:var(--text-muted);">';
+    html += '<button class="nav-item" data-app-action="open-subject-manager" style="border:1px dashed var(--border);margin:4px 10px;width:calc(100% - 20px);justify-content:center;color:var(--text-muted);">';
     html += icon('plus', 'sm') + ' Adaugă prima materie</button>';
   } else {
     for (const [key, subject] of Object.entries(subjects)) {
       const todoCount = (state.todos[key] || []).filter(t => !t.done).length;
       const presCount = getAllPresentations(key).length;
       const theme = getSubjectTheme(subject);
-      html += '<button class="nav-item ' + (state.tab === key ? 'active' : '') + '" onclick="navigateTo(\'' + key + '\')" style="' + (state.tab === key ? '--accent:' + theme.accent + ';--accent-muted:' + theme.muted + ';--accent-border:' + theme.border : '') + '">';
+      html += '<button class="nav-item ' + (state.tab === key ? 'active' : '') + '" data-nav-tab="' + key + '" style="' + (state.tab === key ? '--accent:' + theme.accent + ';--accent-muted:' + theme.muted + ';--accent-border:' + theme.border : '') + '">';
       html += '<span class="ni-icon">' + subjectIcon(subject, 'sm') + '</span> ' + subject.name;
       if (todoCount) html += '<span class="ni-badge">' + todoCount + '</span>';
       if (presCount) html += '<span class="ni-badge" style="background:var(--green-muted);color:var(--green)">' + presCount + '</span>';
       html += '</button>';
     }
-    html += '<button class="nav-item" onclick="openSubjectManager()" style="color:var(--text-muted);font-size:.8rem;">';
+    html += '<button class="nav-item" data-app-action="open-subject-manager" style="color:var(--text-muted);font-size:.8rem;">';
     html += '<span class="ni-icon">' + icon('settings', 'sm') + '</span> Gestionează materii</button>';
   }
 
@@ -6848,7 +6848,7 @@ function renderSidebar() {
 
 // Helper pentru nav button — acceptă icon name (string) sau emoji fallback
 function navBtn(tab, iconName, label, badge) {
-  let html = '<button class="nav-item ' + (state.tab === tab ? 'active' : '') + '" onclick="navigateTo(\'' + tab + '\')">';
+  let html = '<button class="nav-item ' + (state.tab === tab ? 'active' : '') + '" data-nav-tab="' + tab + '">';
   // iconName poate fi un string Lucide sau un emoji (compatibilitate materii)
   const isEmoji = [...iconName].some(c => c.codePointAt(0) > 0x2000);
   html += '<span class="ni-icon">' + (isEmoji ? iconName : icon(iconName, 'sm')) + '</span> ' + label;
@@ -6898,6 +6898,72 @@ function openSidebarMobile() {
   }
 }
 
+function setupAppShellInteractions() {
+  if (document.body.__appShellBound) return;
+  document.body.__appShellBound = true;
+
+  document.body.addEventListener('click', function(event) {
+    const overlayEl = event.target.closest('[data-app-overlay]');
+    if (overlayEl && event.target === overlayEl) {
+      const overlayAction = overlayEl.dataset.appOverlay;
+      if (overlayAction === 'close-pomo-done') closePomoDone();
+      else if (overlayAction === 'close-shortcuts') closeShortcuts();
+      else if (overlayAction === 'close-command-palette') closeCommandPalette();
+      return;
+    }
+
+    const navEl = event.target.closest('[data-nav-tab]');
+    if (navEl) {
+      if (navEl.closest('#subjectsDrawer')) closeSubjectsDrawer();
+      navigateTo(navEl.dataset.navTab);
+      return;
+    }
+
+    const actionEl = event.target.closest('[data-app-action]');
+    if (!actionEl) return;
+    const action = actionEl.dataset.appAction;
+    switch (action) {
+      case 'close-auth-modal': closeAuthModal(); return;
+      case 'switch-auth-tab': switchAuthTab(actionEl.dataset.authTab); return;
+      case 'submit-auth': submitAuth(); return;
+      case 'close-upgrade-modal': closeUpgradeModal(); return;
+      case 'upgrade-open-auth': openAuthModal(); closeUpgradeModal(); return;
+      case 'close-sidebar': closeSidebar(); return;
+      case 'toggle-theme': toggleTheme(); return;
+      case 'open-command-palette': openCommandPalette(); return;
+      case 'handle-logout': handleLogout(); return;
+      case 'open-sidebar-mobile': openSidebarMobile(); return;
+      case 'open-notif-panel': openNotifPanel(); return;
+      case 'close-pomo-done': closePomoDone(); return;
+      case 'pomo-restart-same': pomoRestartSame(); return;
+      case 'pomo-done-start-next': pomoDoneStartNext(); return;
+      case 'pv-prev': pvNavigate(-1); return;
+      case 'pv-next': pvNavigate(1); return;
+      case 'close-presentation-viewer': closePresentationViewer(); return;
+      case 'clear-all-notifs': clearAllNotifs(); return;
+      case 'onb-import-ase': onbImportASE(); return;
+      case 'onb-skip-subjects': onbSkipSubjects(); return;
+      case 'close-onboarding': closeOnboarding(); return;
+      case 'onb-next': onbNext(); return;
+      case 'close-shortcuts': closeShortcuts(); return;
+      case 'open-subject-manager': openSubjectManager(); return;
+      case 'open-subjects-drawer': openSubjectsDrawer(); return;
+      case 'close-subjects-drawer': closeSubjectsDrawer(); return;
+      case 'drawer-open-subject-manager': closeSubjectsDrawer(); openSubjectManager(); return;
+      case 'drawer-import-ase': closeSubjectsDrawer(); importASETemplate(); return;
+      case 'drawer-nav-tab': closeSubjectsDrawer(); navigateTo(actionEl.dataset.navTab); return;
+      case 'open-auth-modal': openAuthModal(); return;
+      default: return;
+    }
+  });
+
+  document.body.addEventListener('input', function(event) {
+    if (event.target.id === 'cmdInput') {
+      renderCmdResults(event.target.value);
+    }
+  });
+}
+
 // Randeaza bara de navigare de jos (mobile)
 function renderBottomNav() {
   const el = document.getElementById('bottomNavItems');
@@ -6919,14 +6985,14 @@ function renderBottomNav() {
     const iconHtml = ICONS[t.icon] ? `<span class="icon icon-sm">${ICONS[t.icon]}</span>` : t.icon;
     if (t.special) {
       const isSubjectActive = Object.keys(subjects).includes(state.tab);
-      html += '<button class="bn-item ' + (isSubjectActive ? 'active' : '') + '" onclick="openSubjectsDrawer()">';
+      html += '<button class="bn-item ' + (isSubjectActive ? 'active' : '') + '" data-app-action="open-subjects-drawer">';
       html += '<span class="bn-icon">' + iconHtml + '</span>';
       html += '<span class="bn-label">' + t.label + '</span>';
       if (!hasSubjects) html += '<span class="bn-badge">+</span>';
       html += '</button>';
     } else {
       const isActive = state.tab === t.tab;
-      html += '<button class="bn-item ' + (isActive ? 'active' : '') + '" onclick="navigateTo(\'' + t.tab + '\')">';
+      html += '<button class="bn-item ' + (isActive ? 'active' : '') + '" data-nav-tab="' + t.tab + '">';
       html += '<span class="bn-icon">' + iconHtml + '</span>';
       html += '<span class="bn-label">' + t.label + '</span>';
       if (t.badge) html += '<span class="bn-badge">' + t.badge + '</span>';
@@ -6946,7 +7012,7 @@ function openSubjectsDrawer() {
   const subjects = getSubjects();
   const subjectKeys = Object.keys(subjects);
 
-  let html = '<div id="subjectsDrawerBackdrop" onclick="closeSubjectsDrawer()" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:70;backdrop-filter:blur(3px);animation:fadeIn .2s ease;"></div>';
+  let html = '<div id="subjectsDrawerBackdrop" data-app-action="close-subjects-drawer" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:70;backdrop-filter:blur(3px);animation:fadeIn .2s ease;"></div>';
 
   html += '<div id="subjectsDrawer" style="position:fixed;bottom:0;left:0;right:0;z-index:71;background:var(--bg-raised);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:0 0 max(16px,env(safe-area-inset-bottom));animation:slideUpDrawer .3s var(--ease);">';
 
@@ -6956,7 +7022,7 @@ function openSubjectsDrawer() {
   // Titlu
   html += '<div style="padding:8px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">';
   html += '<div style="font-weight:700;font-size:1rem;display:flex;align-items:center;gap:8px;">' + icon('book','sm') + ' Materiile mele</div>';
-  html += '<button onclick="closeSubjectsDrawer();openSubjectManager();" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-xs);font-size:.78rem;font-weight:600;cursor:pointer;">+ Adaugă</button>';
+  html += '<button data-app-action="drawer-open-subject-manager" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-xs);font-size:.78rem;font-weight:600;cursor:pointer;">+ Adaugă</button>';
   html += '</div>';
 
   // Lista materii
@@ -6967,7 +7033,7 @@ function openSubjectsDrawer() {
     html += '<div style="margin-bottom:10px;">' + iconBadge('book','','lg') + '</div>';
     html += '<div style="font-weight:600;margin-bottom:6px;">Nicio materie adăugată</div>';
     html += '<div style="font-size:.82rem;margin-bottom:16px;">Adaugă prima ta materie sau importă template-ul ASE</div>';
-    html += '<button onclick="closeSubjectsDrawer();importASETemplate();" style="padding:10px 20px;background:var(--accent-muted);color:var(--accent);border:1px solid var(--accent-border);border-radius:var(--radius-sm);font-weight:600;font-size:.85rem;cursor:pointer;width:100%;">Import Template ASE</button>';
+    html += '<button data-app-action="drawer-import-ase" style="padding:10px 20px;background:var(--accent-muted);color:var(--accent);border:1px solid var(--accent-border);border-radius:var(--radius-sm);font-weight:600;font-size:.85rem;cursor:pointer;width:100%;">Import Template ASE</button>';
     html += '</div>';
   } else {
     subjectKeys.forEach(key => {
@@ -6978,7 +7044,7 @@ function openSubjectsDrawer() {
       const done = todos.filter(t => t.done).length;
       const presCount = getAllPresentations(key).length;
 
-      html += '<button onclick="closeSubjectsDrawer();navigateTo(\'' + key + '\');" style="width:100%;display:flex;align-items:center;gap:14px;padding:13px 14px;background:' + (isActive ? theme.muted : 'var(--bg-surface)') + ';border:1px solid ' + (isActive ? theme.border : 'var(--border)') + ';border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:all .2s;text-align:left;">';
+      html += '<button data-app-action="drawer-nav-tab" data-nav-tab="' + key + '" style="width:100%;display:flex;align-items:center;gap:14px;padding:13px 14px;background:' + (isActive ? theme.muted : 'var(--bg-surface)') + ';border:1px solid ' + (isActive ? theme.border : 'var(--border)') + ';border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:all .2s;text-align:left;">';
       html += subjectIconBadge(subj, 40);
       html += '<div style="flex:1;min-width:0;">';
       html += '<div style="font-weight:700;font-size:.92rem;color:' + (isActive ? theme.accent : 'var(--text-primary)') + '">' + escapeHtml(subj.name) + '</div>';
@@ -6989,7 +7055,7 @@ function openSubjectsDrawer() {
     });
 
     // Buton gestionare
-    html += '<button onclick="closeSubjectsDrawer();openSubjectManager();" style="width:100%;padding:11px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:.82rem;cursor:pointer;margin-top:4px;">' + icon('settings','xs') + ' Gestionează materii</button>';
+    html += '<button data-app-action="drawer-open-subject-manager" style="width:100%;padding:11px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:.82rem;cursor:pointer;margin-top:4px;">' + icon('settings','xs') + ' Gestionează materii</button>';
   }
 
   html += '</div></div>';
@@ -7058,757 +7124,6 @@ function renderPage() {
     title.textContent = subject.name + ' — ' + subject.full;
     renderSubjectPage(page, state.tab, subject);
   }
-}
-
-function renderCalendarPage(element) {
-  let html = '<div class="anim">';
-  html += '<div class="dash-hero" style="padding:32px 20px 24px">';
-  html += '<h2>' + icon('calendar','sm') + ' Calendar Sesiune</h2>';
-  html += '<p>Countdown la examene și planificator de studiu</p>';
-  html += '</div>';
-
-  // Countdown cards pentru examene
-  const exams = state.exams || [];
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-
-  if (exams.length > 0) {
-    html += '<div class="exam-countdown-grid anim-d1">';
-    exams.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-
-    exams.forEach(function(exam, index) {
-      const examDate = new Date(exam.date);
-      examDate.setHours(0, 0, 0, 0);
-      const diffMs = examDate - now;
-      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-      let urgency = 'ok';
-      if (diffDays < 0) urgency = 'past';
-      else if (diffDays <= 3) urgency = 'urgent';
-      else if (diffDays <= 7) urgency = 'soon';
-
-      const subject = getSubjects()[exam.subject];
-
-      html += '<div class="exam-countdown-card ' + urgency + '">';
-      html += '<button class="ecc-del" onclick="deleteExam(' + index + ')">✕</button>';
-      html += '<div class="ecc-subject">' + (subject ? subjectIcon(subject,'xs') + ' ' + subject.name : exam.subject) + '</div>';
-      html += '<div class="ecc-name">' + escapeHtml(exam.name) + '</div>';
-
-      if (diffDays < 0) {
-        html += '<div class="ecc-days" style="color:var(--text-muted)">-</div>';
-        html += '<div class="ecc-days-label">Trecut</div>';
-      } else if (diffDays === 0) {
-        html += '<div class="ecc-days" style="color:var(--red)">AZI</div>';
-        html += '<div class="ecc-days-label">Mult succes! 💪</div>';
-      } else {
-        html += '<div class="ecc-days">' + diffDays + '</div>';
-        html += '<div class="ecc-days-label">' + (diffDays === 1 ? 'zi rămase' : 'zile rămase') + '</div>';
-      }
-
-      html += '<div class="ecc-date">📅 ' + examDate.toLocaleDateString('ro', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div>';
-
-      if (exam.room) {
-        html += '<div class="ecc-date" style="margin-top:4px;">🏛️ ' + escapeHtml(exam.room) + '</div>';
-      }
-      html += '</div>';
-    });
-
-    html += '</div>';
-  }
-
-  // Form adaugare examen + calendar mini
-  html += '<div class="calendar-layout anim-d2">';
-
-  // Stanga: form + plan
-  html += '<div>';
-
-  html += '<div class="add-exam-form">';
-  html += '<h3>' + icon('plus','sm') + ' Adaugă Examen</h3>';
-  html += '<div class="exam-form-row">';
-  html += '<input class="todo-inp" id="examName" placeholder="Ex: Examen parțial MAP" style="width:100%;">';
-  html += '<select class="todo-inp" id="examSubject" style="width:100%;">';
-  html += '<option value="">— Materie —</option>';
-  for (const [key, subject] of Object.entries(getSubjects())) {
-    html += '<option value="' + key + '">' + subject.name + '</option>';
-  }
-  html += '</select>';
-  html += '<button class="todo-btn" onclick="addExam()">+</button>';
-  html += '</div>';
-  html += '<div class="exam-form-row" style="grid-template-columns:1fr 1fr;margin-top:10px;">';
-  html += '<input class="todo-inp" type="date" id="examDate" value="' + new Date().toISOString().split('T')[0] + '" style="width:100%;">';
-  html += '<input class="todo-inp" id="examRoom" placeholder="Sala (opțional)" style="width:100%;">';
-  html += '</div>';
-  html += '</div>'; // end add-exam-form
-
-  // Plan de studiu auto-generat
-  html += '<div class="study-plan-section">';
-  html += '<h3>📋 Plan Auto de Studiu</h3>';
-
-  if (exams.length === 0) {
-    html += '<div style="color:var(--text-muted);font-size:.85rem;text-align:center;padding:16px;">Adaugă examene pentru a genera un plan de studiu</div>';
-  } else {
-    // Generam plan pentru urmatoarele 14 zile
-    const plan = generateStudyPlan(exams, 14);
-    if (plan.length === 0) {
-      html += '<div style="color:var(--text-muted);font-size:.85rem;text-align:center;padding:16px;">Nu există examene viitoare în următoarele 14 zile</div>';
-    } else {
-      plan.forEach(function(day) {
-        const dayDate = new Date(day.date);
-        const isToday = dayDate.toDateString() === new Date().toDateString();
-        html += '<div class="study-day-row">';
-        html += '<div class="sdr-date" style="' + (isToday ? 'color:var(--accent);font-weight:700;' : '') + '">';
-        html += dayDate.toLocaleDateString('ro', { weekday: 'short', day: 'numeric', month: 'short' });
-        html += (isToday ? ' ●' : '');
-        html += '</div>';
-        html += '<div class="sdr-subject">';
-        html += day.tasks.map(function(task) {
-          const subj = getSubjects()[task.subject];
-          return (subj ? subjectIcon(subj,'xs') + ' ' + subj.name : task.subject) + ' — ' + task.activity;
-        }).join(' · ');
-        html += '</div>';
-        html += '<div class="sdr-hours">⏱ ' + day.hours + 'h</div>';
-        html += '</div>';
-      });
-    }
-  }
-
-  html += '</div>'; // end study-plan-section
-  html += '</div>'; // end stanga
-
-  // Dreapta: calendar mini
-  html += '<div>';
-  html += '<div class="calendar-mini">';
-  html += renderMiniCalendar(exams);
-  html += '</div>';
-  html += '</div>';
-
-  html += '</div>'; // end calendar-layout
-  html += '</div>'; // end anim
-  element.innerHTML = html;
-}
-
-// Genereaza plan de studiu automat bazat pe examene
-function generateStudyPlan(exams, daysAhead) {
-  const plan = [];
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-
-  // Activitati recomandate
-  const activities = ['Recitire prezentări', 'Rezolvare exerciții', 'Flashcards', 'Quiz AI', 'Notițe rezumative', 'Recapitulare finală'];
-
-  for (let d = 0; d < daysAhead; d++) {
-    const date = new Date(now);
-    date.setDate(date.getDate() + d);
-
-    const tasks = [];
-    let hours = 0;
-
-    // Sortam examenele dupa distanta de la ziua curenta
-    const upcoming = exams
-      .filter(function(e) {
-        const ed = new Date(e.date);
-        ed.setHours(0, 0, 0, 0);
-        return ed >= date;
-      })
-      .sort(function(a, b) {
-        return new Date(a.date) - new Date(b.date);
-      });
-
-    if (upcoming.length === 0) continue;
-
-    // Prioritizeaza examenele cele mai apropiate
-    upcoming.slice(0, 2).forEach(function(exam, i) {
-      const examDate = new Date(exam.date);
-      examDate.setHours(0, 0, 0, 0);
-      const daysLeft = Math.round((examDate - date) / (1000 * 60 * 60 * 24));
-
-      if (daysLeft < 0) return;
-
-      let activityIndex = 0;
-      if (daysLeft === 0) activityIndex = 5; // Recapitulare finala
-      else if (daysLeft <= 2) activityIndex = 4; // Notite rezumative
-      else if (daysLeft <= 5) activityIndex = Math.floor(Math.random() * 2) + 2; // Flashcards sau Quiz
-      else activityIndex = Math.floor(Math.random() * 2); // Recitire sau Exercitii
-
-      tasks.push({
-        subject: exam.subject,
-        activity: activities[activityIndex],
-        priority: i === 0 ? 'high' : 'normal'
-      });
-
-      hours += daysLeft <= 3 ? 3 : daysLeft <= 7 ? 2 : 1;
-    });
-
-    if (tasks.length > 0) {
-      plan.push({
-        date: date.toISOString().split('T')[0],
-        tasks: tasks,
-        hours: Math.min(hours, 6)
-      });
-    }
-  }
-
-  return plan;
-}
-
-// Randeaza calendarul mini
-function renderMiniCalendar(exams) {
-  const year = calendarState.year;
-  const month = calendarState.month;
-
-  const monthNames = ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
-    'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'];
-  const dayNames = ['Lu', 'Ma', 'Mi', 'Jo', 'Vi', 'Sâ', 'Du'];
-
-  // Construim set de date cu examene
-  const examDates = new Set();
-  (exams || []).forEach(function(exam) {
-    examDates.add(exam.date);
-  });
-
-  const today = new Date();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  let startDow = firstDay.getDay() - 1; // Luni = 0
-  if (startDow < 0) startDow = 6;
-
-  let html = '<div class="calendar-mini-header">';
-  html += '<button class="cal-nav-btn" onclick="prevCalMonth()">←</button>';
-  html += '<div class="calendar-mini-title">' + monthNames[month] + ' ' + year + '</div>';
-  html += '<button class="cal-nav-btn" onclick="nextCalMonth()">→</button>';
-  html += '</div>';
-
-  html += '<div class="calendar-grid">';
-
-  // Header zile
-  dayNames.forEach(function(d) {
-    html += '<div class="cal-day-header">' + d + '</div>';
-  });
-
-  // Padding zile goale
-  for (let i = 0; i < startDow; i++) {
-    html += '<div class="cal-day empty"></div>';
-  }
-
-  // Zilele lunii
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-    const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-    const hasExam = examDates.has(dateStr);
-
-    let classes = 'cal-day';
-    if (isToday) classes += ' today';
-    if (hasExam) classes += ' has-exam';
-
-    html += '<div class="' + classes + '">' + d;
-    if (hasExam) html += '<div class="cal-exam-dot"></div>';
-    html += '</div>';
-  }
-
-  html += '</div>'; // end calendar-grid
-
-  // Legenda
-  html += '<div style="margin-top:14px;font-size:.72rem;color:var(--text-muted);display:flex;gap:14px;justify-content:center;">';
-  html += '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-right:4px;"></span>Azi</span>';
-  html += '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);margin-right:4px;"></span>Examen</span>';
-  html += '</div>';
-
-  return html;
-}
-
-// Navigare calendar
-function prevCalMonth() {
-  calendarState.month--;
-  if (calendarState.month < 0) {
-    calendarState.month = 11;
-    calendarState.year--;
-  }
-  const calEl = document.querySelector('.calendar-mini');
-  if (calEl) calEl.innerHTML = renderMiniCalendar(state.exams || []);
-}
-
-function nextCalMonth() {
-  calendarState.month++;
-  if (calendarState.month > 11) {
-    calendarState.month = 0;
-    calendarState.year++;
-  }
-  const calEl = document.querySelector('.calendar-mini');
-  if (calEl) calEl.innerHTML = renderMiniCalendar(state.exams || []);
-}
-
-// Adauga examen
-function addExam() {
-  const nameInput = document.getElementById('examName');
-  const subjectSelect = document.getElementById('examSubject');
-  const dateInput = document.getElementById('examDate');
-  const roomInput = document.getElementById('examRoom');
-
-  const name = nameInput.value.trim();
-  const subject = subjectSelect.value;
-  const date = dateInput.value;
-
-  if (!name || !subject || !date) {
-    alert('Completează cel puțin numele, materia și data examenului!');
-    return;
-  }
-
-  if (!state.exams) state.exams = [];
-  state.exams.push({
-    name: name,
-    subject: subject,
-    date: date,
-    room: roomInput ? roomInput.value.trim() : '',
-    addedAt: Date.now()
-  });
-
-  saveState();
-
-  nameInput.value = '';
-  roomInput.value = '';
-
-  renderCalendarPage(document.getElementById('pageContent'));
-  renderSidebar();
-}
-
-// Sterge examen
-function deleteExam(index) {
-  if (!confirm('Ștergi examenul?')) return;
-  state.exams.splice(index, 1);
-  saveState();
-  renderCalendarPage(document.getElementById('pageContent'));
-  renderSidebar();
-}
-
-// =============================================
-// V7 — FLASHCARDS DUE COUNT (standalone)
-// =============================================
-function getFlashcardsDueCount() {
-  const decks = state.flashcardDecks || {};
-  let count = 0;
-  const now = Date.now();
-  for (const key of Object.keys(decks)) {
-    (decks[key] || []).forEach(card => {
-      if (!card.nextReview || card.nextReview <= now) count++;
-    });
-  }
-  return count;
-}
-
-// =============================================
-// V7 — GAMIFICATION SYSTEM
-// =============================================
-function getLevelXP(level) {
-  if (level <= 0) return 0;
-  return Math.round(100 * Math.pow(1.5, level - 1));
-}
-
-function getTotalXPForLevelAcc(level) {
-  let total = 0;
-  for (let i = 1; i <= level; i++) total += getLevelXP(i);
-  return total;
-}
-
-function awardXP(amount, reason, subject) {
-  state.xp = (state.xp || 0) + amount;
-  const today = new Date().toISOString().split('T')[0];
-  state.activityLog = state.activityLog || [];
-  state.activityLog.push({ date: today, type: reason, subject: subject || '', xp: amount });
-  if (state.activityLog.length > 500) state.activityLog = state.activityLog.slice(-500);
-
-  // Tracks estimated study time per subject (1 XP ≈ 0.5 min)
-  if (subject && subject !== '') {
-    if (!state.studyTime) state.studyTime = {};
-    state.studyTime[subject] = (state.studyTime[subject] || 0) + Math.round(amount * 0.5);
-  }
-
-  // Recalculeaza nivelul
-  let xpAcc = 0, newLevel = 1;
-  while (true) {
-    const needed = getLevelXP(newLevel);
-    if (xpAcc + needed > state.xp) break;
-    xpAcc += needed;
-    newLevel++;
-  }
-  const leveledUp = newLevel > (state.level || 1);
-  state.level = newLevel;
-
-  updateStreak();
-  saveState();
-  showToast('+' + amount + ' XP — ' + reason, leveledUp ? 'Nivel ' + newLevel + ' deblocat!' : null, leveledUp ? 'success' : 'info', 3000);
-  checkAchievements();
-  renderSidebar();
-}
-
-function updateStreak() {
-  const today = new Date().toISOString().split('T')[0];
-  if (state.lastStudyDate === today) return;
-  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-  const yStr = yesterday.toISOString().split('T')[0];
-  if (state.lastStudyDate === yStr) state.streak = (state.streak || 0) + 1;
-  else state.streak = 1;
-  state.lastStudyDate = today;
-}
-
-function checkAndUpdateStreak() {
-  if (!state.lastStudyDate) return;
-  const today = new Date().toISOString().split('T')[0];
-  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-  const yStr = yesterday.toISOString().split('T')[0];
-  if (state.lastStudyDate !== today && state.lastStudyDate !== yStr) state.streak = 0;
-}
-
-function showToast(message, subtitle) {
-  const existing = document.getElementById('xpToast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.id = 'xpToast';
-  toast.innerHTML = '<span style="font-size:1.3rem;">⭐</span><div><div>' + message + '</div>' +
-    (subtitle ? '<div style="font-size:.78rem;color:var(--accent);margin-top:2px;">' + subtitle + '</div>' : '') + '</div>';
-  document.body.appendChild(toast);
-  setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
-}
-
-const ACHIEVEMENTS_DEF = [
-  { id: 'first_login',   icon: 'graduation', name: 'Bun venit!',        desc: 'Prima autentificare',           xp: 10,   check: () => true },
-  { id: 'first_quiz',    icon: 'brain', name: 'Quiz Master I',     desc: 'Primul quiz completat',         xp: 50,   check: () => Object.values(state.quizHistory||{}).flat().length >= 1 },
-  { id: 'quiz_10',       icon: '🏆', name: 'Quiz Master II',    desc: '10 quiz-uri completate',        xp: 150,  check: () => Object.values(state.quizHistory||{}).flat().length >= 10 },
-  { id: 'perfect_quiz',  icon: '💯', name: 'Perfectionist',     desc: 'Quiz cu scor 100%',            xp: 200,  check: () => Object.values(state.quizHistory||{}).flat().some(r => r.score === r.total) },
-  { id: 'first_fc',      icon: 'cards', name: 'Flashcard Fan',     desc: 'Primul deck de flashcard-uri', xp: 30,   check: () => Object.values(state.flashcardDecks||{}).some(d => d.length > 0) },
-  { id: 'fc_100',        icon: '🔮', name: 'Memorie de Fier',   desc: '100 flashcard-uri reviewed',   xp: 100,  check: () => Object.values(state.flashcardDecks||{}).flat().reduce((a,c)=>a+(c.reviews||0),0) >= 100 },
-  { id: 'streak_3',      icon: 'flame', name: 'On Fire!',          desc: '3 zile consecutive',           xp: 75,   check: () => state.streak >= 3 },
-  { id: 'streak_7',      icon: '⚡', name: 'Săptămâna Studiu', desc: '7 zile consecutive',           xp: 200,  check: () => state.streak >= 7 },
-  { id: 'streak_30',     icon: '🌟', name: 'Legendă',           desc: '30 zile consecutive',          xp: 1000, check: () => state.streak >= 30 },
-  { id: 'first_pres',    icon: 'chart', name: 'Prezentator',       desc: 'Prima prezentare generată',    xp: 40,   check: () => Object.values(state.presentations||{}).flat().length >= 1 },
-  { id: 'pres_10',       icon: '🎨', name: 'Content Creator',   desc: '10 prezentări generate',       xp: 150,  check: () => Object.values(state.presentations||{}).flat().length >= 10 },
-  { id: 'first_exam',    icon: 'calendar', name: 'Organizat',         desc: 'Primul examen adăugat',        xp: 20,   check: () => (state.exams||[]).length >= 1 },
-  { id: 'level_5',       icon: 'trending', name: 'Rising Star',       desc: 'Nivel 5',                      xp: 300,  check: () => (state.level||1) >= 5 },
-  { id: 'level_10',      icon: '💎', name: 'Elite',             desc: 'Nivel 10',                     xp: 500,  check: () => (state.level||1) >= 10 },
-  { id: 'first_mindmap', icon: 'map', name: 'Cartograf',         desc: 'Primul mind map generat',      xp: 60,   check: () => Object.values(state.mindMaps||{}).some(m => m && m.nodes) },
-  { id: 'exam_sim',      icon: 'graduation', name: 'Simulator Pro',     desc: 'Prima sesiune Exam Simulator', xp: 80,   check: () => Object.values(state.examSessions||{}).flat().length >= 1 },
-];
-
-function checkAchievements() {
-  let newUnlocked = [];
-  ACHIEVEMENTS_DEF.forEach(ach => {
-    if (!(state.achievements||[]).includes(ach.id)) {
-      try { if (ach.check()) { state.achievements = [...(state.achievements||[]), ach.id]; newUnlocked.push(ach); } } catch(e) {}
-    }
-  });
-  if (newUnlocked.length) {
-    saveState();
-    newUnlocked.forEach((ach, i) => {
-      setTimeout(() => showToast('' + ach.name + ' deblocat!', '+' + ach.xp + ' XP'), (i+1) * 2000);
-    });
-    renderSidebar();
-  }
-}
-
-// =============================================
-// V7 — ACHIEVEMENTS PAGE
-// =============================================
-function renderAchievementsPage(element) {
-  const xpForNext = getLevelXP(state.level || 1);
-  const xpAcc = getTotalXPForLevelAcc((state.level || 1) - 1);
-  const xpInLevel = (state.xp || 0) - xpAcc;
-  const xpPct = Math.min(100, Math.round((xpInLevel / xpForNext) * 100));
-
-  let html = '<div class="anim">';
-
-  // Hero XP card
-  html += '<div style="background:linear-gradient(135deg,var(--accent-muted),var(--bg-raised));border:1px solid var(--accent-border);border-radius:var(--radius);padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">';
-  html += '<div style="font-size:3.5rem;">⭐</div>';
-  html += '<div style="flex:1;">';
-  html += '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">Nivel Curent</div>';
-  html += '<div style="font-family:Syne,sans-serif;font-size:2.2rem;font-weight:800;">Nivel ' + (state.level||1) + '</div>';
-  html += '<div class="xp-bar-wrap" style="margin-top:8px;height:10px;"><div class="xp-bar-fill" style="width:' + xpPct + '%"></div></div>';
-  html += '<div style="font-size:.8rem;color:var(--text-secondary);margin-top:4px;">' + (state.xp||0) + ' XP total · ' + xpInLevel + '/' + xpForNext + ' XP pentru nivel următor</div>';
-  html += '</div>';
-  html += '<div style="text-align:center;">';
-  html += '<div style="font-size:.72rem;color:var(--text-muted);margin-bottom:4px;">Streak</div>';
-  html += '<div style="font-size:2.5rem;font-weight:700;' + (state.streak >= 3 ? 'color:var(--amber)' : 'color:var(--text-muted)') + '">' + (state.streak||0) + ' <span style="opacity:.5">' + icon('flame','sm') + '</span></div>';
-  html += '<div style="font-size:.72rem;color:var(--text-muted)">zile consecutive</div>';
-  html += '</div></div>';
-
-  // Activity heatmap
-  html += '<div class="chart-panel" style="margin-bottom:24px;">';
-  html += '<div class="chart-title">Activitate — ultimele 14 zile</div>';
-  html += renderActivityHeatmap();
-  html += '</div>';
-
-  // Achievements grid
-  const unlocked = (state.achievements||[]).length;
-  html += '<div style="font-size:.82rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">' + unlocked + ' / ' + ACHIEVEMENTS_DEF.length + ' achievements deblocate</div>';
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">';
-  ACHIEVEMENTS_DEF.forEach(ach => {
-    const isUnlocked = (state.achievements||[]).includes(ach.id);
-    html += '<div class="achievement-card ' + (isUnlocked ? 'unlocked' : 'locked') + '">';
-    html += '<div class="ach-icon">' + ach.icon + '</div>';
-    html += '<div style="flex:1;"><div class="ach-name">' + ach.name + '</div><div class="ach-desc">' + ach.desc + '</div></div>';
-    html += '<div class="ach-xp">+' + ach.xp + ' XP</div>';
-    html += '</div>';
-  });
-  html += '</div></div>';
-
-  element.innerHTML = html;
-}
-
-function renderActivityHeatmap() {
-  const log = state.activityLog || [];
-  const today = new Date();
-  const cells = [];
-
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(today); d.setDate(d.getDate() - i);
-    const dStr = d.toISOString().split('T')[0];
-    const dayXP = log.filter(e => e.date === dStr).reduce((a,c) => a + (c.xp||0), 0);
-    cells.push({ date: dStr, xp: dayXP, level: dayXP > 200 ? 4 : dayXP > 100 ? 3 : dayXP > 50 ? 2 : dayXP > 0 ? 1 : 0 });
-  }
-
-  let html = '<div class="activity-heatmap">';
-  cells.forEach(c => {
-    const dayName = new Date(c.date).toLocaleDateString('ro', { weekday: 'short', day: 'numeric' });
-    html += '<div class="heat-cell l' + c.level + '" title="' + dayName + ': ' + c.xp + ' XP"></div>';
-  });
-  html += '</div>';
-  html += '<div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--text-muted);margin-top:6px;">';
-  html += '<span>' + new Date(cells[0].date).toLocaleDateString('ro', {day:'numeric',month:'short'}) + '</span><span>Azi</span></div>';
-  return html;
-}
-
-// =============================================
-// V7 — SUBJECT MANAGER (modal)
-// =============================================
-function openSubjectManager() {
-  const subjects = getSubjects();
-  const isCustom = Object.keys(state.customSubjects||{}).length > 0;
-  let html = '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">';
-  html += '<div class="modal-box"><div class="modal-header"><div class="modal-title">' + icon('settings','sm') + ' Gestionare Materii</div><button class="modal-close" onclick="closeModal()">✕</button></div>';
-
-  if (isCustom) {
-    html += '<button onclick="importASETemplate();closeModal();" style="width:100%;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-muted);color:var(--accent);font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:16px;">Importă materiile ASE ca template</button>';
-  } else {
-    html += '<button onclick="importASETemplate();closeModal();" style="width:100%;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-muted);color:var(--accent);font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:16px;">Pornește cu materiile ASE (MAP, Python, Banking, Eco, MCCP)</button>';
-  }
-
-  html += '<div style="margin-bottom:20px;">';
-  for (const [key, subj] of Object.entries(subjects)) {
-    const theme = getSubjectTheme(subj);
-    html += '<div class="subject-card-mini">';
-    html += '<div class="scm-icon" style="background:' + theme.muted + ';color:' + theme.accent + ';display:flex;align-items:center;justify-content:center;">' + subjectIcon(subj,'sm') + '</div>';
-    html += '<div class="scm-info"><div class="scm-name">' + escapeHtml(subj.name) + '</div><div class="scm-full">' + escapeHtml(subj.full||'') + '</div></div>';
-    html += '<div class="scm-actions"><button class="scm-btn" onclick="editSubject(\'' + key + '\')">✏️</button><button class="scm-btn danger" onclick="deleteSubject(\'' + key + '\')">🗑️</button></div>';
-    html += '</div>';
-  }
-  html += '</div>';
-
-  html += '<div style="border-top:1px solid var(--border);padding-top:18px;">';
-  html += '<div style="font-size:.82rem;font-weight:700;margin-bottom:12px;color:var(--text-secondary);">➕ Adaugă materie nouă</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
-  html += '<input class="todo-inp" id="newSubjName" placeholder="Nume scurt (ex: Drept)" style="width:100%;">';
-  html += '<input class="todo-inp" id="newSubjIcon" placeholder="Icon emoji (ex: ⚖️)" style="width:100%;">';
-  html += '</div>';
-  html += '<input class="todo-inp" id="newSubjFull" placeholder="Nume complet" style="width:100%;margin-bottom:10px;">';
-  html += '<textarea class="summary-textarea" id="newSubjDesc" placeholder="Descriere scurtă" style="min-height:50px;margin-bottom:10px;"></textarea>';
-  html += '<textarea class="summary-textarea" id="newSubjPrompt" placeholder="System prompt AI Tutor (ex: Ești un profesor de drept...)" style="min-height:70px;margin-bottom:12px;"></textarea>';
-  html += '<div style="font-size:.78rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Culoare temă</div>';
-  html += '<div class="theme-swatches" id="newSubjThemeSwatches">';
-  SUBJECT_THEMES.forEach((theme, i) => {
-    html += '<div class="theme-swatch' + (i===0?' active':'') + '" style="background:' + theme.accent + '" data-theme-id="' + theme.id + '" onclick="selectNewSubjTheme(\'' + theme.id + '\')" title="' + theme.label + '"></div>';
-  });
-  html += '</div>';
-  html += '<button onclick="addNewSubject()" style="width:100%;margin-top:14px;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-weight:700;cursor:pointer;font-size:.92rem;">+ Adaugă Materie</button>';
-  html += '</div></div></div>';
-  document.getElementById('modalContainer').innerHTML = html;
-}
-
-let _newSubjThemeId = 'violet';
-function selectNewSubjTheme(id) {
-  _newSubjThemeId = id;
-  document.querySelectorAll('#newSubjThemeSwatches .theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.themeId===id));
-}
-
-function addNewSubject() {
-  const name = document.getElementById('newSubjName').value.trim();
-  const icon = document.getElementById('newSubjIcon').value.trim() || '◆';
-  const full = document.getElementById('newSubjFull').value.trim() || name;
-  const desc = document.getElementById('newSubjDesc').value.trim() || '';
-  const prompt = document.getElementById('newSubjPrompt').value.trim() || 'Ești un profesor expert în ' + full + '. Răspunde în română.';
-  if (!name) { alert('Introdu un nume pentru materie!'); return; }
-  const key = 'subj_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,15) + '_' + Date.now();
-  if (!state.customSubjects) state.customSubjects = {};
-  // NU copiem DEFAULT_SUBJECTS — incepem fresh cu materia userului
-  state.customSubjects[key] = { icon, name, full, desc, themeId: _newSubjThemeId, resources: [], systemPrompt: prompt };
-  SUBJECTS = getSubjects();
-  saveState();
-  closeModal();
-  renderSidebar();
-  renderBottomNav();
-  renderPage();
-  showToast('[OK] Materie adăugată: ' + name);
-  awardXP(20, 'Materie nouă adăugată');
-}
-
-function deleteSubject(key) {
-  const subj = getSubjects()[key];
-  if (!confirm('Ștergi materia "' + subj.name + '"? Datele asociate rămân în state dar materia dispare.')) return;
-
-  // Daca materiile sunt DEFAULT_SUBJECTS (customSubjects gol),
-  // le copiem mai intai in customSubjects inainte sa stergem
-  if (!state.customSubjects || Object.keys(state.customSubjects).length === 0) {
-    state.customSubjects = JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
-  }
-
-  delete state.customSubjects[key];
-  SUBJECTS = getSubjects();
-  saveState();
-  if (state.tab === key) navigateTo('dashboard');
-  closeModal(); renderSidebar(); openSubjectManager();
-}
-
-function editSubject(key) {
-  const subj = getSubjects()[key];
-  let html = '<div class="modal-overlay" onclick="if(event.target===this){closeModal();}">';
-  html += '<div class="modal-box"><div class="modal-header"><div class="modal-title">✏️ Editează ' + escapeHtml(subj.name) + '</div><button class="modal-close" onclick="closeModal();openSubjectManager()">✕</button></div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
-  html += '<input class="todo-inp" id="editSubjName" value="' + escapeHtml(subj.name) + '" style="width:100%;" placeholder="Nume scurt">';
-  html += '<input class="todo-inp" id="editSubjIcon" value="' + escapeHtml(subj.icon) + '" style="width:100%;" placeholder="Icon">';
-  html += '</div>';
-  html += '<input class="todo-inp" id="editSubjFull" value="' + escapeHtml(subj.full||'') + '" style="width:100%;margin-bottom:10px;">';
-  html += '<textarea class="summary-textarea" id="editSubjDesc" style="min-height:50px;margin-bottom:10px;">' + escapeHtml(subj.desc||'') + '</textarea>';
-  html += '<textarea class="summary-textarea" id="editSubjPrompt" style="min-height:70px;margin-bottom:12px;">' + escapeHtml(subj.systemPrompt||'') + '</textarea>';
-  html += '<div class="theme-swatches" id="editSubjThemeSwatches">';
-  SUBJECT_THEMES.forEach(t => { html += '<div class="theme-swatch' + (t.id===(subj.themeId||'violet')?' active':'') + '" style="background:' + t.accent + '" data-theme-id="' + t.id + '" onclick="selectEditSubjTheme(\'' + t.id + '\')" title="' + t.label + '"></div>'; });
-  html += '</div>';
-  html += '<button onclick="saveEditSubject(\'' + key + '\')" style="width:100%;margin-top:14px;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-weight:700;cursor:pointer;">💾 Salvează</button>';
-  html += '</div></div>';
-  document.getElementById('modalContainer').innerHTML = html;
-  _editSubjThemeId = subj.themeId || 'violet';
-}
-
-let _editSubjThemeId = 'violet';
-function selectEditSubjTheme(id) {
-  _editSubjThemeId = id;
-  document.querySelectorAll('#editSubjThemeSwatches .theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.themeId===id));
-}
-
-function saveEditSubject(key) {
-  const name = document.getElementById('editSubjName').value.trim();
-  if (!name) { alert('Numele nu poate fi gol!'); return; }
-  if (!state.customSubjects) state.customSubjects = {};
-  const existing = state.customSubjects[key] || {};
-  state.customSubjects[key] = { ...existing, name, icon: document.getElementById('editSubjIcon').value.trim()||existing.icon, full: document.getElementById('editSubjFull').value.trim()||name, desc: document.getElementById('editSubjDesc').value.trim(), systemPrompt: document.getElementById('editSubjPrompt').value.trim(), themeId: _editSubjThemeId };
-  SUBJECTS = getSubjects();
-  saveState();
-  closeModal();
-  renderSidebar();
-  if (state.tab === key) renderPage();
-  showToast('[OK] Materie actualizată: ' + name);
-}
-
-function resetToDefaultSubjects() {
-  if (!confirm('Resetezi la materiile ASE default?')) return;
-  state.customSubjects = {};
-  SUBJECTS = getSubjects();
-  saveState();
-  closeModal();
-  if (!getSubjects()[state.tab]) navigateTo('dashboard');
-  renderSidebar(); renderPage();
-}
-
-function closeModal() { document.getElementById('modalContainer').innerHTML = ''; }
-
-// =============================================
-// V7 — DASHBOARD cu grafice Chart.js
-// =============================================
-let dashChartInstance = null;
-
-function renderNotifList() {
-  const list = document.getElementById('notifList');
-  if (!list) return;
-
-  if (!notifications.length) {
-    list.innerHTML = '<div class="notif-empty">' + icon('bell','sm') + '<br>Nicio notificare</div>';
-    return;
-  }
-
-  const iconMap = { info: icon('info','sm'), success: icon('check_circle','sm'), warning: icon('alert','sm'), exam: icon('calendar','sm'), flashcard: icon('cards','sm') };
-  const colorMap = { info: 'var(--blue)', success: 'var(--green)', warning: 'var(--amber)', exam: 'var(--red)', flashcard: 'var(--purple)' };
-
-  list.innerHTML = notifications.map(n => {
-    const ago = formatTimeAgo(n.time);
-    return `<div class="notif-item ${n.read ? '' : 'unread'}" onclick="readNotif('${n.id}')">
-      <span class="notif-icon" style="color:${colorMap[n.type]||colorMap.info}">${iconMap[n.type]||iconMap.info}</span>
-      <div class="notif-body">
-        <div class="notif-title">${escapeHtml(n.title)}</div>
-        <div class="notif-msg">${escapeHtml(n.msg||'')}</div>
-        <div class="notif-time">${ago}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Mark all as read after viewing
-  setTimeout(() => {
-    notifications.forEach(n => n.read = true);
-    updateNotifBadge();
-  }, 1500);
-}
-
-function readNotif(id) {
-  const n = notifications.find(n => String(n.id) === String(id));
-  if (n) { n.read = true; if (n.action) n.action(); }
-  updateNotifBadge();
-}
-
-function clearAllNotifs() {
-  notifications = [];
-  updateNotifBadge();
-  renderNotifList();
-}
-
-function formatTimeAgo(date) {
-  const diff = (Date.now() - new Date(date)) / 1000;
-  if (diff < 60) return 'Acum';
-  if (diff < 3600) return Math.floor(diff/60) + ' min';
-  if (diff < 86400) return Math.floor(diff/3600) + 'h';
-  return Math.floor(diff/86400) + 'z';
-}
-
-// Check for due flashcards and upcoming exams — run periodically
-function checkAndNotify() {
-  const dueFC = getFlashcardsDueCount();
-  if (dueFC > 0) {
-    // Only notify once per session
-    if (!window._notifiedFC) {
-      window._notifiedFC = true;
-      addNotification(
-        dueFC + ' flashcard-uri scadente',
-        'Revizuiește-le acum pentru a menține progresul SRS.',
-        'flashcard',
-        () => navigateTo('flashcards')
-      );
-    }
-  }
-
-  const upcoming = (state.exams||[])
-    .filter(e => new Date(e.date) >= new Date())
-    .sort((a,b) => new Date(a.date) - new Date(b.date));
-
-  upcoming.forEach(exam => {
-    const days = Math.round((new Date(exam.date) - new Date()) / 86400000);
-    const key = 'exam_notif_' + exam.id;
-    if (days <= 3 && !window[key]) {
-      window[key] = true;
-      const subj = getSubjects()[exam.subject];
-      addNotification(
-        exam.name + ' — ' + days + (days === 1 ? ' zi' : ' zile'),
-        (subj ? subj.name + ' · ' : '') + 'Concentrează-te pe recapitulare!',
-        'exam',
-        () => navigateTo('calendar')
-      );
-    }
-  });
 }
 
 // =============================================
@@ -8138,7 +7453,7 @@ function updateAuthUI(user) {
 
   if (!user) {
     // Guest state
-    area.innerHTML = '<button onclick="openAuthModal()" style="padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-muted);color:var(--accent);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">Intră în cont</button>';
+    area.innerHTML = '<button data-app-action="open-auth-modal" style="padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-muted);color:var(--accent);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">Intră în cont</button>';
     // Update sidebar logout button to show login
     var logoutBtn = document.querySelector('.logout-btn');
     if (logoutBtn) {
@@ -8157,7 +7472,7 @@ function updateAuthUI(user) {
     area.innerHTML = '<div style="display:flex;align-items:center;gap:8px;">'
       + roleBadge
       + '<span style="font-size:.78rem;color:var(--text-secondary);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + user.email + '">' + emailShort + '</span>'
-      + '<button onclick="handleLogout()" style="padding:4px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:.75rem;cursor:pointer;font-family:inherit;">Ieși</button>'
+      + '<button data-app-action="handle-logout" style="padding:4px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:.75rem;cursor:pointer;font-family:inherit;">Ieși</button>'
       + '</div>';
     // Update sidebar logout button behavior
     var logoutBtn = document.querySelector('.logout-btn');
@@ -8295,6 +7610,7 @@ window.addEventListener('sh:session-expired', handleSessionExpired);
 <script src="js/dashboard-page.js"></script>
 <script src="js/subject-page.js"></script>
 <script src="js/study-tools-page.js"></script>
+<script src="js/system-pages.js"></script>
 <script src="js/stats-mentor-page.js"></script>
 <script src="js/finance-lab.js"></script>
 <script src="js/finance-charts.js"></script>

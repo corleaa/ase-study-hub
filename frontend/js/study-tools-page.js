@@ -53,7 +53,7 @@ function renderQuizPage(element) {
   html += '<div class="quiz-options-row" id="quizSubjectChips">';
   for (const [key, subject] of Object.entries(getSubjects())) {
     const isActive = (state.quizConfig && state.quizConfig.subject === key) || false;
-    html += '<button class="quiz-chip ' + (isActive ? 'active' : '') + '" onclick="selectQuizSubject(\'' + key + '\', this)">';
+    html += '<button class="quiz-chip ' + (isActive ? 'active' : '') + '" data-quiz-subject="' + key + '">';
     html += subject.icon + ' ' + subject.name;
     html += '</button>';
   }
@@ -65,7 +65,7 @@ function renderQuizPage(element) {
   html += '<div class="quiz-options-row" id="quizCountChips">';
   [5, 10, 15, 20].forEach(function(n) {
     const isActive = (state.quizConfig && state.quizConfig.count === n) || n === 10;
-    html += '<button class="quiz-chip ' + (isActive ? 'active' : '') + '" onclick="selectQuizCount(' + n + ', this)">' + n + ' întrebări</button>';
+    html += '<button class="quiz-chip ' + (isActive ? 'active' : '') + '" data-quiz-count="' + n + '">' + n + ' întrebări</button>';
   });
   html += '</div></div>';
 
@@ -79,14 +79,14 @@ function renderQuizPage(element) {
     { val: 'adevarat', label: '✓✗ Adevărat/Fals' }
   ].forEach(function(t) {
     const isActive = (state.quizConfig && state.quizConfig.type === t.val) || t.val === 'mixed';
-    html += '<button class="quiz-chip ' + (isActive ? 'active' : '') + '" onclick="selectQuizType(\'' + t.val + '\', this)">' + t.label + '</button>';
+    html += '<button class="quiz-chip ' + (isActive ? 'active' : '') + '" data-quiz-type="' + t.val + '">' + t.label + '</button>';
   });
   html += '</div></div>';
 
   if (false) {
     html += '<div style="padding:12px;background:var(--amber-muted);border-radius:var(--radius-sm);font-size:.85rem;color:var(--amber);">[!] Configurează API key-ul din Dashboard pentru a genera quiz-uri AI</div>';
   } else {
-    html += '<button class="summary-gen-btn" id="quizGenBtn" onclick="generateQuiz()">';
+    html += '<button class="summary-gen-btn" id="quizGenBtn" data-quiz-action="generate">';
     html += icon('brain','sm') + ' Generează Quiz</button>';
     html += '<span class="summary-status" id="quizGenStatus" style="margin-left:12px;font-size:.82rem;color:var(--text-muted);"></span>';
   }
@@ -104,6 +104,7 @@ function renderQuizPage(element) {
 
   html += '</div>'; // end anim
   element.innerHTML = html;
+  setupStudyToolsInteractions(element);
 }
 
 // Functii selectie optiuni quiz
@@ -359,7 +360,7 @@ function renderActiveQuiz() {
     });
     html += '</div>';
 
-    html += '<button class="quiz-nav-btn primary" onclick="navigateTo(\'quiz\')">Nou Quiz</button>';
+    html += '<button class="quiz-nav-btn primary" data-quiz-action="restart">Nou Quiz</button>';
     html += '</div>';
     return html;
   }
@@ -373,7 +374,7 @@ function renderActiveQuiz() {
   let html = '<div class="quiz-container" style="margin-top:20px;">';
   html += '<div class="quiz-header">';
   html += '<span style="font-size:.88rem;font-weight:600;">Întrebarea ' + (currentIndex + 1) + ' din ' + total + '</span>';
-  html += '<button class="quiz-nav-btn" style="font-size:.78rem;" onclick="abandonQuiz()">✕ Abandonează</button>';
+  html += '<button class="quiz-nav-btn" style="font-size:.78rem;" data-quiz-action="abandon">✕ Abandonează</button>';
   html += '</div>';
 
   html += '<div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:' + progress + '%"></div></div>';
@@ -391,7 +392,7 @@ function renderActiveQuiz() {
       else if (optIndex === userAnswer) className += ' wrong';
     }
     const disabled = hasAnswered ? 'disabled' : '';
-    html += '<button class="' + className + '" ' + disabled + ' onclick="answerQuizQuestion(' + optIndex + ')">';
+    html += '<button class="' + className + '" ' + disabled + ' data-quiz-answer="' + optIndex + '">';
     html += '<span class="quiz-option-letter">' + letters[optIndex] + '</span>';
     html += '<span>' + escapeHtml(option) + '</span>';
     html += '</button>';
@@ -408,7 +409,7 @@ function renderActiveQuiz() {
   // Navigare
   html += '<div class="quiz-nav-btns">';
   if (currentIndex > 0) {
-    html += '<button class="quiz-nav-btn" onclick="prevQuizQuestion()">← Prev</button>';
+    html += '<button class="quiz-nav-btn" data-quiz-action="prev">← Prev</button>';
   } else {
     html += '<div></div>';
   }
@@ -416,9 +417,9 @@ function renderActiveQuiz() {
   if (hasAnswered) {
     const isLast = currentIndex === total - 1;
     if (isLast) {
-      html += '<button class="quiz-nav-btn primary" onclick="nextQuizQuestion()">Finalizează</button>';
+      html += '<button class="quiz-nav-btn primary" data-quiz-action="next">Finalizează</button>';
     } else {
-      html += '<button class="quiz-nav-btn primary" onclick="nextQuizQuestion()">Următor →</button>';
+      html += '<button class="quiz-nav-btn primary" data-quiz-action="next">Următor →</button>';
     }
   } else {
     html += '<span style="font-size:.82rem;color:var(--text-muted)">Selectează un răspuns</span>';
@@ -517,7 +518,7 @@ function renderFlashcardsPage(element) {
   for (const [key, subject] of Object.entries(getSubjects())) {
     const isActive = state.fcActiveSubject === key;
     const cardCount = (state.flashcardDecks && state.flashcardDecks[key] || []).length;
-    html += '<button class="quiz-chip ' + (isActive ? 'active' : '') + '" onclick="selectFCSubject(\'' + key + '\', this)">';
+    html += '<button class="quiz-chip ' + (isActive ? 'active' : '') + '" data-fc-subject="' + key + '">';
     html += subject.icon + ' ' + subject.name;
     if (cardCount) html += ' <span style="font-size:.72rem;opacity:.7">(' + cardCount + ')</span>';
     html += '</button>';
@@ -528,7 +529,7 @@ function renderFlashcardsPage(element) {
     html += '<div style="padding:12px;background:var(--amber-muted);border-radius:var(--radius-sm);font-size:.85rem;color:var(--amber);">[!] Configurează API key-ul din Dashboard pentru a genera flashcard-uri AI</div>';
   } else {
     html += '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">';
-    html += '<button class="summary-gen-btn" id="fcGenBtn" onclick="generateFlashcards()" style="flex:none;">';
+    html += '<button class="summary-gen-btn" id="fcGenBtn" data-fc-action="generate" style="flex:none;">';
     html += '' + icon('sparkle','sm') + ' Generează Flashcard-uri AI</button>';
     html += '<span class="summary-status" id="fcGenStatus" style="font-size:.82rem;color:var(--text-muted);"></span>';
     html += '</div>';
@@ -571,7 +572,7 @@ function renderAllFCStats() {
       '<div class="empty-state-icon">' + icon('cards','md') + '</div>' +
       '<div class="empty-state-title">Niciun flashcard încă</div>' +
       '<div class="empty-state-desc">Selectează o materie și generează flashcard-uri AI din prezentările tale. Sistemul de spaced repetition îți va programa recapitulările optim.</div>' +
-      (state.apiKey ? '' : '<button class="empty-state-btn" onclick="navigateTo(\'settings\')">' + icon('key','xs') + ' Configurează API Key</button>') +
+      (state.apiKey ? '' : '<button class="empty-state-btn" data-nav-tab="settings">' + icon('key','xs') + ' Configurează API Key</button>') +
       '</div>';
   }
 
@@ -631,7 +632,7 @@ function renderFlashcardStudy(key) {
     html += '<div style="font-size:3rem;margin-bottom:12px;">🎉</div>';
     html += '<div style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">Bravo! Ai terminat pentru azi!</div>';
     html += '<p style="color:var(--text-secondary);margin-bottom:20px;">Revino mâine pentru următoarea sesiune de revizie.</p>';
-    html += '<button class="quiz-nav-btn primary" onclick="studyAllCardsNow(\'' + key + '\')">📚 Studiază Toate (' + totalCards + ')</button>';
+    html += '<button class="quiz-nav-btn primary" data-fc-action="study-all" data-fc-key="' + key + '">📚 Studiază Toate (' + totalCards + ')</button>';
     html += '</div>';
     html += '</div>';
     return html;
@@ -652,7 +653,7 @@ function renderFlashcardStudy(key) {
   html += '<div class="fc-queue-info">' + Math.max(0, remaining) + ' carduri rămase din ' + dueCards.length + ' scadente</div>';
 
   // Flashcard cu flip
-  html += '<div class="flashcard-scene" onclick="flipFlashcard()">';
+  html += '<div class="flashcard-scene" data-fc-action="flip">';
   html += '<div class="flashcard-inner ' + (isFlipped ? 'flipped' : '') + '" id="fcInner">';
 
   // Fata (intrebarea)
@@ -673,9 +674,9 @@ function renderFlashcardStudy(key) {
   // Butoane de rating (apar dupa flip)
   if (isFlipped) {
     html += '<div class="flashcard-answer-btns">';
-    html += '<button class="fc-btn hard" onclick="rateFlashcard(\'' + key + '\',' + dueCards.indexOf(card) + ',\'hard\')">✕ Greu — Revizuiesc</button>';
-    html += '<button class="fc-btn skip" onclick="skipFlashcard()">⏭ Skip</button>';
-    html += '<button class="fc-btn easy" onclick="rateFlashcard(\'' + key + '\',' + dueCards.indexOf(card) + ',\'easy\')">✓ Ușor — Știu!</button>';
+    html += '<button class="fc-btn hard" data-fc-action="rate" data-fc-key="' + key + '" data-fc-index="' + dueCards.indexOf(card) + '" data-fc-rating="hard">✕ Greu — Revizuiesc</button>';
+    html += '<button class="fc-btn skip" data-fc-action="skip">⏭ Skip</button>';
+    html += '<button class="fc-btn easy" data-fc-action="rate" data-fc-key="' + key + '" data-fc-index="' + dueCards.indexOf(card) + '" data-fc-rating="easy">✓ Ușor — Știu!</button>';
     html += '</div>';
 
     html += '<div style="text-align:center;font-size:.78rem;color:var(--text-muted);">';
@@ -688,7 +689,7 @@ function renderFlashcardStudy(key) {
 
   // Optiune stergere deck
   html += '<div style="text-align:center;margin-top:16px;">';
-  html += '<button class="quiz-nav-btn" style="font-size:.75rem;color:var(--red);" onclick="clearFlashcardDeck(\'' + key + '\')">' + icon('trash','xs') + ' Șterge toate flashcard-urile din ' + subject.name + '</button>';
+  html += '<button class="quiz-nav-btn" style="font-size:.75rem;color:var(--red);" data-fc-action="clear-deck" data-fc-key="' + key + '">' + icon('trash','xs') + ' Șterge toate flashcard-urile din ' + subject.name + '</button>';
   html += '</div>';
 
   html += '</div>';
@@ -738,6 +739,72 @@ function rateFlashcard(key, cardIndex, rating) {
   const zone = document.getElementById('fcStudyZone');
   if (zone) zone.innerHTML = renderFlashcardStudy(key);
   renderSidebar();
+}
+
+function setupStudyToolsInteractions(element) {
+  if (element.__studyToolsInteractionsBound) return;
+  element.__studyToolsInteractionsBound = true;
+
+  element.addEventListener('click', function(e) {
+    const navEl = e.target.closest('[data-nav-tab]');
+    if (navEl) {
+      navigateTo(navEl.getAttribute('data-nav-tab'));
+      return;
+    }
+
+    const subjectEl = e.target.closest('[data-quiz-subject]');
+    if (subjectEl) {
+      selectQuizSubject(subjectEl.getAttribute('data-quiz-subject'), subjectEl);
+      return;
+    }
+    const countEl = e.target.closest('[data-quiz-count]');
+    if (countEl) {
+      selectQuizCount(Number(countEl.getAttribute('data-quiz-count')), countEl);
+      return;
+    }
+    const typeEl = e.target.closest('[data-quiz-type]');
+    if (typeEl) {
+      selectQuizType(typeEl.getAttribute('data-quiz-type'), typeEl);
+      return;
+    }
+    const quizAction = e.target.closest('[data-quiz-action]');
+    if (quizAction) {
+      const action = quizAction.getAttribute('data-quiz-action');
+      if (action === 'generate') generateQuiz();
+      else if (action === 'restart') navigateTo('quiz');
+      else if (action === 'abandon') abandonQuiz();
+      else if (action === 'prev') prevQuizQuestion();
+      else if (action === 'next') nextQuizQuestion();
+      return;
+    }
+    const answerEl = e.target.closest('[data-quiz-answer]');
+    if (answerEl) {
+      answerQuizQuestion(Number(answerEl.getAttribute('data-quiz-answer')));
+      return;
+    }
+
+    const fcSubject = e.target.closest('[data-fc-subject]');
+    if (fcSubject) {
+      selectFCSubject(fcSubject.getAttribute('data-fc-subject'), fcSubject);
+      return;
+    }
+    const fcAction = e.target.closest('[data-fc-action]');
+    if (fcAction) {
+      const action = fcAction.getAttribute('data-fc-action');
+      if (action === 'generate') generateFlashcards();
+      else if (action === 'study-all') studyAllCardsNow(fcAction.getAttribute('data-fc-key'));
+      else if (action === 'flip') flipFlashcard();
+      else if (action === 'skip') skipFlashcard();
+      else if (action === 'clear-deck') clearFlashcardDeck(fcAction.getAttribute('data-fc-key'));
+      else if (action === 'rate') {
+        rateFlashcard(
+          fcAction.getAttribute('data-fc-key'),
+          Number(fcAction.getAttribute('data-fc-index')),
+          fcAction.getAttribute('data-fc-rating')
+        );
+      }
+    }
+  });
 }
 
 // Skip card (trece la urmatorul)

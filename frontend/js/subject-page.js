@@ -75,7 +75,7 @@ function renderSubjectPage(element, key, subject) {
       const firstSlide = pres.slides && pres.slides[0];
       const thumbText = firstSlide ? escapeHtml(firstSlide.title) : pres.title;
 
-      html += '<div class="pres-card" onclick="openPresentationViewer(\'' + key + '\',' + index + ')">';
+      html += '<div class="pres-card" data-subject-action="open-presentation" data-subject-key="' + key + '" data-pres-index="' + index + '">';
       html += '<div class="pres-card-thumb">';
       html += '<div class="pres-card-thumb-inner">' + thumbText + '</div>';
       html += '<span class="pres-card-slide-count">' + (pres.slides ? pres.slides.length : 0) + ' slide-uri</span>';
@@ -86,7 +86,7 @@ function renderSubjectPage(element, key, subject) {
       html += '<span style="color:var(--accent);font-size:.72rem;">' + icon('arrow_right','xs') + ' Deschide</span>';
       html += '</div>';
       if (!isBuiltin) {
-        html += '<button class="pres-card-del" onclick="event.stopPropagation();deletePresentation(\'' + key + '\',\'' + pres.id + '\')" title="Șterge">' + icon('trash','xs') + '</button>';
+        html += '<button class="pres-card-del" data-subject-action="delete-presentation" data-subject-key="' + key + '" data-pres-id="' + pres.id + '" title="Șterge">' + icon('trash','xs') + '</button>';
       }
       html += '</div>';
     });
@@ -96,7 +96,7 @@ function renderSubjectPage(element, key, subject) {
     html += '<div class="empty-state-icon">' + icon('layers2','md') + '</div>';
     html += '<div class="empty-state-title">Nicio prezentare încă</div>';
     html += '<div class="empty-state-desc">Încarcă un fișier PDF, DOCX sau lipește text din cursul tău, iar AI-ul va genera o prezentare structurată cu slide-uri.</div>';
-    html += (state.apiKey ? '<button class="empty-state-btn" onclick="document.getElementById(\'uploadZone\')?.scrollIntoView({behavior:\'smooth\'})">' + icon('sparkle','xs') + ' Generează prima prezentare</button>' : '<button class="empty-state-btn" onclick="navigateTo(\'settings\')">' + icon('key','xs') + ' Configurează API Key</button>');
+    html += (state.apiKey ? '<button class="empty-state-btn" data-subject-action="scroll-generator">' + icon('sparkle','xs') + ' Generează prima prezentare</button>' : '<button class="empty-state-btn" data-nav-tab="settings">' + icon('key','xs') + ' Configurează API Key</button>');
     html += '</div>';
   }
 
@@ -113,7 +113,7 @@ function renderSubjectPage(element, key, subject) {
     html += '<div style="text-align:center;padding:20px;color:var(--text-muted)">[!] Configurează API key-ul din Dashboard pentru a genera prezentări</div>';
   } else {
     html += '<div class="summary-upload-zone" id="uploadZone">';
-    html += '<input type="file" id="fileUpload" accept=".pdf,.txt,.doc,.docx,.md,.csv,.pptx" onchange="handleFileUpload(event)">';
+    html += '<input type="file" id="fileUpload" accept=".pdf,.txt,.doc,.docx,.md,.csv,.pptx">';
     html += '<div class="su-icon" style="display:flex;justify-content:center;color:var(--text-muted);">' + icon('upload','lg') + '</div>';
     html += '<div class="su-text">Trage un fișier aici sau click pentru a încărca</div>';
     html += '<div class="su-hint">PDF, TXT, DOCX, PPTX, MD, CSV — max 10MB</div>';
@@ -122,7 +122,7 @@ function renderSubjectPage(element, key, subject) {
     html += '<div class="summary-file-info" id="fileInfo">';
     html += '<span>📎</span><span class="sf-name" id="fileName"></span>';
     html += '<span class="sf-size" id="fileSize"></span>';
-    html += '<button class="sf-remove" onclick="removeFile()">✕</button></div>';
+    html += '<button class="sf-remove" data-subject-action="remove-uploaded-file">✕</button></div>';
 
     html += '<div class="summary-or">sau lipește textul manual</div>';
     html += '<textarea class="summary-textarea" id="summaryInput" placeholder="Lipește aici textul din curs, PDF, sau notițe..."></textarea>';
@@ -139,7 +139,7 @@ function renderSubjectPage(element, key, subject) {
     html += '</div>';
 
     html += '<div class="summary-actions">';
-    html += '<button class="summary-gen-btn" id="summaryBtn" onclick="generatePresentation(\'' + key + '\')">';
+    html += '<button class="summary-gen-btn" id="summaryBtn" data-subject-action="generate-presentation" data-subject-key="' + key + '">';
     html += icon('sparkle','xs') + ' Generează fișa vizuală</button>';
     html += '<span class="summary-status" id="summaryStatus"></span>';
     html += '</div>';
@@ -154,8 +154,8 @@ function renderSubjectPage(element, key, subject) {
   html += '<span style="font-size:.72rem;color:var(--text-muted)">powered by Claude</span>';
   if (state.chatHistories[key] && state.chatHistories[key].length > 0) {
     // === NOU: Buton export chat ca PDF ===
-    html += '<button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 12px;" onclick="exportChatAsPDF(\'' + key + '\')">⬇️ Export PDF</button>';
-    html += '<button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 12px;color:var(--red);" onclick="clearChatHistory(\'' + key + '\')">' + icon('trash','xs') + ' Șterge</button>';
+    html += '<button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 12px;" data-subject-action="export-chat" data-subject-key="' + key + '">⬇️ Export PDF</button>';
+    html += '<button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 12px;color:var(--red);" data-subject-action="clear-chat" data-subject-key="' + key + '">' + icon('trash','xs') + ' Șterge</button>';
   }
   html += '</div></div>';
   html += '<div class="panel-body">';
@@ -167,8 +167,8 @@ function renderSubjectPage(element, key, subject) {
     html += '<div class="chat-container">';
     html += '<div class="chat-messages" id="chatMessages">' + renderChatHistory(key) + '</div>';
     html += '<div class="chat-input-row">';
-    html += '<input class="chat-input" id="chatInput" placeholder="Pune o întrebare despre ' + subject.name + '..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey)sendChatMessage(\'' + key + '\')">';
-    html += '<button class="chat-send" id="chatSendBtn" onclick="sendChatMessage(\'' + key + '\')">Trimite</button>';
+    html += '<input class="chat-input" id="chatInput" placeholder="Pune o întrebare despre ' + subject.name + '..." data-subject-key="' + key + '">';
+    html += '<button class="chat-send" id="chatSendBtn" data-subject-action="send-chat" data-subject-key="' + key + '">Trimite</button>';
     html += '</div></div>';
   }
 
@@ -187,8 +187,8 @@ function renderSubjectPage(element, key, subject) {
   html += '<div class="panel-head"><span>[OK] To-Do</span></div>';
   html += '<div class="panel-body">';
   html += '<div class="todo-row">';
-  html += '<input class="todo-inp" id="todoInput" placeholder="Adaugă un task..." onkeydown="if(event.key===\'Enter\')addTodo(\'' + key + '\')">';
-  html += '<button class="todo-btn" onclick="addTodo(\'' + key + '\')">+</button>';
+  html += '<input class="todo-inp" id="todoInput" placeholder="Adaugă un task..." data-subject-key="' + key + '">';
+  html += '<button class="todo-btn" data-subject-action="add-todo" data-subject-key="' + key + '">+</button>';
   html += '</div>';
   html += '<div id="todoList">' + renderTodos(key) + '</div>';
   html += '</div></div>';
@@ -201,7 +201,7 @@ function renderSubjectPage(element, key, subject) {
   html += '<input id="linkName" placeholder="Nume (ex: Colab S4)">';
   html += '<input id="linkUrl" placeholder="https://...">';
   html += '<select id="linkCat"><option value="colab">Colab</option><option value="drive">Drive</option><option value="site">Site</option><option value="video">Video</option><option value="other">Altele</option></select>';
-  html += '<button class="link-add-btn" onclick="addLink(\'' + key + '\')">+</button>';
+  html += '<button class="link-add-btn" data-subject-action="add-link" data-subject-key="' + key + '">+</button>';
   html += '</div>';
   html += '<div id="linkList" style="display:flex;flex-direction:column;gap:6px;">' + renderLinks(key) + '</div>';
   html += '</div></div>';
@@ -230,24 +230,24 @@ function renderSubjectPage(element, key, subject) {
 
   // Controls
   html += '<div class="pomo-controls">';
-  html += '<button class="pomo-btn primary" id="pomoStartBtn" onclick="togglePomodoro()">' + icon('activity','sm') + ' Start</button>';
-  html += '<button class="pomo-btn" onclick="resetPomodoro()">' + icon('arrow_left','xs') + ' Reset</button>';
+  html += '<button class="pomo-btn primary" id="pomoStartBtn" data-subject-action="toggle-pomodoro">' + icon('activity','sm') + ' Start</button>';
+  html += '<button class="pomo-btn" data-subject-action="reset-pomodoro">' + icon('arrow_left','xs') + ' Reset</button>';
   html += '</div>';
 
   // Presets
   html += '<div class="pomo-presets">';
-  html += '<button class="pomo-preset active" onclick="setPomoPreset(25,this)">25 min</button>';
-  html += '<button class="pomo-preset" onclick="setPomoPreset(45,this)">45 min</button>';
-  html += '<button class="pomo-preset" onclick="setPomoPreset(60,this)">60 min</button>';
-  html += '<button class="pomo-preset break-preset" onclick="setPomoPreset(5,this,true)">5 min ·pauză</button>';
-  html += '<button class="pomo-preset break-preset" onclick="setPomoPreset(15,this,true)">15 min ·pauză</button>';
+  html += '<button class="pomo-preset active" data-subject-action="set-pomo-preset" data-pomo-minutes="25">25 min</button>';
+  html += '<button class="pomo-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="45">45 min</button>';
+  html += '<button class="pomo-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="60">60 min</button>';
+  html += '<button class="pomo-preset break-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="5" data-pomo-break="true">5 min ·pauză</button>';
+  html += '<button class="pomo-preset break-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="15" data-pomo-break="true">15 min ·pauză</button>';
   html += '</div>';
 
   // Custom input
   html += '<div class="pomo-custom-row">';
   html += '<span class="pomo-custom-label">Custom:</span>';
-  html += '<input type="number" class="pomo-custom-inp" id="pomoCustomInp" min="1" max="180" placeholder="min" onkeydown="if(event.key===\'Enter\')applyPomoCustom()">';
-  html += '<button class="pomo-custom-btn" onclick="applyPomoCustom()">Set</button>';
+  html += '<input type="number" class="pomo-custom-inp" id="pomoCustomInp" min="1" max="180" placeholder="min">';
+  html += '<button class="pomo-custom-btn" data-subject-action="apply-pomo-custom">Set</button>';
   html += '</div>';
 
   // Stats
@@ -275,7 +275,7 @@ function renderSubjectPage(element, key, subject) {
   html += '<div class="file-add-row">';
   html += '<input id="fileName_input" placeholder="Numele fișierului (ex: Curs 3 - Regresie.pdf)">';
   html += '<select id="fileCat"><option value="curs">Curs</option><option value="seminar">Seminar</option><option value="lab">Lab</option><option value="proiect">Proiect</option><option value="examen">Examen</option><option value="altele">Altele</option></select>';
-  html += '<button class="link-add-btn" onclick="addFile(\'' + key + '\')">+</button>';
+  html += '<button class="link-add-btn" data-subject-action="add-file" data-subject-key="' + key + '">+</button>';
   html += '</div>';
   html += '<div id="fileList">' + renderFileOrganizer(key) + '</div>';
   html += '</div></div>';
@@ -314,6 +314,8 @@ function renderSubjectPage(element, key, subject) {
 
   // Setup presentation navigation
   setupPresentationNav(presId, allPres[activeIndex] || null);
+
+  setupSubjectPageInteractions(element, key, subject);
 
   // Setup drag & drop
   setupDragDrop();
@@ -409,7 +411,7 @@ function pvRenderSlides() {
 
   if (dots) {
     dots.innerHTML = pvState.slides.map(function(_, i) {
-      return '<button class="pres-viewer-dot' + (i === 0 ? ' active' : '') + '" onclick="pvGoTo(' + i + ')"></button>';
+      return '<button class="pres-viewer-dot' + (i === 0 ? ' active' : '') + '" data-pv-dot="' + i + '"></button>';
     }).join('');
   }
 }
@@ -476,6 +478,132 @@ function deletePresentation(key, id) {
   renderSidebar();
 }
 
+function setupSubjectPageInteractions(element, key, subject) {
+  if (!element) return;
+
+  var fileUpload = element.querySelector('#fileUpload');
+  if (fileUpload && !fileUpload.dataset.bound) {
+    fileUpload.dataset.bound = 'true';
+    fileUpload.addEventListener('change', handleFileUpload);
+  }
+
+  element.addEventListener('click', function(event) {
+    var actionEl = event.target.closest('[data-subject-action], [data-nav-tab], [data-pv-dot]');
+    if (!actionEl || !element.contains(actionEl)) return;
+
+    if (actionEl.dataset.navTab) {
+      navigateTo(actionEl.dataset.navTab);
+      return;
+    }
+
+    if (actionEl.dataset.pvDot) {
+      pvGoTo(parseInt(actionEl.dataset.pvDot, 10));
+      return;
+    }
+
+    var action = actionEl.dataset.subjectAction;
+    if (!action) return;
+
+    switch (action) {
+      case 'open-presentation':
+        openPresentationViewer(actionEl.dataset.subjectKey, parseInt(actionEl.dataset.presIndex, 10));
+        return;
+      case 'delete-presentation':
+        event.stopPropagation();
+        deletePresentation(actionEl.dataset.subjectKey, actionEl.dataset.presId);
+        return;
+      case 'scroll-generator':
+        document.getElementById('uploadZone')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      case 'remove-uploaded-file':
+        removeFile();
+        return;
+      case 'generate-presentation':
+        generatePresentation(actionEl.dataset.subjectKey);
+        return;
+      case 'export-chat':
+        exportChatAsPDF(actionEl.dataset.subjectKey);
+        return;
+      case 'clear-chat':
+        clearChatHistory(actionEl.dataset.subjectKey);
+        return;
+      case 'send-chat':
+        sendChatMessage(actionEl.dataset.subjectKey);
+        return;
+      case 'add-todo':
+        addTodo(actionEl.dataset.subjectKey);
+        return;
+      case 'toggle-todo':
+        toggleTodo(actionEl.dataset.subjectKey, parseInt(actionEl.dataset.todoIndex, 10));
+        return;
+      case 'delete-todo':
+        deleteTodo(actionEl.dataset.subjectKey, parseInt(actionEl.dataset.todoIndex, 10));
+        return;
+      case 'add-link':
+        addLink(actionEl.dataset.subjectKey);
+        return;
+      case 'delete-link':
+        deleteLink(actionEl.dataset.subjectKey, parseInt(actionEl.dataset.linkIndex, 10));
+        return;
+      case 'toggle-pomodoro':
+        togglePomodoro();
+        return;
+      case 'reset-pomodoro':
+        resetPomodoro();
+        return;
+      case 'set-pomo-preset':
+        setPomoPreset(
+          parseInt(actionEl.dataset.pomoMinutes, 10),
+          actionEl,
+          actionEl.dataset.pomoBreak === 'true'
+        );
+        return;
+      case 'apply-pomo-custom':
+        applyPomoCustom();
+        return;
+      case 'add-file':
+        addFile(actionEl.dataset.subjectKey);
+        return;
+      case 'delete-file':
+        deleteFile(actionEl.dataset.subjectKey, parseInt(actionEl.dataset.fileIndex, 10));
+        return;
+      case 'set-progress':
+        setProgress(actionEl.dataset.subjectKey, actionEl.dataset.progressKey, event);
+        return;
+      case 'adjust-progress':
+        adjustProgress(
+          actionEl.dataset.subjectKey,
+          actionEl.dataset.progressKey,
+          parseInt(actionEl.dataset.progressDelta, 10)
+        );
+        return;
+      default:
+        return;
+    }
+  });
+
+  element.addEventListener('keydown', function(event) {
+    if (event.key !== 'Enter' || event.shiftKey) return;
+
+    if (event.target.id === 'chatInput') {
+      event.preventDefault();
+      sendChatMessage(key);
+      return;
+    }
+
+    if (event.target.id === 'todoInput') {
+      event.preventDefault();
+      addTodo(key);
+      return;
+    }
+
+    if (event.target.id === 'pomoCustomInp') {
+      event.preventDefault();
+      applyPomoCustom();
+    }
+  });
+}
+
 // =============================================
 // TODOS
 // =============================================
@@ -491,9 +619,9 @@ function renderTodos(key) {
   var html = '';
   items.forEach(function(item, index) {
     html += '<div class="todo-item">';
-    html += '<button class="t-check ' + (item.done ? 'done' : '') + '" onclick="toggleTodo(\'' + key + '\',' + index + ')"></button>';
+    html += '<button class="t-check ' + (item.done ? 'done' : '') + '" data-subject-action="toggle-todo" data-subject-key="' + key + '" data-todo-index="' + index + '"></button>';
     html += '<span class="t-text ' + (item.done ? 'done' : '') + '">' + escapeHtml(item.text) + '</span>';
-    html += '<button class="t-del" onclick="deleteTodo(\'' + key + '\',' + index + ')">×</button>';
+    html += '<button class="t-del" data-subject-action="delete-todo" data-subject-key="' + key + '" data-todo-index="' + index + '">×</button>';
     html += '</div>';
   });
 
@@ -1315,7 +1443,7 @@ function renderLinks(key) {
       '<span>' + (catIcons[link.cat] || '↗') + '</span>' +
       '<span class="link-cat">' + link.cat + '</span>' +
       '<a href="' + sanitizeUrl(link.url) + '" target="_blank" rel="noopener noreferrer" title="' + escapeHtml(link.url) + '">' + escapeHtml(link.name) + '</a>' +
-      '<button class="link-del" onclick="deleteLink(\'' + key + '\',' + index + ')">×</button>' +
+      '<button class="link-del" data-subject-action="delete-link" data-subject-key="' + key + '" data-link-index="' + index + '">×</button>' +
       '</div>';
   }).join('');
 }
@@ -1377,13 +1505,13 @@ function renderProgress(key, subject) {
 
     html += '<div class="progress-row">';
     html += '<span class="progress-label">' + (item.tag === 'slides' ? '📘' : '🔬') + ' ' + item.label.substring(0, 30) + (item.label.length > 30 ? '...' : '') + '</span>';
-    html += '<div class="progress-bar-wrap" onclick="setProgress(\'' + key + '\',\'' + itemKey + '\', event)">';
+    html += '<div class="progress-bar-wrap" data-subject-action="set-progress" data-subject-key="' + key + '" data-progress-key="' + itemKey + '">';
     html += '<div class="progress-bar-inner" style="width:' + value + '%"></div>';
     html += '</div>';
     html += '<span class="progress-pct">' + value + '%</span>';
     html += '<div class="progress-btns">';
-    html += '<button class="progress-btn" onclick="adjustProgress(\'' + key + '\',\'' + itemKey + '\',-10)">−</button>';
-    html += '<button class="progress-btn" onclick="adjustProgress(\'' + key + '\',\'' + itemKey + '\',10)">+</button>';
+    html += '<button class="progress-btn" data-subject-action="adjust-progress" data-subject-key="' + key + '" data-progress-key="' + itemKey + '" data-progress-delta="-10">−</button>';
+    html += '<button class="progress-btn" data-subject-action="adjust-progress" data-subject-key="' + key + '" data-progress-key="' + itemKey + '" data-progress-delta="10">+</button>';
     html += '</div>';
     html += '</div>';
   });
@@ -1680,7 +1808,7 @@ function renderFileOrganizer(key) {
     html += '<span class="file-name">' + escapeHtml(file.name) + '</span>';
     html += '<span class="file-cat-badge" style="background:' + cat.bg + ';color:' + cat.color + '">' + file.cat + '</span>';
     html += '<span class="file-date">' + file.date + '</span>';
-    html += '<button class="file-del" onclick="deleteFile(\'' + key + '\',' + origIndex + ')">×</button>';
+    html += '<button class="file-del" data-subject-action="delete-file" data-subject-key="' + key + '" data-file-index="' + origIndex + '">×</button>';
     html += '</div>';
   });
 

@@ -26,6 +26,8 @@ function renderMentorGuide() {
     + '</div></div>';
 }
 
+let dashChartInstance = null;
+
 function renderDashboardCharts() {
   const subjects = getSubjects();
   const ctx = document.getElementById('progressChart');
@@ -83,16 +85,16 @@ function renderMindMapPage(element) {
   html += '<div class="quiz-options-row" id="mmSubjectChips">';
   for (const [key, subject] of Object.entries(subjects)) {
     const hasMM = state.mindMaps && state.mindMaps[key] && state.mindMaps[key].nodes;
-    html += '<button class="quiz-chip ' + (state.mmActiveSubject===key?'active':'') + '" onclick="selectMMSubject(\'' + key + '\')">' + subjectIcon(subject,'xs') + ' ' + subject.name + '</button>';
+    html += '<button class="quiz-chip ' + (state.mmActiveSubject===key?'active':'') + '" data-stats-action="select-mm-subject" data-mm-subject="' + key + '">' + subjectIcon(subject,'xs') + ' ' + subject.name + '</button>';
   }
   html += '</div>';
   if (false) {
     html += '<div style="padding:12px;background:var(--amber-muted);border-radius:var(--radius-sm);font-size:.85rem;color:var(--amber);margin-top:12px;">[!] Configurează API key-ul din Dashboard</div>';
   } else {
     html += '<div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;">';
-    html += '<button class="summary-gen-btn" id="mmGenBtn" onclick="generateMindMap()">' + icon('map','sm') + ' Generează Mind Map</button>';
+    html += '<button class="summary-gen-btn" id="mmGenBtn" data-stats-action="generate-mindmap">' + icon('map','sm') + ' Generează Mind Map</button>';
     if (state.mmActiveSubject && state.mindMaps && state.mindMaps[state.mmActiveSubject]) {
-      html += '<button class="quiz-nav-btn" onclick="clearMindMap()">' + icon('trash','xs') + ' Șterge</button>';
+      html += '<button class="quiz-nav-btn" data-stats-action="clear-mindmap">' + icon('trash','xs') + ' Șterge</button>';
     }
     html += '<span class="summary-status" id="mmGenStatus" style="font-size:.82rem;color:var(--text-muted);"></span></div>';
   }
@@ -105,14 +107,15 @@ function renderMindMapPage(element) {
   }
   html += '</div></div>';
   element.innerHTML = html;
+  setupStatsMentorInteractions(element);
   // Inițializează canvas după injectarea în DOM
   setTimeout(mmInitCanvas, 0);
 }
 
-function selectMMSubject(key) {
+function selectMMSubject(key, triggerEl) {
   state.mmActiveSubject = key;
   document.querySelectorAll('#mmSubjectChips .quiz-chip').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  if (triggerEl) triggerEl.classList.add('active');
   const zone = document.getElementById('mmDisplayZone');
   if (zone) {
     if (state.mindMaps && state.mindMaps[key] && state.mindMaps[key].nodes) {
@@ -208,9 +211,9 @@ function renderMindMapSVG(mm, subjectKey) {
       <span style="font-size:.82rem;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;gap:6px;">${icon('map','xs')} ${escapeHtml(mm.center || '')}</span>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <span style="font-size:.68rem;color:var(--text-muted);font-family:var(--font-mono);">scroll=zoom · drag=pan · click=collapse</span>
-        <button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 10px;" onclick="mmZoomReset()">⊙ Reset</button>
-        <button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 10px;" onclick="mmExpandAll()">⊕ Expand tot</button>
-        <button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 10px;" onclick="downloadMindMapSVG()">${icon('download','xs')} SVG</button>
+        <button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 10px;" data-stats-action="mm-zoom-reset">⊙ Reset</button>
+        <button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 10px;" data-stats-action="mm-expand-all">⊕ Expand tot</button>
+        <button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 10px;" data-stats-action="download-mindmap-svg">${icon('download','xs')} SVG</button>
       </div>
     </div>
     <canvas id="mmCanvas" style="width:100%;display:block;cursor:grab;" height="560"></canvas>
@@ -496,17 +499,17 @@ function renderExamSimPage(element) {
     html += '<div style="margin-bottom:14px;"><label style="font-size:.82rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">Materie</label>';
     html += '<div class="quiz-options-row" id="simSubjectChips">';
     for (const [key, subject] of Object.entries(subjects)) {
-      html += '<button class="quiz-chip ' + (state.simConfig&&state.simConfig.subject===key?'active':'') + '" onclick="selectSimSubject(\'' + key + '\', this)">' + subjectIcon(subject,'xs') + ' ' + subject.name + '</button>';
+      html += '<button class="quiz-chip ' + (state.simConfig&&state.simConfig.subject===key?'active':'') + '" data-stats-action="select-sim-subject" data-sim-subject="' + key + '">' + subjectIcon(subject,'xs') + ' ' + subject.name + '</button>';
     }
     html += '</div></div>';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">';
     html += '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">Număr întrebări</label><div class="quiz-options-row">';
-    [10,20,30,40].forEach(n => html += '<button class="quiz-chip ' + (!state.simConfig&&n===20||state.simConfig&&state.simConfig.count===n?'active':'') + '" onclick="selectSimCount(' + n + ', this)">' + n + '</button>');
+    [10,20,30,40].forEach(n => html += '<button class="quiz-chip ' + (!state.simConfig&&n===20||state.simConfig&&state.simConfig.count===n?'active':'') + '" data-stats-action="select-sim-count" data-sim-count="' + n + '">' + n + '</button>');
     html += '</div></div><div><label style="font-size:.82rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">Timp (minute)</label><div class="quiz-options-row">';
-    [30,45,60,90].forEach(m => html += '<button class="quiz-chip ' + (!state.simConfig&&m===45||state.simConfig&&state.simConfig.minutes===m?'active':'') + '" onclick="selectSimMinutes(' + m + ', this)">' + m + ' min</button>');
+    [30,45,60,90].forEach(m => html += '<button class="quiz-chip ' + (!state.simConfig&&m===45||state.simConfig&&state.simConfig.minutes===m?'active':'') + '" data-stats-action="select-sim-minutes" data-sim-minutes="' + m + '">' + m + ' min</button>');
     html += '</div></div></div>';
     if (false) html += '<div style="padding:12px;background:var(--amber-muted);border-radius:var(--radius-sm);font-size:.85rem;color:var(--amber);">[!] Configurează API key-ul</div>';
-    else { html += '<button class="summary-gen-btn" id="simGenBtn" onclick="startExamSim()">' + icon('graduation','sm') + ' Începe Simularea</button><span class="summary-status" id="simGenStatus" style="margin-left:12px;font-size:.82rem;color:var(--text-muted);"></span>'; }
+    else { html += '<button class="summary-gen-btn" id="simGenBtn" data-stats-action="start-exam-sim">' + icon('graduation','sm') + ' Începe Simularea</button><span class="summary-status" id="simGenStatus" style="margin-left:12px;font-size:.82rem;color:var(--text-muted);"></span>'; }
     html += '</div>';
     html += renderExamSimHistory();
   } else {
@@ -514,6 +517,7 @@ function renderExamSimPage(element) {
   }
   html += '</div>';
   element.innerHTML = html;
+  setupStatsMentorInteractions(element);
   if (state.activeExamSim) startExamSimTimer();
 }
 
@@ -595,28 +599,28 @@ function renderActiveExamSim() {
   html += '<div class="exam-sim-header">';
   html += '<div><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">' + (subject?subjectIcon(subject,'xs')+' '+subject.name:'') + '</div><div style="font-size:.85rem;font-weight:600;">' + totalAnswered + '/' + questions.length + ' răspunse</div></div>';
   html += '<div class="exam-sim-meta"><div class="exam-sim-timer ' + tClass + '" id="examTimer">' + String(mL).padStart(2,'0') + ':' + String(sL).padStart(2,'0') + '</div><div class="esm-label">timp rămas</div></div>';
-  html += '<button class="quiz-nav-btn" onclick="submitExamSim()" style="background:var(--red);color:#fff;border-color:var(--red);">🏁 Predă</button></div>';
+  html += '<button class="quiz-nav-btn" data-stats-action="submit-exam-sim" style="background:var(--red);color:#fff;border-color:var(--red);">🏁 Predă</button></div>';
 
   html += '<div class="exam-q-nav">';
-  questions.forEach((_,i) => { let cls = 'eq-nav-dot'; if(i===currentIndex)cls+=' current'; else if(answers[i]!==undefined)cls+=' answered'; else if(flagged[i])cls+=' flagged'; html += '<button class="'+cls+'" onclick="goToSimQuestion('+i+')">'+(i+1)+'</button>'; });
+  questions.forEach((_,i) => { let cls = 'eq-nav-dot'; if(i===currentIndex)cls+=' current'; else if(answers[i]!==undefined)cls+=' answered'; else if(flagged[i])cls+=' flagged'; html += '<button class="'+cls+'" data-stats-action="go-to-sim-question" data-sim-question-index="'+i+'">'+(i+1)+'</button>'; });
   html += '</div>';
 
   html += '<div class="quiz-question-card">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
   html += '<div class="quiz-q-num">Întrebarea ' + (currentIndex+1) + ' din ' + questions.length + '</div>';
-  html += '<button onclick="toggleSimFlag('+currentIndex+')" style="background:' + (flagged[currentIndex]?'var(--amber-muted)':'var(--bg-surface)') + ';border:1px solid ' + (flagged[currentIndex]?'var(--amber)':'var(--border)') + ';color:' + (flagged[currentIndex]?'var(--amber)':'var(--text-muted)') + ';padding:5px 12px;border-radius:var(--radius-xs);font-size:.78rem;cursor:pointer;">🚩 Marchează</button></div>';
+  html += '<button data-stats-action="toggle-sim-flag" data-sim-question-index="' + currentIndex + '" style="background:' + (flagged[currentIndex]?'var(--amber-muted)':'var(--bg-surface)') + ';border:1px solid ' + (flagged[currentIndex]?'var(--amber)':'var(--border)') + ';color:' + (flagged[currentIndex]?'var(--amber)':'var(--text-muted)') + ';padding:5px 12px;border-radius:var(--radius-xs);font-size:.78rem;cursor:pointer;">🚩 Marchează</button></div>';
   html += '<div class="quiz-q-text">' + escapeHtml(q.q) + '</div><div class="quiz-options">';
   const letters = ['A','B','C','D'];
   (q.options||[]).forEach((opt,oi) => {
     const isSel = answers[currentIndex]===oi;
-    html += '<button class="quiz-option' + (isSel?'" style="background:var(--accent-muted);border-color:var(--accent);"':'"') + ' onclick="answerSimQuestion('+oi+')">';
+    html += '<button class="quiz-option' + (isSel?'" style="background:var(--accent-muted);border-color:var(--accent);"':'"') + ' data-stats-action="answer-sim-question" data-sim-answer-index="' + oi + '">';
     html += '<span class="quiz-option-letter"' + (isSel?' style="background:var(--accent);color:#fff;"':'') + '>' + letters[oi] + '</span><span>' + escapeHtml(opt) + '</span></button>';
   });
   html += '</div></div>';
 
   html += '<div class="quiz-nav-btns">';
-  html += '<button class="quiz-nav-btn" onclick="prevSimQuestion()" ' + (currentIndex===0?'disabled':'') + '>← Prev</button>';
-  html += '<button class="quiz-nav-btn primary" onclick="nextSimQuestion()" ' + (currentIndex===questions.length-1?'disabled':'') + '>Next →</button></div></div>';
+  html += '<button class="quiz-nav-btn" data-stats-action="prev-sim-question" ' + (currentIndex===0?'disabled':'') + '>← Prev</button>';
+  html += '<button class="quiz-nav-btn primary" data-stats-action="next-sim-question" ' + (currentIndex===questions.length-1?'disabled':'') + '>Next →</button></div></div>';
   return html;
 }
 
@@ -666,7 +670,7 @@ function submitExamSim() {
     if (!ok) html += '<div style="font-size:.75rem;color:var(--text-secondary);margin-top:3px;">Răspuns corect: ' + escapeHtml((q.options||[])[q.correct]||'') + '</div>';
     html += '</div>';
   });
-  html += '</div><button class="quiz-nav-btn primary" onclick="navigateTo(\'examsim\')">↩ Sesiune nouă</button></div></div>';
+  html += '</div><button class="quiz-nav-btn primary" data-nav-tab="examsim">↩ Sesiune nouă</button></div></div>';
   document.getElementById('pageContent').innerHTML = html;
 }
 
@@ -683,9 +687,9 @@ function renderSettingsPage(element) {
   html += '<p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:14px;">Necesar pentru AI Tutor, Quiz, Flashcards AI, Mind Map și Prezentări. Obții gratuit de la <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent);text-decoration:underline;">console.anthropic.com</a>.</p>';
   html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
   html += '<input type="password" id="apiKeyInput" class="todo-inp" placeholder="configurat automat de server" style="flex:1;min-width:220px;font-family:var(--font-mono);font-size:.82rem;letter-spacing:.04em;" value="' + (state.apiKey ? state.apiKey : '') + '">';
-  html += '<button class="summary-gen-btn" onclick="saveApiKey()" style="flex:none;">' + icon('check','xs') + ' Salvează</button>';
+  html += '<button class="summary-gen-btn" data-stats-action="save-api-key" style="flex:none;">' + icon('check','xs') + ' Salvează</button>';
   if (apiKeySet) {
-    html += '<button class="quiz-nav-btn" onclick="clearApiKey()" style="border-color:var(--red);color:var(--red);flex:none;">' + icon('trash','xs') + ' Șterge</button>';
+    html += '<button class="quiz-nav-btn" data-stats-action="clear-api-key" style="border-color:var(--red);color:var(--red);flex:none;">' + icon('trash','xs') + ' Șterge</button>';
   }
   html += '</div>';
   html += '<div id="apiStatus" class="api-status ' + (apiKeySet ? 'ok' : '') + '" style="margin-top:10px;font-size:.8rem;">' + (apiKeySet ? '[OK] API key activ — funcțiile AI sunt disponibile.' : '[!] Fără API key funcțiile AI nu sunt disponibile.') + '</div>';
@@ -695,27 +699,28 @@ function renderSettingsPage(element) {
   html += '<div class="quiz-gen-section"><h3>' + icon('download','sm') + ' Export Date</h3>';
   html += '<p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:14px;">Descarcă toate datele tale ca fișier JSON pentru backup sau transfer.</p>';
   html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
-  html += '<button class="summary-gen-btn" onclick="exportData()">' + icon('download','xs') + ' Export JSON complet</button>';
-  html += '<button class="quiz-nav-btn" onclick="exportProgressPDF()">' + icon('file','xs') + ' Export PDF Raport</button>';
-  html += '<button class="quiz-nav-btn" onclick="exportCollabCode()">' + icon('link','xs') + ' Generează Cod Collab</button></div></div>';
+  html += '<button class="summary-gen-btn" data-stats-action="export-data">' + icon('download','xs') + ' Export JSON complet</button>';
+  html += '<button class="quiz-nav-btn" data-stats-action="export-progress-pdf">' + icon('file','xs') + ' Export PDF Raport</button>';
+  html += '<button class="quiz-nav-btn" data-stats-action="export-collab-code">' + icon('link','xs') + ' Generează Cod Collab</button></div></div>';
 
   html += '<div class="quiz-gen-section"><h3>' + icon('upload','sm') + ' Import Date</h3>';
   html += '<p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:14px;">Restaurează dintr-un backup JSON.</p>';
-  html += '<div class="import-export-zone"><input type="file" accept=".json" onchange="importData(event)"><div style="font-size:2rem;margin-bottom:8px;">📁</div><div style="font-weight:600;">Trage fișierul JSON sau click</div><div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Fișier exportat din ASE Study Hub</div></div></div>';
+  html += '<div class="import-export-zone"><input type="file" id="settingsImportInput" accept=".json"><div style="font-size:2rem;margin-bottom:8px;">📁</div><div style="font-weight:600;">Trage fișierul JSON sau click</div><div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Fișier exportat din ASE Study Hub</div></div></div>';
 
   html += '<div class="quiz-gen-section"><h3>' + icon('layers','sm') + ' Collab Mode</h3>';
   html += '<p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:14px;">Partajează prezentările cu un coleg folosind un cod.</p>';
-  html += '<div style="display:flex;gap:10px;"><input class="todo-inp" id="collabCodeInput" placeholder="Introdu cod collab..." style="flex:1;"><button class="quiz-nav-btn primary" onclick="importCollabCode()">' + icon('download','xs') + ' Import</button></div>';
+  html += '<div style="display:flex;gap:10px;"><input class="todo-inp" id="collabCodeInput" placeholder="Introdu cod collab..." style="flex:1;"><button class="quiz-nav-btn primary" data-stats-action="import-collab-code">' + icon('download','xs') + ' Import</button></div>';
   html += '<div id="collabCodeDisplay"></div></div>';
 
   html += '<div class="quiz-gen-section" style="border:1px solid var(--red);background:var(--red-muted);">';
   html += '<h3 style="color:var(--red)">' + icon('alert','sm') + ' Zonă Periculoasă</h3>';
   html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">';
-  html += '<button class="quiz-nav-btn" style="border-color:var(--red);color:var(--red);" onclick="resetPIN()">' + icon('lock','xs') + ' Schimbă PIN</button>';
-  html += '<button class="quiz-nav-btn" style="border-color:var(--red);color:var(--red);" onclick="clearAllData()">' + icon('trash','xs') + ' Șterge toate datele</button></div></div>';
+  html += '<button class="quiz-nav-btn" style="border-color:var(--red);color:var(--red);" data-stats-action="reset-pin">' + icon('lock','xs') + ' Schimbă PIN</button>';
+  html += '<button class="quiz-nav-btn" style="border-color:var(--red);color:var(--red);" data-stats-action="clear-all-data">' + icon('trash','xs') + ' Șterge toate datele</button></div></div>';
 
   html += '</div>';
   element.innerHTML = html;
+  setupStatsMentorInteractions(element);
 }
 
 function exportData() {
@@ -1033,7 +1038,7 @@ function renderMentorPage(element) {
   html += '<div><div style="font-weight:700;font-size:.95rem;">AI Mentor</div>';
   html += '<div class="mentor-status">Online — analizează progresul tău</div></div>';
   if ((state.mentorHistory || []).length > 0) {
-    html += '<button onclick="clearMentorHistory()" style="margin-left:auto;padding:5px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg-surface);color:var(--text-muted);font-size:.72rem;cursor:pointer;">' + icon('trash','xs') + ' Șterge</button>';
+    html += '<button data-stats-action="clear-mentor-history" style="margin-left:auto;padding:5px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg-surface);color:var(--text-muted);font-size:.72rem;cursor:pointer;">' + icon('trash','xs') + ' Șterge</button>';
   }
   html += '</div>';
 
@@ -1059,8 +1064,8 @@ function renderMentorPage(element) {
   if (false) {
     html += '<div style="width:100%;text-align:center;color:var(--text-muted);font-size:.82rem;">[!] Configurează API key-ul din Dashboard pentru AI Mentor</div>';
   } else {
-    html += '<textarea class="mentor-input" id="mentorInput" rows="1" placeholder="Pune o întrebare sau cere o analiză..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendMentorMessage()}"></textarea>';
-    html += '<button class="mentor-send-btn" id="mentorSendBtn" onclick="sendMentorMessage()">Trimite</button>';
+    html += '<textarea class="mentor-input" id="mentorInput" rows="1" placeholder="Pune o întrebare sau cere o analiză..."></textarea>';
+    html += '<button class="mentor-send-btn" id="mentorSendBtn" data-stats-action="send-mentor-message">Trimite</button>';
   }
   html += '</div>';
   html += '</div>'; // end mentor-chat
@@ -1087,7 +1092,7 @@ function renderMentorPage(element) {
     { icon: 'brain', text: 'Strategii pentru quiz-uri mai bune' },
   ];
   quickPrompts.forEach(p => {
-    html += '<button class="mentor-quick-prompt" onclick="sendMentorQuickPrompt(\'' + p.text.replace(/'/g, "\\'") + '\')">' + p.icon + ' ' + p.text + '</button>';
+    html += '<button class="mentor-quick-prompt" data-stats-action="mentor-quick-prompt" data-mentor-prompt="' + escapeHtml(p.text) + '">' + p.icon + ' ' + p.text + '</button>';
   });
   html += '</div>';
 
@@ -1102,6 +1107,7 @@ function renderMentorPage(element) {
   html += '</div>'; // end anim
 
   element.innerHTML = html;
+  setupStatsMentorInteractions(element);
 
   // Scroll la bottom
   setTimeout(() => {
@@ -1109,6 +1115,148 @@ function renderMentorPage(element) {
     if (msgs) msgs.scrollTop = msgs.scrollHeight;
   }, 50);
 }
+
+function setupStatsMentorInteractions(element) {
+  if (!element || element.__statsMentorBound) return;
+  element.__statsMentorBound = true;
+
+  const importInput = element.querySelector('#settingsImportInput');
+  if (importInput && !importInput.dataset.bound) {
+    importInput.dataset.bound = 'true';
+    importInput.addEventListener('change', importData);
+  }
+
+  element.addEventListener('click', function(event) {
+    const navEl = event.target.closest('[data-nav-tab]');
+    if (navEl && element.contains(navEl)) {
+      navigateTo(navEl.dataset.navTab);
+      return;
+    }
+
+    const actionEl = event.target.closest('[data-stats-action]');
+    if (!actionEl || !element.contains(actionEl)) return;
+
+    const action = actionEl.dataset.statsAction;
+    switch (action) {
+      case 'select-mm-subject':
+        selectMMSubject(actionEl.dataset.mmSubject, actionEl);
+        return;
+      case 'generate-mindmap':
+        generateMindMap();
+        return;
+      case 'clear-mindmap':
+        clearMindMap();
+        return;
+      case 'mm-zoom-reset':
+        mmZoomReset();
+        return;
+      case 'mm-expand-all':
+        mmExpandAll();
+        return;
+      case 'download-mindmap-svg':
+        downloadMindMapSVG();
+        return;
+      case 'select-sim-subject':
+        selectSimSubject(actionEl.dataset.simSubject, actionEl);
+        return;
+      case 'select-sim-count':
+        selectSimCount(parseInt(actionEl.dataset.simCount, 10), actionEl);
+        return;
+      case 'select-sim-minutes':
+        selectSimMinutes(parseInt(actionEl.dataset.simMinutes, 10), actionEl);
+        return;
+      case 'start-exam-sim':
+        startExamSim();
+        return;
+      case 'submit-exam-sim':
+        submitExamSim();
+        return;
+      case 'go-to-sim-question':
+        goToSimQuestion(parseInt(actionEl.dataset.simQuestionIndex, 10));
+        return;
+      case 'toggle-sim-flag':
+        toggleSimFlag(parseInt(actionEl.dataset.simQuestionIndex, 10));
+        return;
+      case 'answer-sim-question':
+        answerSimQuestion(parseInt(actionEl.dataset.simAnswerIndex, 10));
+        return;
+      case 'prev-sim-question':
+        prevSimQuestion();
+        return;
+      case 'next-sim-question':
+        nextSimQuestion();
+        return;
+      case 'save-api-key':
+        saveApiKey();
+        return;
+      case 'clear-api-key':
+        clearApiKey();
+        return;
+      case 'export-data':
+        exportData();
+        return;
+      case 'export-progress-pdf':
+        exportProgressPDF();
+        return;
+      case 'export-collab-code':
+        exportCollabCode();
+        return;
+      case 'import-collab-code':
+        importCollabCode();
+        return;
+      case 'reset-pin':
+        resetPIN();
+        return;
+      case 'clear-all-data':
+        clearAllData();
+        return;
+      case 'clear-mentor-history':
+        clearMentorHistory();
+        return;
+      case 'send-mentor-message':
+        sendMentorMessage();
+        return;
+      case 'mentor-quick-prompt':
+        sendMentorQuickPrompt(actionEl.dataset.mentorPrompt || '');
+        return;
+      default:
+        return;
+    }
+  });
+
+  element.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' && !event.shiftKey && event.target.id === 'mentorInput') {
+      event.preventDefault();
+      sendMentorMessage();
+    }
+  });
+}
+
+function setupStatsMentorGlobalInteractions() {
+  if (document.body.__statsMentorGlobalBound) return;
+  document.body.__statsMentorGlobalBound = true;
+
+  document.body.addEventListener('click', function(event) {
+    const toastClose = event.target.closest('[data-stats-action="close-toast"]');
+    if (toastClose) {
+      removeToast(toastClose.parentElement);
+      return;
+    }
+
+    const cmdItem = event.target.closest('[data-cmd-item]');
+    if (cmdItem) {
+      executeCmdItem(parseInt(cmdItem.dataset.cmdItem, 10));
+      return;
+    }
+
+    const notifItem = event.target.closest('[data-notif-id]');
+    if (notifItem) {
+      readNotif(notifItem.dataset.notifId);
+    }
+  });
+}
+
+setTimeout(setupStatsMentorGlobalInteractions, 0);
 
 // Mesajul de bun venit al mentorului
 function renderMentorWelcome() {
@@ -1545,7 +1693,7 @@ function showToast(title, message, type, duration) {
       <div class="toast-title">${title}</div>
       ${message ? `<div class="toast-msg">${message}</div>` : ''}
     </div>
-    <button class="toast-close" onclick="removeToast(this.parentElement)">${icon('close', 'xs')}</button>
+    <button class="toast-close" data-stats-action="close-toast">${icon('close', 'xs')}</button>
   `;
   container.appendChild(toast);
 
@@ -1616,7 +1764,7 @@ function renderCmdResults(query) {
       html += `<div class="cmd-section-label">${item.section}</div>`;
       lastSection = item.section;
     }
-    html += `<div class="cmd-item ${idx === 0 ? 'selected' : ''}" onclick="executeCmdItem(${CMD_ITEMS.indexOf(item)})" data-idx="${idx}">
+    html += `<div class="cmd-item ${idx === 0 ? 'selected' : ''}" data-cmd-item="${CMD_ITEMS.indexOf(item)}" data-idx="${idx}">
       ${icon(item.icon, 'sm')}
       <div class="cmd-item-label">${item.label}</div>
       ${item.sub ? `<div class="cmd-item-sub">${item.sub}</div>` : ''}
@@ -1704,5 +1852,86 @@ function closeNotifOutside(e) {
   const panel = document.getElementById('notifPanel');
   if (panel && !panel.contains(e.target) && e.target.id !== 'topbarNotifBtn') {
     panel.classList.remove('open');
+  }
+}
+
+function renderNotifList() {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+
+  if (!notifications.length) {
+    list.innerHTML = '<div class="notif-empty">' + icon('bell','sm') + '<br>Nicio notificare</div>';
+    return;
+  }
+
+  const iconMap = { info: icon('info','sm'), success: icon('check_circle','sm'), warning: icon('alert','sm'), exam: icon('calendar','sm'), flashcard: icon('cards','sm') };
+  const colorMap = { info: 'var(--blue)', success: 'var(--green)', warning: 'var(--amber)', exam: 'var(--red)', flashcard: 'var(--purple)' };
+
+  list.innerHTML = notifications.map(n => {
+    const ago = formatTimeAgo(n.time);
+    return `<div class="notif-item ${n.read ? '' : 'unread'}" data-notif-id="${n.id}">
+      <span class="notif-icon" style="color:${colorMap[n.type]||colorMap.info}">${iconMap[n.type]||iconMap.info}</span>
+      <div class="notif-body">
+        <div class="notif-title">${escapeHtml(n.title)}</div>
+        <div class="notif-msg">${escapeHtml(n.msg||'')}</div>
+        <div class="notif-time">${ago}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  setTimeout(() => {
+    notifications.forEach(n => n.read = true);
+    updateNotifBadge();
+  }, 1500);
+}
+
+function readNotif(id) {
+  const n = notifications.find(n => String(n.id) === String(id));
+  if (n) { n.read = true; if (n.action) n.action(); }
+  updateNotifBadge();
+}
+
+function clearAllNotifs() {
+  notifications = [];
+  updateNotifBadge();
+  renderNotifList();
+}
+
+function formatTimeAgo(date) {
+  const diff = (Date.now() - new Date(date)) / 1000;
+  if (diff < 60) return 'Acum';
+  if (diff < 3600) return Math.floor(diff / 60) + ' min';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+  return Math.floor(diff / 86400) + 'z';
+}
+
+function checkAndNotify() {
+  const dueFC = getFlashcardsDueCount();
+  if (dueFC > 0 && !window._notifiedFC) {
+    window._notifiedFC = true;
+    addNotification(
+      'Flashcards de revizuit',
+      'Ai ' + dueFC + ' flashcards scadente azi.',
+      'flashcard',
+      () => navigateTo('flashcards')
+    );
+  }
+
+  const nextExam = (state.exams || [])
+    .filter(e => new Date(e.date) >= new Date())
+    .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+  if (nextExam) {
+    const days = Math.round((new Date(nextExam.date) - new Date()) / 86400000);
+    if (days <= 3 && !window._notifiedExam) {
+      window._notifiedExam = true;
+      const subj = getSubjects()[nextExam.subject];
+      addNotification(
+        'Examen apropiat',
+        (subj ? subj.name : nextExam.name) + ' este în ' + days + ' zile.',
+        'exam',
+        () => navigateTo('calendar')
+      );
+    }
   }
 }

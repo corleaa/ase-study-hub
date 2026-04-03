@@ -143,8 +143,8 @@ function financeFieldDisplay(field, value) {
 function financeSlider(field, label, value, min, max, step, hint) {
   var decimals = String(step).indexOf('.') >= 0 ? String(step).split('.')[1].length : 0;
   return '<div class="finance-control' + (hint ? ' finance-control--sim' : '') + '">'
-    + '<div class="finance-control-row"><label>' + label + (hint ? ' <span class="finance-control-help" title="' + escapeHtml(hint) + '">?</span>' : '') + '</label><div class="finance-control-value"><strong data-finance-value-for="' + field + '">' + financeFieldDisplay(field, value) + '</strong><input class="finance-control-number" data-finance-number-for="' + field + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + Number(value).toFixed(decimals) + '" onchange="setFinanceLabValue(\'' + field + '\', this.value)" oninput="setFinanceLabValue(\'' + field + '\', this.value)"></div></div>'
-    + '<input data-finance-input="' + field + '" type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '" oninput="setFinanceLabValue(\'' + field + '\', this.value)">'
+    + '<div class="finance-control-row"><label>' + label + (hint ? ' <span class="finance-control-help" title="' + escapeHtml(hint) + '">?</span>' : '') + '</label><div class="finance-control-value"><strong data-finance-value-for="' + field + '">' + financeFieldDisplay(field, value) + '</strong><input class="finance-control-number" data-finance-number-for="' + field + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + Number(value).toFixed(decimals) + '"></div></div>'
+    + '<input data-finance-input="' + field + '" type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '">'
     + (hint ? '<div class="finance-control-hint">' + escapeHtml(hint) + '</div>' : '')
     + '</div>';
 }
@@ -495,9 +495,9 @@ function openFinanceNetworkInfo(key) {
   var info = financeNetworkInfoPayload(key, metrics);
   if (!info) return;
   var level = financeRiskLevelMeta(info.score);
-  var body = '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">';
+  var body = '<div class="modal-overlay" data-finance-modal="close-if-overlay">';
   body += '<div class="modal-box" style="max-width:620px;">';
-  body += '<div class="modal-header"><div class="modal-title">' + escapeHtml(info.title) + '</div><button class="modal-close" onclick="closeModal()">✕</button></div>';
+  body += '<div class="modal-header"><div class="modal-title">' + escapeHtml(info.title) + '</div><button class="modal-close" data-finance-action="close-modal">✕</button></div>';
   body += '<div style="display:grid;gap:16px;">';
   body += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><span style="display:inline-flex;padding:7px 12px;border-radius:999px;background:' + level.color + '18;color:' + level.color + ';border:1px solid ' + level.color + '55;font-size:.76rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">' + level.label + '</span><span style="font-family:var(--font-mono);font-size:1rem;font-weight:800;color:var(--text-primary);">' + info.score + '/100</span></div>';
   body += '<div style="color:var(--text-secondary);font-size:.92rem;line-height:1.7;">' + escapeHtml(info.what) + '</div>';
@@ -573,7 +573,7 @@ function financeStabilityHeroHtml(metrics) {
     + '<div class="finance-sim-scenarios">'
     + Object.keys(presets).map(function(key) {
       var preset = presets[key];
-      return '<button class="finance-sim-scenario' + (metrics.finance.scenario === key ? ' active' : '') + '" data-fin-scenario-card="' + key + '" onclick="setFinanceLabScenario(\'' + key + '\')"><strong>' + preset.title + '</strong><span>' + preset.copy + '</span></button>';
+      return '<button class="finance-sim-scenario' + (metrics.finance.scenario === key ? ' active' : '') + '" data-fin-scenario-card="' + key + '" data-finance-action="set-scenario" data-finance-scenario="' + key + '"><strong>' + preset.title + '</strong><span>' + preset.copy + '</span></button>';
     }).join('')
     + '</div></div>'
     + '<div class="finance-sim-panel">'
@@ -636,7 +636,7 @@ function financeNetworkSvg(metrics) {
     { title: 'Canal suveran', value: Math.round(metrics.housingFragility), color: '#6e7d91' }
   ];
   function box(x, y, w, h, item, key) {
-    return '<g onclick="openFinanceNetworkInfo(\'' + key + '\')" style="cursor:pointer">'
+    return '<g data-finance-network="' + key + '" style="cursor:pointer">'
       + '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="18" fill="' + item.color + '" fill-opacity="0.14" stroke="' + item.color + '" stroke-opacity="0.5" stroke-width="2"/>'
       + '<text x="' + (x + 14) + '" y="' + (y + 22) + '" fill="#243348" font-size="12" font-weight="800">' + item.title + '</text>'
       + '<text x="' + (x + 14) + '" y="' + (y + 44) + '" fill="' + item.color + '" font-size="18" font-weight="800">' + item.value + '/100</text>'
@@ -998,11 +998,11 @@ function renderFinanceLab(el) {
   var isStability = mode === 'stability';
   var html = '<div class="anim"><div class="finance-lab-shell">';
   html += '<div class="dash-hero-v13" style="margin-bottom:0;"><div class="dash-hero-v13-content"><div class="dash-hero-v13-tag">' + icon('chart','xs') + ' Finance Lab · ' + cfg.title + '</div><h1 style="font-size:1.65rem;">' + cfg.hero + '</h1><p class="dash-hero-v13-sub">' + cfg.copy + '</p><div class="finance-mode-tabs">'
-    + '<button class="finance-mode-tab ' + (mode === 'investments' ? 'active' : '') + '" onclick="setFinanceLabMode(\'investments\')">Investiții</button>'
-    + '<button class="finance-mode-tab ' + (mode === 'modeling' ? 'active' : '') + '" onclick="setFinanceLabMode(\'modeling\')">Modelare</button>'
-    + '<button class="finance-mode-tab ' + (mode === 'analysis' ? 'active' : '') + '" onclick="setFinanceLabMode(\'analysis\')">Analiză</button>'
-    + '<button class="finance-mode-tab ' + (mode === 'stability' ? 'active' : '') + '" onclick="setFinanceLabMode(\'stability\')">Stabilitate</button>'
-    + '<button class="finance-mode-tab ' + (mode === 'monetary' ? 'active' : '') + '" onclick="setFinanceLabMode(\'monetary\')">Politici Monetare</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'investments' ? 'active' : '') + '" data-finance-action="set-mode" data-finance-mode="investments">Investiții</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'modeling' ? 'active' : '') + '" data-finance-action="set-mode" data-finance-mode="modeling">Modelare</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'analysis' ? 'active' : '') + '" data-finance-action="set-mode" data-finance-mode="analysis">Analiză</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'stability' ? 'active' : '') + '" data-finance-action="set-mode" data-finance-mode="stability">Stabilitate</button>'
+    + '<button class="finance-mode-tab ' + (mode === 'monetary' ? 'active' : '') + '" data-finance-action="set-mode" data-finance-mode="monetary">Politici Monetare</button>'
     + '</div></div></div>';
   if (isStability) {
     html += financeStabilityHeroHtml(getFinanceLabMetrics());
@@ -1013,18 +1013,93 @@ function renderFinanceLab(el) {
     html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Secțiunea 4</div><div class="finance-zone-title">Contagiune, distribuția pierderilor și vulnerabilități structurale</div><div class="finance-zone-copy">Ultimul bloc arată cum se conectează segmentele sistemului financiar și cât de groasă devine coada pierderilor atunci când crește interconectarea.</div></div></div><div class="finance-stability-grid finance-stability-grid--stacked"><div class="finance-control-panel finance-control-panel--horizontal"><div class="finance-panel-title">Canale structurale de vulnerabilitate</div><div class="finance-control-grid finance-control-grid--4">' + financeSlider('policyRate', 'Dobânda de politică monetară', finance.policyRate, 1, 12, 0.1) + financeSlider('inflation', 'Inflație', finance.inflation, 1, 15, 0.1) + financeSlider('leverage', 'Leverage sistemic', finance.leverage, 1, 10, 0.1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + '</div><div class="finance-story" id="finStoryStability"></div></div><div class="finance-stability-stack"><div class="finance-dual-grid"><div class="finance-report-card finance-report-card--wide"><div class="finance-panel-title">Distribuția pierderilor sistemice</div><div class="finance-chart" id="finDistributionChart"></div><div class="finance-chart-caption">Curba se deplasează și se îngroașă pe măsură ce contagiunea, concentrarea și volatilitatea se suprapun.</div><div class="finance-stat-strip" id="finDistributionStrip"></div></div><div class="finance-report-card finance-report-card--wide"><div class="finance-panel-title">Hartă a vulnerabilităților sistemice</div><div class="finance-chart" id="finStabilityChart"></div><div class="finance-chart-caption">Radarul îți arată dacă fragilitatea vine mai ales din capital, lichiditate, ciclul creditului, housing sau rețea.</div></div></div><div class="finance-report-card finance-report-card--wide"><div class="finance-panel-title">Interdependențele segmentelor sistemului financiar</div><div class="finance-chart" id="finNetworkChart"></div><div class="finance-network-note">Schema urmărește traseul șocului: de la sursele de stres, prin canalele de transmitere, până la segmentele lovite prima dată. Valorile din fiecare box arată intensitatea relativă a presiunii.</div></div></div></div></section>';
     html += '</div></div>';
     el.innerHTML = html;
+    setupFinanceLabInteractions(el);
     updateFinanceLabUI();
     return;
   }
   html += '<div class="finance-overview"><div class="finance-kpi"><div class="finance-kpi-label">' + (isStability ? 'Risc sistemic' : 'VPN curent') + '</div><div class="finance-kpi-value" id="finKpiNpv"></div></div><div class="finance-kpi"><div class="finance-kpi-label">' + (isStability ? 'Tail loss' : 'Probabilitate pierdere') + '</div><div class="finance-kpi-value" id="finKpiLoss"></div></div><div class="finance-kpi"><div class="finance-kpi-label">' + (isStability ? 'CCyB sugerat' : 'Capital sub stres') + '</div><div class="finance-kpi-value" id="finKpiCapital"></div></div><div class="finance-kpi"><div class="finance-kpi-label">Scor stabilitate</div><div class="finance-kpi-value" id="finKpiStability"></div></div></div>';
   html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 1</div><div class="finance-zone-title">' + cfg.zone1 + '</div><div class="finance-zone-copy">' + cfg.zone1Copy + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">' + (isStability ? 'Motoarele ciclului financiar' : 'Controlează ipotezele') + '</div>' + (isStability ? financeSlider('creditGrowth', 'Creștere credit', finance.creditGrowth, 0, 20, 0.5) + financeSlider('householdDebt', 'Datorie gospodării / venit', finance.householdDebt, 20, 90, 1) + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('leverage', 'Leverage sistemic', finance.leverage, 1, 10, 0.1) : financeSlider('initialInvestment', 'Investiție inițială', finance.initialInvestment, 50000, 1000000, 10000) + financeSlider('annualCashflow', 'Cash flow anual', finance.annualCashflow, 10000, 250000, 5000) + financeSlider('discountRate', 'Rata de actualizare', finance.discountRate, 1, 20, 0.5) + financeSlider('years', 'Orizont (ani)', finance.years, 2, 10, 1) + financeSlider('growthRate', 'Creștere cash flow', finance.growthRate, -5, 15, 0.5)) + '<div class="finance-story" id="finStoryValuation"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">' + (isStability ? 'Eroziunea buffer-elor pe ciclul financiar' : 'Curba fluxurilor nominale vs. actualizate') + '</div><div class="finance-chart" id="finValuationChart"></div><div class="finance-chart-legend"><span><i style="background:#73c9a6"></i>' + (isStability ? 'Buffer brut' : 'Cash flow nominal') + '</span><span><i style="background:#f29b6d"></i>' + (isStability ? 'Buffer după stres' : 'Cash flow actualizat') + '</span></div><div class="finance-chart-caption">' + (isStability ? 'Vezi unde se consumă rezervele de reziliență când urcă ritmul creditului, leverage-ul și datoria gospodăriilor.' : 'Graficul arată cum scade valoarea cash flow-ului pe măsură ce îl aduci în prezent prin rata de actualizare.') + '</div><div class="finance-stat-strip" id="finValuationStrip"></div></div></div></section>';
   html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 2</div><div class="finance-zone-title">' + cfg.zone2 + '</div><div class="finance-zone-copy">' + cfg.zone2Copy + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">' + (isStability ? 'Amplificatori de coadă' : 'Reglează profilul de risc') + '</div>' + (isStability ? financeSlider('concentrationRisk', 'Concentrare sectorială', finance.concentrationRisk, 10, 90, 1) + financeSlider('contagionRisk', 'Interconectare / contagiune', finance.contagionRisk, 5, 90, 1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) : financeSlider('expectedReturn', 'Randament așteptat', finance.expectedReturn, -5, 25, 0.5) + financeSlider('volatility', 'Volatilitate', finance.volatility, 5, 45, 0.5) + financeSlider('exposure', 'Expunere economică', finance.exposure, 10, 200, 5)) + '<div class="finance-story" id="finStoryDistribution"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">' + (isStability ? 'Distribuția pierderilor sistemice' : 'Distribuția randamentelor') + '</div><div class="finance-chart" id="finDistributionChart"></div><div class="finance-chart-caption">' + (isStability ? 'Curba arată cât de groasă devine coada pierderilor când se suprapun concentrare, contagiune și volatilitate.' : 'Curba îți arată distribuția probabilă a rezultatelor, cu markeri pentru percentilele cheie.') + '</div><div class="finance-stat-strip" id="finDistributionStrip"></div></div></div></section>';
-  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 3</div><div class="finance-zone-title">' + cfg.zone3 + '</div><div class="finance-zone-copy">' + cfg.zone3Copy + '</div></div></div><div class="finance-scenario-row"><div class="finance-scenario-card active" data-fin-scenario="base" onclick="setFinanceLabScenario(\'base\')"><div class="finance-scenario-name">Scenariu de bază</div><div class="finance-scenario-copy">' + (isStability ? 'Creditul încetinește ordonat, buffer-ele țin și refinanțarea rămâne deschisă.' : 'Șocuri mici, piață ordonată, refinanțare normală.') + '</div></div><div class="finance-scenario-card" data-fin-scenario="adverse" onclick="setFinanceLabScenario(\'adverse\')"><div class="finance-scenario-name">Scenariu advers</div><div class="finance-scenario-copy">' + (isStability ? 'Crește costul finanțării, housing-ul slăbește și canalele de contagiune se activează.' : 'Costul finanțării crește, lichiditatea se strânge, default-urile urcă.') + '</div></div><div class="finance-scenario-card" data-fin-scenario="crisis" onclick="setFinanceLabScenario(\'crisis\')"><div class="finance-scenario-name">Scenariu de criză</div><div class="finance-scenario-copy">' + (isStability ? 'Buffer-ele se consumă rapid, LCR-ul cade și credit gap-ul intră în zonă critică.' : 'Volatilitate mare, pierderi accelerate și presiune pe capital.') + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">' + (isStability ? 'Parametri macro de stres' : 'Parametri bilanț și șoc') + '</div>' + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + financeSlider('refinancingGap', 'Refinancing gap', finance.refinancingGap, 10, 80, 1) + '<div class="finance-story" id="finStoryStress"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">' + (isStability ? 'Transmisia șocului sistemic' : 'Impactul scenariului ales') + '</div><div class="finance-chart" id="finStressChart"></div><div class="finance-chart-caption">' + (isStability ? 'Barele arată unde intră prima ruptură într-un exercițiu macroprudențial: capital, lichiditate, credit gap sau rețea.' : 'Barele compară zonele cele mai sensibile din bilanț după șocul selectat.') + '</div><div class="finance-stat-strip" id="finStressStrip"></div></div></div></section>';
+  html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 3</div><div class="finance-zone-title">' + cfg.zone3 + '</div><div class="finance-zone-copy">' + cfg.zone3Copy + '</div></div></div><div class="finance-scenario-row"><div class="finance-scenario-card active" data-fin-scenario="base" data-finance-action="set-scenario" data-finance-scenario="base"><div class="finance-scenario-name">Scenariu de bază</div><div class="finance-scenario-copy">' + (isStability ? 'Creditul încetinește ordonat, buffer-ele țin și refinanțarea rămâne deschisă.' : 'Șocuri mici, piață ordonată, refinanțare normală.') + '</div></div><div class="finance-scenario-card" data-fin-scenario="adverse" data-finance-action="set-scenario" data-finance-scenario="adverse"><div class="finance-scenario-name">Scenariu advers</div><div class="finance-scenario-copy">' + (isStability ? 'Crește costul finanțării, housing-ul slăbește și canalele de contagiune se activează.' : 'Costul finanțării crește, lichiditatea se strânge, default-urile urcă.') + '</div></div><div class="finance-scenario-card" data-fin-scenario="crisis" data-finance-action="set-scenario" data-finance-scenario="crisis"><div class="finance-scenario-name">Scenariu de criză</div><div class="finance-scenario-copy">' + (isStability ? 'Buffer-ele se consumă rapid, LCR-ul cade și credit gap-ul intră în zonă critică.' : 'Volatilitate mare, pierderi accelerate și presiune pe capital.') + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">' + (isStability ? 'Parametri macro de stres' : 'Parametri bilanț și șoc') + '</div>' + financeSlider('capitalBuffer', 'Capital disponibil', finance.capitalBuffer, 8, 22, 0.5) + financeSlider('liquidityBuffer', 'LCR / buffer lichiditate', finance.liquidityBuffer, 80, 180, 1) + financeSlider('stressShock', 'Intensitate șoc', finance.stressShock, 10, 80, 1) + financeSlider('refinancingGap', 'Refinancing gap', finance.refinancingGap, 10, 80, 1) + '<div class="finance-story" id="finStoryStress"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">' + (isStability ? 'Transmisia șocului sistemic' : 'Impactul scenariului ales') + '</div><div class="finance-chart" id="finStressChart"></div><div class="finance-chart-caption">' + (isStability ? 'Barele arată unde intră prima ruptură într-un exercițiu macroprudențial: capital, lichiditate, credit gap sau rețea.' : 'Barele compară zonele cele mai sensibile din bilanț după șocul selectat.') + '</div><div class="finance-stat-strip" id="finStressStrip"></div></div></div></section>';
   html += '<section class="finance-zone"><div class="finance-zone-head"><div><div class="finance-zone-kicker">Zona 4</div><div class="finance-zone-title">' + cfg.zone4 + '</div><div class="finance-zone-copy">' + cfg.zone4Copy + '</div></div></div><div class="finance-zone-grid"><div class="finance-control-panel"><div class="finance-panel-title">' + (isStability ? 'Canale structurale de vulnerabilitate' : 'Motoarele stabilității') + '</div>' + financeSlider('policyRate', 'Dobânda de politică monetară', finance.policyRate, 1, 12, 0.1) + financeSlider('inflation', 'Inflație', finance.inflation, 1, 15, 0.1) + financeSlider('leverage', isStability ? 'Leverage sistemic' : 'Leverage', finance.leverage, 1, 10, 0.1) + financeSlider('marketVol', 'Volatilitate piață', finance.marketVol, 5, 50, 1) + '<div class="finance-story" id="finStoryStability"></div></div><div class="finance-visual-panel"><div class="finance-panel-title">' + (isStability ? 'Hartă a vulnerabilităților sistemice' : 'Hartă de stabilitate') + '</div><div class="finance-chart" id="finStabilityChart"></div><div class="finance-chart-caption">' + (isStability ? 'Radarul îți arată dacă fragilitatea vine mai ales din ciclul creditului, housing, rețea sau risc de piață.' : 'Radarul sintetizează starea sistemului pe 5 dimensiuni și arată rapid unde apare fragilitatea.') + '</div><div class="finance-stat-strip" id="finStabilityStrip"></div></div></div></section>';
   html += '</div></div>';
   el.innerHTML = html;
+  setupFinanceLabInteractions(el);
   updateFinanceLabUI();
 }
+
+function setupFinanceLabInteractions(el) {
+  if (!el || el.__financeLabBound) return;
+  el.__financeLabBound = true;
+
+  el.addEventListener('click', function(event) {
+    const networkEl = event.target.closest('[data-finance-network]');
+    if (networkEl && el.contains(networkEl)) {
+      openFinanceNetworkInfo(networkEl.dataset.financeNetwork);
+      return;
+    }
+
+    const actionEl = event.target.closest('[data-finance-action]');
+    if (!actionEl || !el.contains(actionEl)) return;
+
+    const action = actionEl.dataset.financeAction;
+    switch (action) {
+      case 'set-mode':
+        setFinanceLabMode(actionEl.dataset.financeMode);
+        return;
+      case 'set-scenario':
+        setFinanceLabScenario(actionEl.dataset.financeScenario);
+        return;
+      case 'run-calc':
+        if (typeof window[actionEl.dataset.financeCalc] === 'function') {
+          window[actionEl.dataset.financeCalc]();
+        }
+        return;
+      default:
+        return;
+    }
+  });
+
+  el.addEventListener('input', function(event) {
+    const target = event.target;
+    if (target.matches('[data-finance-input]')) {
+      setFinanceLabValue(target.dataset.financeInput, target.value);
+      return;
+    }
+    if (target.matches('[data-finance-number-for]')) {
+      setFinanceLabValue(target.dataset.financeNumberFor, target.value);
+    }
+  });
+
+  el.addEventListener('keydown', function(event) {
+    if (event.key !== 'Enter') return;
+    const target = event.target;
+    if (target.matches('[data-finance-calc-enter]')) {
+      event.preventDefault();
+      if (typeof window[target.dataset.financeCalcEnter] === 'function') {
+        window[target.dataset.financeCalcEnter]();
+      }
+    }
+  });
+}
+
+function setupFinanceLabModalInteractions() {
+  const modalContainer = document.getElementById('modalContainer');
+  if (!modalContainer || modalContainer.__financeModalBound) return;
+  modalContainer.__financeModalBound = true;
+
+  modalContainer.addEventListener('click', function(event) {
+    const overlay = event.target.closest('[data-finance-modal="close-if-overlay"]');
+    if (overlay && event.target === overlay) {
+      closeModal();
+      return;
+    }
+    const actionEl = event.target.closest('[data-finance-action="close-modal"]');
+    if (actionEl) closeModal();
+  });
+}
+
+setTimeout(setupFinanceLabModalInteractions, 0);
 
 function finCard(title, fields, calcFn, resultId) {
   var html = '<div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:20px;">';
@@ -1032,10 +1107,10 @@ function finCard(title, fields, calcFn, resultId) {
   fields.forEach(function(f) {
     html += '<div style="margin-bottom:10px;">';
     html += '<label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">' + f.label + '</label>';
-    html += '<input id="' + f.id + '" class="todo-inp" type="number" placeholder="' + f.placeholder + '" style="width:100%;" onkeydown="if(event.key===\'Enter\')window.' + calcFn + '();">';
+    html += '<input id="' + f.id + '" class="todo-inp" type="number" placeholder="' + f.placeholder + '" style="width:100%;" data-finance-calc-enter="' + calcFn + '">';
     html += '</div>';
   });
-  html += '<button class="quiz-nav-btn primary" style="width:100%;margin-top:4px;" onclick="window.' + calcFn + '()">Calculează</button>';
+  html += '<button class="quiz-nav-btn primary" style="width:100%;margin-top:4px;" data-finance-action="run-calc" data-finance-calc="' + calcFn + '">Calculează</button>';
   html += '<div id="' + resultId + '" style="margin-top:12px;font-family:var(--font-mono);font-size:.85rem;color:var(--accent);min-height:20px;"></div>';
   html += '</div>';
   return html;
