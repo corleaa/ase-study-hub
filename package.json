@@ -8,7 +8,10 @@
     "init-db": "node init-db.js",
     "dev": "cd backend && npm run dev",
     "start": "cd backend && npm start",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:stability": "playwright test tests/e2e/finance-lab-stability.flow.spec.js",
+    "test:visual:stability": "playwright test tests/e2e/finance-lab-stability.visual.spec.js",
+    "test:review:stability": "node tests/review/finance-lab-stability-review.js"
   },
   "engines": {
     "node": ">=18.0.0"

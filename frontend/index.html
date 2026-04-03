@@ -6903,6 +6903,11 @@ function setupAppShellInteractions() {
   document.body.__appShellBound = true;
 
   document.body.addEventListener('click', function(event) {
+    if (event.target.id === 'onboardingOverlay') {
+      closeOnboarding();
+      return;
+    }
+
     const overlayEl = event.target.closest('[data-app-overlay]');
     if (overlayEl && event.target === overlayEl) {
       const overlayAction = overlayEl.dataset.appOverlay;
@@ -6914,6 +6919,8 @@ function setupAppShellInteractions() {
 
     const navEl = event.target.closest('[data-nav-tab]');
     if (navEl) {
+      const onboardingOverlay = document.getElementById('onboardingOverlay');
+      if (onboardingOverlay && onboardingOverlay.classList.contains('open')) closeOnboarding();
       if (navEl.closest('#subjectsDrawer')) closeSubjectsDrawer();
       navigateTo(navEl.dataset.navTab);
       return;

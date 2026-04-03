@@ -596,13 +596,30 @@ function financeStressStatus(score) {
 }
 
 function financeShockNarrative(metrics) {
+  var scenario = metrics.finance.scenario || 'baseline';
   var drivers = [
     { key: 'inflation', value: metrics.finance.inflation + metrics.finance.policyRate * 0.35, text: 'Creșterea inflației și a dobânzii lovește debitorii, ridică serviciul datoriei și începe să împingă NPL-urile și costul refinanțării în sus.' },
     { key: 'fiscal', value: metrics.finance.budgetDeficit * 7 + metrics.publicDebt * 0.35, text: 'Deficitul și datoria publică pun presiune pe canalul suveran, ridică costul finanțării și mută șocul spre bănci și lichiditate.' },
     { key: 'credit', value: metrics.creditHeat + metrics.finance.leverage * 4, text: 'Expansiunea creditului și leverage-ul accelerează pro-ciclicitatea: când apare șocul, ajustarea se face mai brutal în bilanțuri.' },
     { key: 'contagion', value: metrics.contagionPressure + metrics.finance.marketVol * 0.8, text: 'Interconectarea și volatilitatea pieței fac ca stresul să circule rapid între stat, bănci, firme și populație.' }
   ].sort(function(a, b) { return b.value - a.value; });
-  return drivers[0].text;
+  var lead = drivers[0];
+  var secondary = drivers[1];
+  var scenarioPrefix = {
+    baseline: 'În scenariul de bază, tensiunea rămâne controlată.',
+    inflation_shock: 'În șocul inflaționist, presiunea pornește din prețuri și dobânzi.',
+    fiscal_crisis: 'În criza fiscală, canalul suveran devine sursa dominantă de stres.',
+    credit_bubble: 'În bula de credit, acumularea ciclică face corecția mai abruptă.',
+    banking_stress: 'În stres bancar, bilanțurile și lichiditatea transmit cel mai repede șocul.',
+    external_shock: 'În șoc extern, piețele și finanțarea globală împing stresul în economie.'
+  }[scenario] || 'Scenariul curent mută presiunea prin mai multe canale simultan.';
+  var bridge = {
+    inflation: 'Efectul secundar apare apoi în refinanțare și în bilanțurile băncilor.',
+    fiscal: 'Efectul secundar apare apoi în costul de finanțare al băncilor și al economiei.',
+    credit: 'Efectul secundar apare apoi în default, ajustarea consumului și reculul investițiilor.',
+    contagion: 'Efectul secundar apare apoi în reevaluări, lichiditate și transmitere rapidă între sectoare.'
+  }[secondary.key];
+  return scenarioPrefix + ' ' + lead.text + ' ' + bridge;
 }
 
 function financeStabilityHeroHtml(metrics) {
