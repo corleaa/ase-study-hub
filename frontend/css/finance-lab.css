@@ -467,11 +467,11 @@
 
 .finance-propagation-node {
   position: relative;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.035));
+  border: 1px solid rgba(255,255,255,0.11);
   border-radius: 22px;
-  padding: 14px;
-  min-height: 120px;
+  padding: 16px;
+  min-height: 132px;
   overflow: hidden;
   transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
@@ -507,17 +507,16 @@
 .finance-propagation-node strong {
   display: block;
   color: #f4f8ff;
-  font-size: 0.88rem;
+  font-size: 0.98rem;
   font-weight: 800;
   letter-spacing: 0.02em;
-  text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .finance-propagation-node span {
   display: block;
   color: var(--node-color, #73c9a6);
-  font-size: 1.82rem;
+  font-size: 2.08rem;
   line-height: 1;
   font-weight: 800;
   font-family: var(--font-mono);
@@ -528,9 +527,9 @@
 
 .finance-propagation-node small {
   display: block;
-  color: rgba(198,213,236,0.80);
-  line-height: 1.52;
-  font-size: 0.74rem;
+  color: rgba(211,223,244,0.88);
+  line-height: 1.58;
+  font-size: 0.82rem;
   transition: color 0.28s ease;
 }
 
@@ -728,15 +727,21 @@
 }
 
 .finance-control-number {
-  width: 82px;
-  border-radius: 10px;
+  width: 84px;
+  height: 40px;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--bg-overlay);
   color: var(--text-primary);
-  padding: 6px 8px;
+  padding: 6px 10px;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
   text-align: center;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -909,8 +914,8 @@
 .finance-chart-caption {
   margin-top: 10px;
   color: var(--text-secondary);
-  font-size: 0.84rem;
-  line-height: 1.62;
+  font-size: 0.9rem;
+  line-height: 1.68;
 }
 
 .finance-chart-legend {
@@ -947,19 +952,20 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 12px;
-  min-height: 92px;
+  min-height: 96px;
 }
 
 .finance-stat-chip strong {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   margin-bottom: 6px;
 }
 
 .finance-stat-chip span {
   color: var(--text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.55;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-weight: 700;
 }
 
 .finance-mode-tabs {
@@ -1027,17 +1033,17 @@
 }
 
 .finance-report-card {
-  background: #f5f8fc;
-  border: 1px solid #cdd8e8;
+  background: #f7fafe;
+  border: 1px solid #bccadf;
   border-radius: 22px;
-  padding: 18px;
+  padding: 20px;
   color: #243348;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.92), 0 6px 24px rgba(14,24,40,0.05);
 }
 
 .finance-report-card .finance-panel-title {
   color: #1e2e44;
-  font-size: 0.95rem;
+  font-size: 1.02rem;
   font-weight: 800;
   letter-spacing: -0.01em;
   border-bottom: 1px solid #d5e0ef;
@@ -1054,7 +1060,7 @@
 .finance-report-card .finance-risk-meta,
 .finance-report-card .finance-vuln-copy,
 .finance-report-card .finance-vuln-tone {
-  color: #44607c;
+  color: #344b66;
 }
 
 .finance-report-card .finance-scorecard-label {
@@ -1063,17 +1069,18 @@
 }
 
 .finance-report-card .finance-chart {
-  background: linear-gradient(180deg, rgba(224,232,244,0.92), rgba(243,248,254,0.80));
-  border-color: #c4d2e4;
+  background: linear-gradient(180deg, rgba(228,235,245,0.96), rgba(246,250,255,0.90));
+  border-color: #bccbdf;
   border-width: 1.5px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.92);
 }
 
 .finance-report-card--wide .finance-chart {
-  min-height: 348px;
+  min-height: 372px;
 }
 
 .finance-report-card--wide .finance-chart svg {
-  height: 308px;
+  height: 330px;
 }
 
 .finance-report-card .finance-story {
@@ -1088,7 +1095,7 @@
 }
 
 .finance-report-card .finance-stat-chip strong {
-  color: #506077;
+  color: #41546f;
 }
 
 .finance-report-card .finance-stat-chip span {
@@ -1265,14 +1272,14 @@
 }
 
 .finance-network-note {
-  font-size: 0.92rem;
-  line-height: 1.6;
-  color: #516175;
+  font-size: 0.95rem;
+  line-height: 1.68;
+  color: #3c526e;
 }
 
 .finance-policy-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: 10px;
 }
 
