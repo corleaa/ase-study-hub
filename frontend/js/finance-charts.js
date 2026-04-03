@@ -6,6 +6,8 @@
 (function () {
   'use strict';
 
+  console.log('[Finance Charts v2] Loaded — animated charts + BNR style active');
+
   // ─── Animation Engine ───────────────────────────────────────────────────────
 
   var _anim = { raf: null, from: null, to: null, t0: null, dur: 520 };
