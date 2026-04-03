@@ -349,19 +349,34 @@ function financeStabilitySvg(metrics) {
 }
 
 function financeSparklineSvg(values, color) {
-  var width = 108, height = 32, pad = 3;
+  var width = 120, height = 38, pad = 4;
   var min = Math.min.apply(null, values);
   var max = Math.max.apply(null, values);
-  var span = Math.max(0.001, max - min);
-  var path = '';
+  // Ensure a minimum visual range so even flat series show something
+  var span = Math.max(0.5, max - min);
+  var path = '', areaPath = '';
+  var baseY = height - pad;
   values.forEach(function(v, i) {
     var x = pad + i * ((width - pad * 2) / (values.length - 1));
-    var y = height - pad - ((v - min) / span) * (height - pad * 2);
-    path += (i ? ' L ' : 'M ') + x.toFixed(2) + ' ' + y.toFixed(2);
+    var y = height - pad - ((v - min) / span) * (height - pad * 2 - 4);
+    var op = i ? ' L ' : 'M ';
+    path += op + x.toFixed(2) + ' ' + y.toFixed(2);
+    if (i === 0) areaPath = 'M ' + x.toFixed(2) + ' ' + baseY + ' L ' + x.toFixed(2) + ' ' + y.toFixed(2);
+    else areaPath += ' L ' + x.toFixed(2) + ' ' + y.toFixed(2);
   });
-  var lx = pad + (values.length - 1) * ((width - pad * 2) / (values.length - 1));
-  var ly = height - pad - ((values[values.length - 1] - min) / span) * (height - pad * 2);
-  return '<svg viewBox="0 0 ' + width + ' ' + height + '"><path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="' + lx.toFixed(2) + '" cy="' + ly.toFixed(2) + '" r="2.8" fill="' + color + '"/></svg>';
+  var lastX = (pad + (values.length - 1) * ((width - pad * 2) / (values.length - 1))).toFixed(2);
+  var lastY = (height - pad - ((values[values.length - 1] - min) / span) * (height - pad * 2 - 4)).toFixed(2);
+  areaPath += ' L ' + lastX + ' ' + baseY + ' Z';
+  var gradId = 'spkG' + Math.round(Math.random() * 99999);
+  return '<svg viewBox="0 0 ' + width + ' ' + height + '">'
+    + '<defs><linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.24"/>'
+    + '<stop offset="100%" stop-color="' + color + '" stop-opacity="0.02"/>'
+    + '</linearGradient></defs>'
+    + '<path d="' + areaPath + '" fill="url(#' + gradId + ')"/>'
+    + '<path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<circle cx="' + lastX + '" cy="' + lastY + '" r="3.2" fill="' + color + '"/>'
+    + '</svg>';
 }
 
 function financeHistorySeries(current, deltas) {
@@ -592,14 +607,15 @@ function financeShockNarrative(metrics) {
 function financeStabilityHeroHtml(metrics) {
   var presets = getFinanceStabilityScenarioPresets();
   var status = financeStressStatus(metrics.systemStressGauge);
-  var gaugeCirc = 565.49;
-  var gaugeOffset = gaugeCirc - (Math.max(0, Math.min(100, metrics.systemStressGauge)) / 100) * gaugeCirc;
+  // 260° gauge arc: circumference of 260/360 * 2π*90 = 408.4
+  var gaugeArc = 408.4;
+  var gaugeFill = ((Math.max(0, Math.min(100, metrics.systemStressGauge)) / 100) * gaugeArc).toFixed(2);
   return '<section class="finance-sim-hero">'
     + '<div class="finance-sim-grid">'
     + '<div class="finance-sim-panel">'
     + '<div class="finance-sim-kicker">Financial Stability Simulator</div>'
     + '<div class="finance-sim-title">System Stress Gauge</div>'
-    + '<div class="finance-sim-copy">Simulezi cum un șoc pe inflație, dobândă, deficit sau interconectare circulă prin sistem. Nu vezi doar indicatori, ci traseul riscului.</div>'
+    + '<div class="finance-sim-copy">Simulezi cum un șoc pe inflație, dobândă, deficit sau interconectare circulă prin sistem. Nu vezi doar indicatori — ci traseul riscului prin economie.</div>'
     + '<div class="finance-sim-scenarios">'
     + Object.keys(presets).map(function(key) {
       var preset = presets[key];
@@ -610,7 +626,10 @@ function financeStabilityHeroHtml(metrics) {
     + '<div class="finance-gauge-shell">'
     + '<div class="finance-gauge-wrap" id="finStressGauge" style="--finance-gauge-color:' + status.color + ';">'
     + '<div class="finance-gauge-glow"></div>'
-    + '<svg viewBox="0 0 230 230"><circle class="finance-gauge-track" cx="115" cy="115" r="90"></circle><circle class="finance-gauge-progress" id="finStressGaugeProgress" cx="115" cy="115" r="90" stroke-dasharray="' + gaugeCirc.toFixed(2) + '" stroke-dashoffset="' + gaugeOffset.toFixed(2) + '"></circle></svg>'
+    + '<svg viewBox="0 0 230 230">'
+    + '<circle class="finance-gauge-track" cx="115" cy="115" r="90" stroke-dasharray="408.4 157.1"></circle>'
+    + '<circle class="finance-gauge-progress" id="finStressGaugeProgress" cx="115" cy="115" r="90" stroke-dasharray="' + gaugeFill + ' 565.49" stroke-dashoffset="0"></circle>'
+    + '</svg>'
     + '<div class="finance-gauge-needle" id="finStressGaugeNeedle"></div><div class="finance-gauge-center-dot"></div>'
     + '<div class="finance-gauge-core"><div class="finance-gauge-label"><strong id="finStressGaugeValue">' + Math.round(metrics.systemStressGauge) + '</strong><span id="finStressGaugeState">' + status.label + '</span></div></div>'
     + '</div>'
@@ -686,27 +705,43 @@ function financeNetworkSvg(metrics) {
     { title: 'Fonduri & asigurări', value: Math.round(metrics.tailLossTail * 3), color: '#5fb49c' },
     { title: 'Canal suveran', value: Math.round(metrics.housingFragility), color: '#6e7d91' }
   ];
+  // Determine overall stress level for visual intensity
+  var netStressLevel = metrics.systemicRiskScore;
+  function netStressColor(score) {
+    if (score >= 65) return '#c84b5a';
+    if (score >= 45) return '#de8b3d';
+    if (score >= 25) return '#6f9fc9';
+    return '#5ea68c';
+  }
   function box(x, y, w, h, item, key) {
+    var sColor = netStressColor(item.value);
+    var pulseOp = Math.min(0.32, 0.08 + item.value / 300);
     return '<g data-finance-network="' + key + '" style="cursor:pointer">'
-      + '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="18" fill="' + item.color + '" fill-opacity="0.14" stroke="' + item.color + '" stroke-opacity="0.5" stroke-width="2"/>'
-      + '<text x="' + (x + 14) + '" y="' + (y + 22) + '" fill="#243348" font-size="12" font-weight="800">' + item.title + '</text>'
-      + '<text x="' + (x + 14) + '" y="' + (y + 44) + '" fill="' + item.color + '" font-size="18" font-weight="800">' + item.value + '/100</text>'
+      + '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="16" fill="' + item.color + '" fill-opacity="0.12" stroke="' + item.color + '" stroke-opacity="0.55" stroke-width="2"/>'
+      + '<rect x="' + (x+1) + '" y="' + (y+1) + '" width="' + (w-2) + '" height="4" rx="8" fill="' + sColor + '" fill-opacity="' + pulseOp.toFixed(2) + '"/>'
+      + '<text x="' + (x + 12) + '" y="' + (y + 22) + '" fill="#1e2e44" font-size="11.5" font-weight="800" font-family="system-ui,Arial,sans-serif">' + item.title + '</text>'
+      + '<text x="' + (x + 12) + '" y="' + (y + 42) + '" fill="' + sColor + '" font-size="17" font-weight="800" font-family="system-ui,Arial,sans-serif">' + item.value + '<tspan font-size="10" fill="rgba(60,80,110,0.7)">/100</tspan></text>'
+      + '<text x="' + (x + w - 10) + '" y="' + (y + h - 8) + '" text-anchor="end" fill="rgba(60,80,110,0.55)" font-size="9" font-family="system-ui,Arial,sans-serif">↗ detalii</text>'
       + '</g>';
   }
   function arrow(x1, y1, x2, y2, color) {
-    return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-opacity="0.72" stroke-width="4" marker-end="url(#finArrow)"/>'
+    return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-opacity="0.65" stroke-width="3.5" marker-end="url(#finArrow)"/>';
   }
   function badge(x, y, color, label) {
-    var width = Math.max(52, 10 + label.length * 7);
+    var bw = Math.max(58, 12 + label.length * 7.2);
     return '<g>'
-      + '<rect x="' + x + '" y="' + y + '" width="' + width + '" height="24" rx="12" fill="#ffffff" fill-opacity="0.94" stroke="' + color + '" stroke-opacity="0.38"/>'
-      + '<text x="' + (x + width / 2) + '" y="' + (y + 16) + '" text-anchor="middle" fill="' + color + '" font-size="11" font-weight="700">' + label + '</text>'
+      + '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="22" rx="11" fill="' + color + '" fill-opacity="0.14" stroke="' + color + '" stroke-opacity="0.62" stroke-width="1.5"/>'
+      + '<text x="' + (x + bw / 2) + '" y="' + (y + 15) + '" text-anchor="middle" fill="' + color + '" font-size="10.5" font-weight="800" font-family="system-ui,Arial,sans-serif">' + label + '</text>'
       + '</g>';
   }
-  var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '"><defs><marker id="finArrow" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#7b8ba0"/></marker></defs>';
-  svg += '<text x="40" y="28" fill="rgba(81,97,117,0.78)" font-size="11" font-weight="800">1. Surse de șoc</text>';
-  svg += '<text x="258" y="28" fill="rgba(81,97,117,0.78)" font-size="11" font-weight="800">2. Canale de transmitere</text>';
-  svg += '<text x="452" y="28" fill="rgba(81,97,117,0.78)" font-size="11" font-weight="800">3. Zone afectate</text>';
+  var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '"><defs><marker id="finArrow" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#6b7f9a"/></marker></defs>';
+  // Column headers
+  svg += '<rect x="24" y="16" width="150" height="20" rx="10" fill="rgba(224,141,134,0.14)"/>';
+  svg += '<text x="99" y="30" text-anchor="middle" fill="rgba(160,68,80,0.9)" font-size="10" font-weight="800" font-family="system-ui,Arial,sans-serif">1. Surse de șoc</text>';
+  svg += '<rect x="230" y="16" width="164" height="20" rx="10" fill="rgba(75,131,209,0.12)"/>';
+  svg += '<text x="312" y="30" text-anchor="middle" fill="rgba(52,96,168,0.9)" font-size="10" font-weight="800" font-family="system-ui,Arial,sans-serif">2. Canale de transmitere</text>';
+  svg += '<rect x="446" y="16" width="150" height="20" rx="10" fill="rgba(94,180,156,0.12)"/>';
+  svg += '<text x="521" y="30" text-anchor="middle" fill="rgba(48,128,104,0.9)" font-size="10" font-weight="800" font-family="system-ui,Arial,sans-serif">3. Zone afectate</text>';
   svg += box(24, 48, 150, 52, left[0], 'credit_boom');
   svg += box(24, 114, 150, 52, left[1], 'market_vol');
   svg += box(24, 180, 150, 52, left[2], 'refinancing');
@@ -860,13 +895,41 @@ function getFinanceLabMetrics() {
     { title: 'Contagiune între segmente', copy: 'Legăturile dintre bănci, fonduri, asigurări și stat decid cât de repede un șoc local devine stres sistemic.', tone: Math.round(contagionPressure) + '/100', color: 'linear-gradient(180deg,#6b68c9,#4c53a9)' },
     { title: 'Gospodării și imobiliare', copy: 'Dobânzile ridicate și povara datoriei apasă simultan pe consum, default și piața rezidențială.', tone: Math.round(housingFragility) + '/100', color: 'linear-gradient(180deg,#4ea29d,#318a85)' }
   ];
+  // Dynamic sparkline history — scales with stress magnitude for visual reactivity
+  var stressScale = 1 + (macroPressure + fundingPressure + cyclePressure) * 0.6;
+  var volFactor = 1 + finance.marketVol * 0.018;
+  function dynHist(current, baseDeltas) {
+    // Scale deltas by stress level, add slight volatility variation
+    return baseDeltas.map(function(d, i) {
+      var jitter = (i % 2 === 0 ? 1 : -1) * volFactor * 0.08 * Math.abs(d);
+      return Math.max(0, current + d * stressScale + jitter);
+    });
+  }
   var scorecard = [
-    { label: 'CET1 sub stres', band: '>10% confort | 8-10% watch | <8% critic', history: financeHistorySeries(Math.max(0, capitalRatio), [4.8, 4.1, 3.4, 2.6, 1.8, 0.9, 0]), value: financePct(capitalRatio, 1), benchmark: 'UE 17,8%', color: capitalRatio > 10 ? '#5ea68c' : capitalRatio > 8 ? '#de8b3d' : '#c84b5a' },
-    { label: 'LCR sub stres', band: '>110% confort | 100-110% watch | <100% critic', history: financeHistorySeries(Math.max(0, liquidityCoverage), [33, 40, 27, 19, 11, 6, 0]), value: financePct(liquidityCoverage, 1), benchmark: 'UE 161,6%', color: liquidityCoverage > 110 ? '#5ea68c' : liquidityCoverage > 100 ? '#de8b3d' : '#c84b5a' },
-    { label: 'Credit gap', band: '<6 moderat | 6-10 ridicat | >10 sever', history: financeHistorySeries(creditGapStress, [-3.5, -2.7, -2.1, -1.3, -0.8, -0.3, 0]), value: financePct(creditGapStress, 1), benchmark: 'Prag intern 6%', color: creditGapStress < 6 ? '#5ea68c' : creditGapStress < 10 ? '#de8b3d' : '#c84b5a' },
-    { label: 'Tail loss sever', band: '<12% redus | 12-18% watch | >18% sever', history: financeHistorySeries(tailLossTail, [-8.2, -6.1, -4.7, -3.0, -1.8, -0.7, 0]), value: financePct(tailLossTail, 1), benchmark: 'Scenariu intern', color: tailLossTail < 12 ? '#5ea68c' : tailLossTail < 18 ? '#de8b3d' : '#c84b5a' },
-    { label: 'Scor risc sistemic', band: '<35 redus | 35-55 watch | >55 ridicat', history: financeHistorySeries(systemicRiskScore, [-24, -18, -13, -8, -5, -2, 0]), value: Math.round(systemicRiskScore) + '/100', benchmark: 'Țintă <35', color: systemicRiskScore < 35 ? '#5ea68c' : systemicRiskScore < 55 ? '#de8b3d' : '#c84b5a' },
-    { label: 'CCyB sugerat', band: '<1.5% redus | 1.5-2.5% watch | >2.5% activ', history: financeHistorySeries(ccybNeed, [-0.8, -0.7, -0.5, -0.4, -0.2, -0.1, 0]), value: financePct(ccybNeed, 1), benchmark: 'RO 1,0%', color: ccybNeed < 1.5 ? '#5ea68c' : ccybNeed < 2.5 ? '#de8b3d' : '#c84b5a' }
+    { label: 'CET1 sub stres', band: '>10% confort | 8-10% watch | <8% critic',
+      history: dynHist(Math.max(0, capitalRatio), [3.8, 3.1, 2.5, 1.8, 1.1, 0.4, 0]),
+      value: financePct(capitalRatio, 1), benchmark: 'UE 17,8%',
+      color: capitalRatio > 10 ? '#5ea68c' : capitalRatio > 8 ? '#de8b3d' : '#c84b5a' },
+    { label: 'LCR sub stres', band: '>110% confort | 100-110% watch | <100% critic',
+      history: dynHist(Math.max(0, liquidityCoverage), [28, 22, 16, 11, 6, 2, 0]),
+      value: financePct(liquidityCoverage, 1), benchmark: 'UE 161,6%',
+      color: liquidityCoverage > 110 ? '#5ea68c' : liquidityCoverage > 100 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Credit gap', band: '<6 moderat | 6-10 ridicat | >10 sever',
+      history: dynHist(creditGapStress, [-2.8, -2.2, -1.7, -1.1, -0.6, -0.2, 0]),
+      value: financePct(creditGapStress, 1), benchmark: 'Prag intern 6%',
+      color: creditGapStress < 6 ? '#5ea68c' : creditGapStress < 10 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Tail loss sever', band: '<12% redus | 12-18% watch | >18% sever',
+      history: dynHist(tailLossTail, [-6.4, -4.8, -3.6, -2.3, -1.4, -0.5, 0]),
+      value: financePct(tailLossTail, 1), benchmark: 'Scenariu intern',
+      color: tailLossTail < 12 ? '#5ea68c' : tailLossTail < 18 ? '#de8b3d' : '#c84b5a' },
+    { label: 'Scor risc sistemic', band: '<35 redus | 35-55 watch | >55 ridicat',
+      history: dynHist(systemicRiskScore, [-18, -14, -10, -6.5, -3.8, -1.4, 0]),
+      value: Math.round(systemicRiskScore) + '/100', benchmark: 'Țintă <35',
+      color: systemicRiskScore < 35 ? '#5ea68c' : systemicRiskScore < 55 ? '#de8b3d' : '#c84b5a' },
+    { label: 'CCyB sugerat', band: '<1.5% redus | 1.5-2.5% watch | >2.5% activ',
+      history: dynHist(ccybNeed, [-0.6, -0.52, -0.4, -0.28, -0.16, -0.06, 0]),
+      value: financePct(ccybNeed, 1), benchmark: 'RO 1,0%',
+      color: ccybNeed < 1.5 ? '#5ea68c' : ccybNeed < 2.5 ? '#de8b3d' : '#c84b5a' }
   ];
   var overviewTone = isStability
     ? (stabilityScore >= 62 ? 'Sistemul rămâne absorbant, dar amortizoarele trebuie monitorizate în jurul creditului, refinanțării și pieței.' : 'Fragilitatea sistemică se acumulează prea repede; buffer-ele nu mai compensează complet ciclul creditului și canalele de contagiune.')
@@ -980,11 +1043,13 @@ function updateFinanceLabUI() {
   });
   if (isStability) {
     var gaugeStatus = financeStressStatus(metrics.systemStressGauge);
-    var gaugeCirc = 565.49;
+    var gaugeArc2 = 408.4; // 260° arc
+    var gaugeFill2 = ((Math.max(0, Math.min(100, metrics.systemStressGauge)) / 100) * gaugeArc2).toFixed(2);
     var gaugeProgress = document.getElementById('finStressGaugeProgress');
     if (gaugeProgress) {
       gaugeProgress.style.stroke = gaugeStatus.color;
-      gaugeProgress.style.strokeDashoffset = (gaugeCirc - (Math.max(0, Math.min(100, metrics.systemStressGauge)) / 100) * gaugeCirc).toFixed(2);
+      gaugeProgress.style.strokeDasharray = gaugeFill2 + ' 565.49';
+      gaugeProgress.style.strokeDashoffset = '0';
     }
     var gaugeNeedle = document.getElementById('finStressGaugeNeedle');
     if (gaugeNeedle) gaugeNeedle.style.transform = 'rotate(' + (-130 + metrics.systemStressGauge * 2.6).toFixed(1) + 'deg)';
@@ -1015,6 +1080,41 @@ function updateFinanceLabUI() {
     var shockExplainer = document.getElementById('finShockExplainer');
     if (shockExplainer) shockExplainer.innerHTML = '<strong>Lanțul de propagare:</strong> ' + financeShockNarrative(metrics);
 
+    // Dynamic descriptions based on stress level
+    var nodeMeta = {
+      State: {
+        low:  'Finanțele publice sunt sustenabile, canalul suveran rămâne stabil.',
+        mid:  'Deficitul apasă pe datoria publică — canalul suveran devine relevant.',
+        high: 'Datoria publică ridică costul finanțării pentru tot sistemul.',
+        crit: 'Criza suverană transmite stres direct în bănci și piețe.'
+      },
+      Banks: {
+        low:  'Buffer-ele absorb fără presiune — creditarea rămâne funcțională.',
+        mid:  'NPL și lichiditatea intră sub presiune — supraveghere atentă necesară.',
+        high: 'CET1 și LCR se comprimă simultan — transmisia se accelerează.',
+        crit: 'Băncile restrâng creditarea și transmit stresul în economia reală.'
+      },
+      Firms: {
+        low:  'Costul creditului este suportabil — investițiile continuă.',
+        mid:  'Marjele se comprimă și cererea slăbește — primele semnale în venituri.',
+        high: 'Firmele reduc investițiile și crește presiunea pe locuri de muncă.',
+        crit: 'Valul de restructurări și defaults amplifică stresul sistemic.'
+      },
+      Households: {
+        low:  'Serviciul datoriei este suportabil — consumul rămâne stabil.',
+        mid:  'Inflația și dobânzile reduc venitul real — presiunea crește.',
+        high: 'Gospodăriile intră în dificultate — NPL retail urcă vizibil.',
+        crit: 'Criza de lichiditate la nivel de gospodărie — cererea se prăbușește.'
+      }
+    };
+    function nodeDesc(key, score) {
+      var m = nodeMeta[key];
+      if (!m) return '';
+      if (score >= 72) return m.crit;
+      if (score >= 52) return m.high;
+      if (score >= 34) return m.mid;
+      return m.low;
+    }
     [
       ['State', metrics.stateSectorStress, '#f29b6d'],
       ['Banks', metrics.banksSectorStress, '#6fa2ea'],
@@ -1023,13 +1123,15 @@ function updateFinanceLabUI() {
     ].forEach(function(item) {
       var node = document.getElementById('finNode' + item[0]);
       var nodeVal = document.getElementById('finNode' + item[0] + 'Val');
+      var nodeDesc2 = node ? node.querySelector('small') : null;
       if (node) {
         node.style.setProperty('--node-color', item[2]);
-        node.style.setProperty('--node-glow', (0.18 + Math.min(0.62, item[1] / 110)).toFixed(2));
-        node.classList.toggle('is-hot', item[1] >= 52);
-        node.classList.toggle('is-very-hot', item[1] >= 72);
+        node.style.setProperty('--node-glow', (0.16 + Math.min(0.72, item[1] / 95)).toFixed(2));
+        node.classList.toggle('is-hot',      item[1] >= 38);
+        node.classList.toggle('is-very-hot', item[1] >= 60);
       }
       if (nodeVal) nodeVal.textContent = Math.round(item[1]) + '/100';
+      if (nodeDesc2) nodeDesc2.textContent = nodeDesc(item[0], item[1]);
     });
     [
       ['finLinkState', metrics.linkStateBanks, '#f29b6d'],

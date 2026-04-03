@@ -291,15 +291,24 @@
       { label: isStab ? 'Tail' : 'P90',   v: isStab ? metrics.tailLossTail   : metrics.p90, color: '#e08d86' }
     ];
 
+    // Light-bg colors for stability
+    var dGridClr  = isStab ? 'rgba(39,55,82,0.10)'  : 'rgba(255,255,255,0.07)';
+    var dAxisClr  = isStab ? 'rgba(39,55,82,0.22)'  : 'rgba(255,255,255,0.14)';
+    var dTickFill = isStab ? 'rgba(36,51,72,0.66)'  : 'rgba(255,255,255,0.38)';
+    var dPillBg   = isStab ? 'rgba(240,244,252,0.95)' : 'rgba(20,17,24,0.75)';
+    // For stability: bigger tail highlight, stronger area gradient opacity
+    var areaOpTop = isStab ? '0.52' : '0.42';
+    var tailFillOp = isStab ? '0.32' : '0.24';
+
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '">'
       + '<defs>'
       + '<linearGradient id="fcDB" x1="0" y1="0" x2="0" y2="1">'
-      + '<stop offset="0%" stop-color="#8ab8d8" stop-opacity="0.42"/>'
+      + '<stop offset="0%" stop-color="#8ab8d8" stop-opacity="' + areaOpTop + '"/>'
       + '<stop offset="100%" stop-color="#8ab8d8" stop-opacity="0.04"/>'
       + '</linearGradient>'
       + '<linearGradient id="fcDT" x1="0" y1="0" x2="1" y2="0">'
       + '<stop offset="0%" stop-color="#e08d86" stop-opacity="0"/>'
-      + '<stop offset="100%" stop-color="#e08d86" stop-opacity="0.24"/>'
+      + '<stop offset="100%" stop-color="#e08d86" stop-opacity="' + tailFillOp + '"/>'
       + '</linearGradient>'
       + '</defs>';
 
@@ -310,9 +319,10 @@
 
     // Grid
     for (var g2 = 0; g2 <= 4; g2++) {
-      svg += gridH(pL, pL + pw, pT + (ph / 4) * g2);
+      var gy2 = pT + (ph / 4) * g2;
+      svg += '<line x1="' + pL + '" y1="' + gy2.toFixed(1) + '" x2="' + (pL + pw) + '" y2="' + gy2.toFixed(1) + '" stroke="' + dGridClr + '" stroke-width="1"/>';
     }
-    svg += '<line x1="' + pL + '" y1="' + (pT + ph) + '" x2="' + (pL + pw) + '" y2="' + (pT + ph) + '" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>';
+    svg += '<line x1="' + pL + '" y1="' + (pT + ph) + '" x2="' + (pL + pw) + '" y2="' + (pT + ph) + '" stroke="' + dAxisClr + '" stroke-width="1.5"/>';
 
     // Area + curve
     svg += '<path d="' + areaSvg + '" fill="url(#fcDB)"/>';
@@ -321,17 +331,23 @@
     // Marker lines + labels
     markers.forEach(function (m, idx) {
       var mx = Math.max(pL + 2, Math.min(pL + pw - 2, qx(m.v)));
-      svg += '<line x1="' + mx.toFixed(1) + '" y1="' + pT + '" x2="' + mx.toFixed(1) + '" y2="' + (pT + ph) + '" stroke="' + m.color + '" stroke-width="1.8" stroke-dasharray="5 5"/>';
-      // Pill label
-      var lx = mx.toFixed(1), ly = (pT + 14 + idx * 22).toFixed(1);
-      svg += '<rect x="' + (mx - 28).toFixed(1) + '" y="' + (pT + 2 + idx * 22) + '" width="56" height="18" rx="5" fill="rgba(20,17,24,0.75)"/>';
-      svg += '<text x="' + lx + '" y="' + ly + '" text-anchor="middle" fill="' + m.color + '" font-size="10.5" font-weight="700" ' + FONT + '>' + m.label + ' ' + pct(m.v) + '</text>';
+      svg += '<line x1="' + mx.toFixed(1) + '" y1="' + pT + '" x2="' + mx.toFixed(1) + '" y2="' + (pT + ph) + '" stroke="' + m.color + '" stroke-width="2.2" stroke-dasharray="5 5"/>';
+      // Pill label with adaptive background
+      var lx = mx.toFixed(1), ly = (pT + 14 + idx * 24).toFixed(1);
+      svg += '<rect x="' + (mx - 34).toFixed(1) + '" y="' + (pT + 2 + idx * 24) + '" width="68" height="20" rx="6" fill="' + dPillBg + '" stroke="' + m.color + '" stroke-width="1" stroke-opacity="0.6"/>';
+      svg += '<text x="' + lx + '" y="' + ly + '" text-anchor="middle" fill="' + m.color + '" font-size="10.5" font-weight="800" ' + FONT + '>' + m.label + ' ' + pct(m.v) + '</text>';
     });
+
+    // Tail label annotation
+    if (isStab) {
+      var tailLabelX = Math.min(pL + pw - 44, tailXpx + 6);
+      svg += '<text x="' + tailLabelX.toFixed(1) + '" y="' + (pT + ph - 8) + '" fill="#e08d86" font-size="9.5" font-weight="800" ' + FONT + '>← Tail risk zone</text>';
+    }
 
     // X-axis tick labels
     var xTicks = [minX, center, maxX];
     xTicks.forEach(function (v) {
-      svg += txt(qx(v), H - 10, pct(v, 0), { size: 10, fill: 'rgba(255,255,255,0.38)' });
+      svg += txt(qx(v), H - 10, pct(v, 0), { size: 10, fill: dTickFill, weight: isStab ? 600 : 400 });
     });
 
     return svg + '</svg>';
@@ -358,6 +374,11 @@
           { label: 'Drag',        v: Math.max(0, metrics.earningsDrag),      max: 28,  thresh: 10,  tLbl: '10', color: metrics.earningsDrag < 10 ? '#73c9a6' : metrics.earningsDrag < 18 ? '#e9bb74' : '#e08d86' }
         ];
 
+    // Light-bg aware colors (stability charts render on white card background)
+    var axisColor    = isStab ? 'rgba(39,54,78,0.28)'  : 'rgba(255,255,255,0.12)';
+    var barLabelClr  = isStab ? 'rgba(36,51,72,0.82)'  : 'rgba(255,255,255,0.5)';
+    var threshClr    = isStab ? 'rgba(36,51,72,0.42)'  : 'rgba(255,255,255,0.28)';
+
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '">';
 
     // Zone bands
@@ -374,7 +395,7 @@
       });
     }
 
-    svg += '<line x1="' + pad + '" y1="' + baseY + '" x2="' + (W - pad) + '" y2="' + baseY + '" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>';
+    svg += '<line x1="' + pad + '" y1="' + baseY + '" x2="' + (W - pad) + '" y2="' + baseY + '" stroke="' + axisColor + '" stroke-width="1"/>';
 
     items.forEach(function (item, idx) {
       var bx = 38 + idx * 152;
@@ -388,8 +409,8 @@
 
       // Threshold line
       var tY = baseY - (item.thresh / item.max) * plotH;
-      svg += '<line x1="' + (bx - 8) + '" y1="' + tY.toFixed(1) + '" x2="' + (bx + barW + 8) + '" y2="' + tY.toFixed(1) + '" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="4 4"/>';
-      svg += txt(bx + barW + 10, tY + 4, item.tLbl, { anchor: 'start', size: 9, fill: 'rgba(255,255,255,0.32)' });
+      svg += '<line x1="' + (bx - 8) + '" y1="' + tY.toFixed(1) + '" x2="' + (bx + barW + 8) + '" y2="' + tY.toFixed(1) + '" stroke="' + threshClr + '" stroke-width="1.5" stroke-dasharray="4 4"/>';
+      svg += txt(bx + barW + 10, tY + 4, item.tLbl, { anchor: 'start', size: 9.5, fill: threshClr, weight: 700 });
 
       // Value
       var vText = (item.label === 'Contagion' || item.label === 'Drag')
@@ -398,7 +419,7 @@
       svg += txt(bx + barW / 2, barY - 10, vText, { size: 13, weight: 700, fill: item.color });
 
       // Label
-      svg += txt(bx + barW / 2, baseY + 20, item.label, { size: 11, fill: 'rgba(255,255,255,0.5)' });
+      svg += txt(bx + barW / 2, baseY + 20, item.label, { size: 11.5, weight: 700, fill: barLabelClr });
     });
 
     return svg + '</svg>';
@@ -410,53 +431,85 @@
     var W = 640, H = 292, cx = 320, cy = 142, R = 104;
     var isStab = metrics.finance.mode === 'stability';
 
-    var axes = [
-      { label: isStab ? 'Capital'       : 'Stability',   v: isStab ? Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) : metrics.stabilityScore },
-      { label: 'Liquidity',                               v: Math.max(0, Math.min(100, metrics.finance.liquidityBuffer - 60)) },
-      { label: isStab ? 'Credit Cycle'  : 'Capital',      v: isStab ? Math.max(0, Math.min(100, 100 - metrics.creditHeat)) : Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) },
-      { label: isStab ? 'Housing'       : 'Market Risk',  v: isStab ? Math.max(0, Math.min(100, 100 - metrics.housingFragility)) : Math.max(0, Math.min(100, 100 - metrics.finance.marketVol * 1.7)) },
-      { label: isStab ? 'Network'       : 'Debt Load',    v: isStab ? Math.max(0, Math.min(100, 100 - metrics.contagionPressure)) : Math.max(0, Math.min(100, 100 - metrics.debtStress)) }
-    ];
+    // Radar axes — 6 dimensions for richer picture in stability mode
+    var axes = isStab
+      ? [
+          { label: 'Capital',       sub: 'CET1 / buffer', v: Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) },
+          { label: 'Lichiditate',   sub: 'LCR / funding', v: Math.max(0, Math.min(100, metrics.finance.liquidityBuffer - 60)) },
+          { label: 'Credit cycle',  sub: 'expansiune',    v: Math.max(0, Math.min(100, 100 - metrics.creditHeat)) },
+          { label: 'Housing',       sub: 'gospodării',    v: Math.max(0, Math.min(100, 100 - metrics.housingFragility)) },
+          { label: 'Contagiune',    sub: 'propagare',     v: Math.max(0, Math.min(100, 100 - metrics.contagionPressure)) },
+          { label: 'Macro',         sub: 'presiune',      v: Math.max(0, Math.min(100, 100 - metrics.systemicRiskScore)) }
+        ]
+      : [
+          { label: 'Stability',  sub: '', v: metrics.stabilityScore },
+          { label: 'Liquidity',  sub: '', v: Math.max(0, Math.min(100, metrics.finance.liquidityBuffer - 60)) },
+          { label: 'Capital',    sub: '', v: Math.max(0, Math.min(100, metrics.finance.capitalBuffer * 5)) },
+          { label: 'Market Risk',sub: '', v: Math.max(0, Math.min(100, 100 - metrics.finance.marketVol * 1.7)) },
+          { label: 'Debt Load',  sub: '', v: Math.max(0, Math.min(100, 100 - metrics.debtStress)) }
+        ];
     var n = axes.length;
     function ang(i) { return -Math.PI / 2 + i * 2 * Math.PI / n; }
 
+    // Light-bg colors for stability (renders on white .finance-report-card)
+    var ringFills = isStab
+      ? ['rgba(224,141,134,0.16)', 'rgba(233,187,116,0.12)', 'rgba(115,201,166,0.09)', 'rgba(115,201,166,0.05)']
+      : ['rgba(224,141,134,0.1)',  'rgba(233,187,116,0.08)', 'rgba(115,201,166,0.06)', 'rgba(115,201,166,0.04)'];
+    var ringStroke = isStab ? 'rgba(39,55,82,0.18)'      : 'rgba(255,255,255,0.08)';
+    var axisStroke = isStab ? 'rgba(39,55,82,0.24)'      : 'rgba(255,255,255,0.12)';
+    var labelFill  = isStab ? '#243348'                   : 'rgba(255,255,255,0.78)';
+    var scoreFill  = isStab ? 'rgba(36,51,72,0.68)'      : 'rgba(255,255,255,0.4)';
+    var polyFill   = isStab ? 'rgba(242,155,109,0.30)'   : 'rgba(242,155,109,0.18)';
+    var dotStroke  = isStab ? '#f5f8fc'                   : '#1a1520';
+
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '">';
 
-    // Rings with color zones
-    var ringFills = ['rgba(224,141,134,0.1)', 'rgba(233,187,116,0.08)', 'rgba(115,201,166,0.06)', 'rgba(115,201,166,0.04)'];
+    // Concentric rings with zone coloring
     for (var ring = 4; ring >= 1; ring--) {
       var rPath = '';
       for (var j = 0; j < n; j++) {
         var a = ang(j), r = R * ring / 4;
         rPath += (j ? ' L ' : 'M ') + (cx + Math.cos(a) * r).toFixed(1) + ' ' + (cy + Math.sin(a) * r).toFixed(1);
       }
-      svg += '<path d="' + rPath + ' Z" fill="' + ringFills[ring - 1] + '" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>';
+      svg += '<path d="' + rPath + ' Z" fill="' + ringFills[ring - 1] + '" stroke="' + ringStroke + '" stroke-width="1"/>';
     }
 
     // Axis lines
     for (var j2 = 0; j2 < n; j2++) {
       var a2 = ang(j2);
-      svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.cos(a2) * R).toFixed(1) + '" y2="' + (cy + Math.sin(a2) * R).toFixed(1) + '" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>';
+      svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + Math.cos(a2) * R).toFixed(1) + '" y2="' + (cy + Math.sin(a2) * R).toFixed(1) + '" stroke="' + axisStroke + '" stroke-width="1.5"/>';
     }
 
-    // Data polygon
+    // Data polygon — filled + outlined
     var poly = '';
     axes.forEach(function (ax, i) {
       var a3 = ang(i), r3 = R * ax.v / 100;
       poly += (i ? ' L ' : 'M ') + (cx + Math.cos(a3) * r3).toFixed(1) + ' ' + (cy + Math.sin(a3) * r3).toFixed(1);
     });
-    svg += '<path d="' + poly + ' Z" fill="rgba(242,155,109,0.18)" stroke="#f29b6d" stroke-width="3"/>';
+    svg += '<path d="' + poly + ' Z" fill="' + polyFill + '" stroke="#f29b6d" stroke-width="3.2"/>';
 
-    // Vertex dots + axis labels
+    // Vertex dots + labels
     axes.forEach(function (ax, i) {
       var a4 = ang(i), r4 = R * ax.v / 100;
       var px3 = cx + Math.cos(a4) * r4, py3 = cy + Math.sin(a4) * r4;
-      svg += dot(px3, py3, 5, '#f29b6d');
+      svg += dot(px3, py3, 5.5, '#f29b6d', dotStroke, 2);
 
-      var lx = cx + Math.cos(a4) * (R + 30), ly = cy + Math.sin(a4) * (R + 30);
-      svg += txt(lx, ly - 4, ax.label, { size: 11, weight: 600, fill: 'rgba(255,255,255,0.78)' });
-      svg += txt(lx, ly + 12, Math.round(ax.v) + '/100', { size: 10, fill: 'rgba(255,255,255,0.4)' });
+      var labelR = R + 34;
+      var lx = cx + Math.cos(a4) * labelR, ly = cy + Math.sin(a4) * labelR;
+      svg += txt(lx, ly - 5, ax.label, { size: 11.5, weight: 700, fill: labelFill });
+      if (isStab) {
+        var scoreColor = ax.v >= 65 ? '#4ea88c' : ax.v >= 40 ? '#c48c3a' : '#c84b5a';
+        svg += txt(lx, ly + 12, Math.round(ax.v) + '/100', { size: 10, weight: 700, fill: scoreColor });
+      }
     });
+
+    // Center label
+    if (isStab) {
+      var avgScore = Math.round(axes.reduce(function(s,a){ return s+a.v; }, 0) / n);
+      var cColor = avgScore >= 65 ? '#4ea88c' : avgScore >= 40 ? '#c48c3a' : '#c84b5a';
+      svg += '<circle cx="' + cx + '" cy="' + cy + '" r="20" fill="rgba(242,155,109,0.12)" stroke="#f29b6d" stroke-width="1.5"/>';
+      svg += txt(cx, cy + 5, avgScore + '', { size: 13, weight: 800, fill: cColor });
+    }
 
     return svg + '</svg>';
   };
@@ -483,48 +536,66 @@
     var barW = Math.min(82, pw / items.length * 0.54);
     var barSlot = pw / items.length;
 
+    // Policy chart always renders inside light .finance-report-card
+    var pGridClr  = 'rgba(39,55,82,0.10)';
+    var pAxisClr  = 'rgba(39,55,82,0.24)';
+    var pYLblClr  = 'rgba(36,51,72,0.60)';
+    var pBarLblClr = 'rgba(36,51,72,0.84)';
+
+    // Tooltip descriptions per instrument
+    var policyDesc = {
+      'CCyB':  'Contraciclic — eliberat în criză',
+      'SyRB':  'Risc sistemic structural',
+      'O-SII': 'Instituții sistemice',
+      'MREL':  'Absorbție pierderi'
+    };
+
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '">';
 
-    // Zone bands
+    // Zone bands (more opaque for light bg)
     var zones2 = [
-      { pct: 0.18, fill: 'rgba(94,166,140,0.06)',  label: 'Buffere confortabile', lc: 'rgba(94,166,140,0.7)' },
-      { pct: 0.32, fill: 'rgba(233,187,116,0.07)', label: 'Calibrare atentă',    lc: 'rgba(196,140,71,0.72)' },
-      { pct: 0.50, fill: 'rgba(224,141,134,0.09)', label: 'Intervenție necesară', lc: 'rgba(200,75,90,0.72)' }
+      { pct: 0.18, fill: 'rgba(94,166,140,0.12)',   label: 'Buffere confortabile', lc: 'rgba(52,120,96,0.88)' },
+      { pct: 0.32, fill: 'rgba(233,187,116,0.14)',  label: 'Calibrare atentă',    lc: 'rgba(158,104,32,0.9)' },
+      { pct: 0.50, fill: 'rgba(224,141,134,0.16)',  label: 'Intervenție necesară', lc: 'rgba(168,52,68,0.88)' }
     ];
     var zoneTop = pT;
     zones2.forEach(function (z) {
       var zh = ph * z.pct;
       svg += '<rect x="' + pL + '" y="' + zoneTop.toFixed(0) + '" width="' + pw + '" height="' + zh.toFixed(0) + '" fill="' + z.fill + '"/>';
-      svg += txt(pL + 10, zoneTop + 16, z.label, { anchor: 'start', size: 10.5, weight: 700, fill: z.lc });
+      svg += txt(pL + 10, zoneTop + 17, z.label, { anchor: 'start', size: 11, weight: 700, fill: z.lc });
       zoneTop += zh;
     });
 
-    // Y-axis grid
+    // Y-axis grid + labels
     for (var g3 = 0; g3 <= 4; g3++) {
       var gy2 = pT + (ph / 4) * g3;
       var gv2 = maxVal * (1 - g3 / 4);
-      svg += gridH(pL, pL + pw, gy2);
-      svg += yLabel(pL - 6, gy2 + 4, round1(gv2) + '%');
+      svg += '<line x1="' + pL + '" y1="' + gy2.toFixed(1) + '" x2="' + (pL + pw) + '" y2="' + gy2.toFixed(1) + '" stroke="' + pGridClr + '" stroke-width="1"/>';
+      svg += '<text x="' + (pL - 6) + '" y="' + (gy2 + 4).toFixed(1) + '" text-anchor="end" fill="' + pYLblClr + '" font-size="10" ' + FONT + '>' + round1(gv2) + '%</text>';
     }
-    svg += '<line x1="' + pL + '" y1="' + baseY + '" x2="' + (pL + pw) + '" y2="' + baseY + '" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>';
+    svg += '<line x1="' + pL + '" y1="' + baseY + '" x2="' + (pL + pw) + '" y2="' + baseY + '" stroke="' + pAxisClr + '" stroke-width="1.5"/>';
 
     items.forEach(function (item, idx) {
       var bx = pL + idx * barSlot + (barSlot - barW) / 2;
       var baseH = bH(item.base), topH = bH(item.top);
       var barTopY = baseY - baseH - topH;
 
-      // Stress top
+      // Stress top (requirement headroom)
       if (topH > 1) {
         svg += '<rect x="' + bx.toFixed(1) + '" y="' + barTopY.toFixed(1) + '" width="' + barW + '" height="' + topH.toFixed(1) + '" rx="8" fill="' + item.color + '" fill-opacity="0.35"/>';
+        svg += '<line x1="' + bx.toFixed(1) + '" y1="' + (baseY - baseH).toFixed(1) + '" x2="' + (bx + barW).toFixed(1) + '" y2="' + (baseY - baseH).toFixed(1) + '" stroke="' + item.color + '" stroke-width="1" stroke-dasharray="3 3" stroke-opacity="0.6"/>';
       }
       // Base bar
       svg += '<rect x="' + bx.toFixed(1) + '" y="' + (baseY - baseH).toFixed(1) + '" width="' + barW + '" height="' + baseH.toFixed(1) + '" rx="8" fill="' + item.color + '" fill-opacity="0.9"/>';
 
       // Value label
-      svg += txt(bx + barW / 2, barTopY - 9, round1(item.base + item.top) + '%', { size: 12, weight: 700, fill: item.color });
+      svg += txt(bx + barW / 2, barTopY - 10, round1(item.base + item.top) + '%', { size: 13, weight: 800, fill: item.color });
 
-      // Label
-      svg += txt(bx + barW / 2, H - 8, item.label, { size: 11, fill: 'rgba(255,255,255,0.5)' });
+      // Instrument label
+      svg += txt(bx + barW / 2, H - 16, item.label, { size: 12, weight: 800, fill: pBarLblClr });
+      // Description sub-label
+      var desc = policyDesc[item.label] || '';
+      if (desc) svg += txt(bx + barW / 2, H - 4, desc, { size: 8.5, fill: 'rgba(60,78,104,0.62)' });
     });
 
     return svg + '</svg>';
