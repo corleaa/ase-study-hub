@@ -853,10 +853,31 @@ function getFinanceLabMetrics() {
   else stabilityScore = Math.max(0, Math.min(100, stabilityScore));
   var publicDebt = financeClamp(42 + finance.budgetDeficit * 3.2 + macroPressure * 12 + fundingPressure * 6, 35, 110);
   var nplPressure = financeClamp(nplRate + finance.policyRate * 0.28 + macroPressure * 4, 0, 24);
-  var stateSectorStress = financeClamp(publicDebt * 0.52 + finance.budgetDeficit * 3.2 + scenarioShock * 7, 0, 100);
-  var banksSectorStress = financeClamp(systemicRiskScore * 0.58 + nplPressure * 1.25 + Math.max(0, 110 - liquidityCoverage) * 0.20, 0, 100);
-  var firmsSectorStress = financeClamp(creditGapStress * 4.1 + finance.policyRate * 2 + finance.marketVol * 1.0 + scenarioShock * 7, 0, 100);
-  var householdsSectorStress = financeClamp(housingFragility * 0.58 + finance.policyRate * 2.0 + finance.inflation * 2.2 + nplPressure * 0.4, 0, 100);
+  // Sector stress — normalized to stress-mode slider ranges so that all values
+  // are 0 when every slider is at its minimum. Slider mins: budgetDeficit=1,
+  // marketVol=5, contagionRisk=5, stressShock=10, creditGrowth=0, leverage=1,
+  // policyRate=1, inflation=1.
+  var sNormBudget    = financeNorm(finance.budgetDeficit,  1,  12);
+  var sNormMarket    = financeNorm(finance.marketVol,      5,  50);
+  var sNormContagion = financeNorm(finance.contagionRisk,  5,  90);
+  var sNormShock     = financeNorm(finance.stressShock,   10,  80);
+  var sNormCredit    = financeNorm(finance.creditGrowth,   0,  20);
+  var sNormLeverage  = financeNorm(finance.leverage,       1,  10);
+  var sNormRate      = financeNorm(finance.policyRate,     1,  12);
+  var sNormInflation = financeNorm(finance.inflation,      1,  15);
+
+  var stateSectorStress = financeClamp(100 * (
+    0.35 * sNormBudget + 0.25 * sNormShock + 0.20 * sNormMarket + 0.20 * sNormContagion
+  ), 0, 100);
+  var banksSectorStress = financeClamp(100 * (
+    0.30 * sNormContagion + 0.25 * sNormMarket + 0.25 * sNormLeverage + 0.20 * sNormShock
+  ), 0, 100);
+  var firmsSectorStress = financeClamp(100 * (
+    0.30 * sNormCredit + 0.25 * sNormShock + 0.25 * sNormRate + 0.20 * sNormMarket
+  ), 0, 100);
+  var householdsSectorStress = financeClamp(100 * (
+    0.30 * sNormRate + 0.30 * sNormInflation + 0.25 * sNormShock + 0.15 * sNormContagion
+  ), 0, 100);
   var linkStateBanks = Math.max(0, Math.min(100, stateSectorStress * 0.78));
   var linkBanksFirms = Math.max(0, Math.min(100, (banksSectorStress + firmsSectorStress) / 2));
   var linkFirmsHouseholds = Math.max(0, Math.min(100, (firmsSectorStress + householdsSectorStress) / 2));
@@ -1052,7 +1073,7 @@ function updateFinanceLabUI() {
       gaugeProgress.style.strokeDashoffset = '0';
     }
     var gaugeNeedle = document.getElementById('finStressGaugeNeedle');
-    if (gaugeNeedle) gaugeNeedle.style.transform = 'rotate(' + (-130 + metrics.systemStressGauge * 2.6).toFixed(1) + 'deg)';
+    if (gaugeNeedle) gaugeNeedle.style.transform = 'rotate(' + (-220 + metrics.systemStressGauge * 2.6).toFixed(1) + 'deg)';
     var gaugeWrap = document.getElementById('finStressGauge');
     if (gaugeWrap) {
       gaugeWrap.style.setProperty('--finance-gauge-color', gaugeStatus.color);

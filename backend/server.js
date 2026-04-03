@@ -65,8 +65,8 @@ app.use((req, res, next) => {
       useDefaults: false,
       directives: {
         defaultSrc:   ["'self'"],
-        // REMOVED 'unsafe-inline' — replaced with per-request nonce
-        scriptSrc:    ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com'],
+        // Per-request nonce — NO 'unsafe-inline'
+        scriptSrc:    ["'self'", `'nonce-${nonce}'`, 'https://cdnjs.cloudflare.com'],
         styleSrc:     ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc:      ['https://fonts.gstatic.com'],
         connectSrc:   ["'self'"],

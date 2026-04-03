@@ -25,7 +25,6 @@ export async function initAuth(onAuthenticated, onUnauthenticated) {
   try {
     const { user } = await api.me();
     _currentUser = user;
-    window._currentUser = user;  // Expose for settings page rendering
     onAuthenticated(user);
   } catch {
     // me() failed and refresh also failed — session is fully expired
@@ -38,7 +37,6 @@ export async function initAuth(onAuthenticated, onUnauthenticated) {
 // ─────────────────────────────────────────────────────────────────
 window.addEventListener('sh:session-expired', () => {
   _currentUser = null;
-  window._currentUser = null;
   showAuthScreen();
 });
 
@@ -50,7 +48,6 @@ export async function handleLogin(email, password, onSuccess) {
   try {
     const { user } = await api.login(email, password);
     _currentUser = user;
-    window._currentUser = user;
     onSuccess(user);
   } catch (err) {
     _showAuthError(err.message);
@@ -65,7 +62,6 @@ export async function handleRegister(email, password, onSuccess) {
   try {
     const { user } = await api.register(email, password);
     _currentUser = user;
-    window._currentUser = user;
     onSuccess(user);
   } catch (err) {
     _showAuthError(err.message);
@@ -75,7 +71,6 @@ export async function handleRegister(email, password, onSuccess) {
 export async function handleLogout() {
   await api.logout();
   _currentUser = null;
-  window._currentUser = null;
   showAuthScreen();
 }
 

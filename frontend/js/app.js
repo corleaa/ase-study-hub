@@ -247,10 +247,8 @@ function renderSettings(el) {
   // Mount the upload widget into its container
   const uploadSection = document.getElementById('uploadSection');
   if (uploadSection) {
-    window.mountUpload?.(uploadSection, (text, filename) => {
+    window.mountUpload?.(uploadSection, (_text, filename) => {
       showToast('File ready', `Extracted from ${filename}. Paste into Quiz or Flashcard generator.`, 'success', 5000);
-      // Store extracted text in sessionStorage so quiz/flashcard pages can read it
-      try { sessionStorage.setItem('sh_last_upload', text); } catch { /* quota */ }
     });
   }
 }
