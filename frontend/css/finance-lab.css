@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 .finance-overview {
@@ -196,15 +197,15 @@
 
 .finance-gauge-shell {
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
   gap: 20px;
   align-items: center;
 }
 
 .finance-gauge-wrap {
   position: relative;
-  width: 230px;
-  height: 230px;
+  width: 260px;
+  height: 260px;
   margin: 0 auto;
 }
 
@@ -1152,11 +1153,14 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   border: 1px solid currentColor;
+  background: rgba(36, 51, 72, 0.12);
+  color: #243348;
 }
 
 .finance-risk-trend {
   font-size: 0.8rem;
   font-weight: 700;
+  color: #243348;
 }
 
 .finance-vuln-grid {
@@ -1320,5 +1324,48 @@
 
   .finance-stability-brief-head {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .finance-lab-shell {
+    padding-bottom: var(--mobile-bottom-nav-offset, calc(84px + env(safe-area-inset-bottom)));
+  }
+
+  .finance-sim-hero,
+  .finance-zone,
+  .finance-report-card {
+    padding: 18px;
+  }
+
+  .finance-sim-scenarios {
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .finance-sim-scenario {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .finance-lab-shell {
+    overflow-x: hidden;
+  }
+
+  .finance-overview,
+  .finance-sim-grid,
+  .finance-sim-scenarios {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-control-grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .finance-gauge-shell,
+  .finance-gauge-wrap {
+    width: 100%;
+    max-width: 230px;
   }
 }

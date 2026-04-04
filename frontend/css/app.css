@@ -1271,14 +1271,29 @@ input, textarea, select { font-family: inherit; }
 }
 
 @media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); }
+  :root { --mobile-bottom-nav-offset: calc(84px + env(safe-area-inset-bottom)); }
+  .app { display: block; overflow-x: hidden; }
+  .sidebar {
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
   .sidebar.open + .sidebar-backdrop { display: block; }
-  .content { margin-left: 0 !important; }
+  .content {
+    margin-left: 0 !important;
+    width: 100%;
+    min-width: 0;
+  }
   .menu-toggle { display: block; }
-  .page { padding: 16px 14px 80px; } /* padding bottom for bottom nav */
+  .page { padding: 16px 14px var(--mobile-bottom-nav-offset); } /* padding bottom for bottom nav */
   .topbar { padding: 12px 16px; }
   .topbar-clock { display: none; }
+  .dash-hero { padding: 24px 18px 18px !important; }
   .panels-grid { grid-template-columns: 1fr !important; }
   .panel-full { grid-column: 1 !important; }
   .quick-stats { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; }
@@ -1298,7 +1313,15 @@ input, textarea, select { font-family: inherit; }
   .flashcard-stats { flex-wrap: wrap !important; }
   .fc-stat { min-width: 80px !important; }
   .flashcard-scene { height: 220px !important; }
-  .quiz-container { padding: 0 !important; }
+  .quiz-gen-section { padding: 18px !important; }
+  .quiz-container { padding: 0 0 var(--mobile-bottom-nav-offset) !important; }
+  .flashcard-container,
+  .mentor-shell,
+  .finance-lab-shell,
+  .cal-shell,
+  #pageContent {
+    padding-bottom: var(--mobile-bottom-nav-offset) !important;
+  }
   .exam-sim-header { flex-wrap: wrap !important; gap: 10px !important; padding: 14px !important; }
   .exam-sim-timer { font-size: 1.5rem !important; }
   .modal-box { padding: 20px 16px !important; }
@@ -1312,14 +1335,45 @@ input, textarea, select { font-family: inherit; }
   .heatmap-30 { grid-template-columns: repeat(10, 1fr) !important; }
   .activity-heatmap { grid-template-columns: repeat(7, 1fr) !important; }
   .sidebar-footer { gap: 6px !important; padding: 10px 12px !important; }
-  .quiz-options-row { gap: 6px !important; }
-  .quiz-chip { font-size: .78rem !important; padding: 5px 10px !important; }
+  .quiz-options-row { gap: 6px !important; margin-bottom: 10px !important; }
+  .quiz-chip {
+    font-size: .78rem !important;
+    padding: 6px 14px !important;
+    min-height: 36px;
+  }
   .flashcard-answer-btns { gap: 8px !important; }
   .fc-btn { padding: 10px 6px !important; font-size: .82rem !important; }
+  .topbar-kbd-hint {
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .home-section-action {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+  .subject-group-edit {
+    min-width: 32px;
+    min-height: 32px;
+  }
+  .cal-nav-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .sidebar:not(.open) .nav-item,
+  .sidebar:not(.open) .nav-section {
+    visibility: hidden;
+  }
+  .purpose-grid { align-items: start; }
+  .home-tools-grid { align-items: stretch; }
+  #quizCountChips,
+  #quizTypeChips { align-items: center; }
+  .mentor-side-panel { padding: 16px; }
+  .mentor-context-card { padding: 14px 16px; }
+  .mcc-title { margin-bottom: 8px; }
 }
 
 @media (max-width: 480px) {
-  .page { padding: 12px 12px 80px; }
+  .page { padding: 12px 12px var(--mobile-bottom-nav-offset); }
   .quick-stats { grid-template-columns: repeat(2, 1fr) !important; }
   .dash-grid { grid-template-columns: 1fr !important; }
   .exam-countdown-grid { grid-template-columns: 1fr !important; }
@@ -1417,6 +1471,22 @@ input, textarea, select { font-family: inherit; }
 
 @media (max-width: 768px) {
   .bottom-nav { display: block; }
+  .bottom-nav {
+    padding: 2px 0 max(2px, env(safe-area-inset-bottom));
+  }
+  .bottom-nav-items {
+    min-height: 40px;
+  }
+  .bn-item {
+    min-width: 46px;
+    padding: 2px 8px 3px;
+    gap: 1px;
+  }
+  .bn-icon { font-size: 1.08rem; }
+  .bn-label {
+    font-size: 0.52rem;
+    letter-spacing: 0.35px;
+  }
   .sidebar-backdrop { display: none; } /* shown via JS class */
 }
 
@@ -6009,6 +6079,45 @@ details[open] .detail-chevron {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.purpose-grid {
+  align-items: start;
+}
+
+.home-tools-grid {
+  align-items: stretch;
+}
+
+#quizCountChips,
+#quizTypeChips {
+  align-items: center;
+}
+
+.flashcard-stats {
+  padding: 12px 16px;
+}
+
+#clock {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+.level-badge {
+  color: var(--text-primary) !important;
+}
+
+.streak-flame.hot {
+  color: #d97706 !important;
+}
+
+.mentor-msg.ai .msg-sender {
+  color: color-mix(in srgb, var(--accent) 72%, black);
+}
+
+.quiz-nav-btn.primary {
+  background: color-mix(in srgb, var(--accent) 88%, black) !important;
+  color: #fff !important;
 }
 
 
