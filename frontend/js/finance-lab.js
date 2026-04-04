@@ -647,9 +647,10 @@ function financeShockNarrative(metrics) {
 function financeStabilityHeroHtml(metrics) {
   var presets = getFinanceStabilityScenarioPresets();
   var status = financeStressStatus(metrics.systemStressGauge);
-  // 260° gauge arc: circumference of 260/360 * 2π*96 = 435.6
-  var gaugeArc = 435.6;
+  // 260° gauge arc: circumference of 260/360 * 2π*98 = 444.7
+  var gaugeArc = 444.7;
   var gaugeFill = ((Math.max(0, Math.min(100, metrics.systemStressGauge)) / 100) * gaugeArc).toFixed(2);
+  var needleAngle = (-220 + metrics.systemStressGauge * 2.6).toFixed(1);
   return '<section class="finance-sim-hero">'
     + '<div class="finance-sim-grid">'
     + '<div class="finance-sim-panel">'
@@ -665,13 +666,26 @@ function financeStabilityHeroHtml(metrics) {
     + '<div class="finance-sim-panel">'
     + '<div class="finance-gauge-shell">'
     + '<div class="finance-gauge-wrap" id="finStressGauge" style="--finance-gauge-color:' + status.color + ';">'
-    + '<div class="finance-gauge-glow"></div>'
-    + '<svg viewBox="0 0 260 260" aria-hidden="true">'
-    + '<circle class="finance-gauge-track" cx="130" cy="130" r="96" stroke-dasharray="435.6 167.6"></circle>'
-    + '<circle class="finance-gauge-progress" id="finStressGaugeProgress" cx="130" cy="130" r="96" stroke-dasharray="' + gaugeFill + ' 603.2" stroke-dashoffset="0"></circle>'
+    + '<svg class="finance-gauge-svg" viewBox="0 0 260 260" aria-hidden="true">'
+    + '<defs>'
+    + '<radialGradient id="finGaugeCoreFill" cx="50%" cy="34%" r="68%">'
+    + '<stop offset="0%" stop-color="rgba(55,70,94,0.98)"/>'
+    + '<stop offset="100%" stop-color="rgba(16,24,37,1)"/>'
+    + '</radialGradient>'
+    + '</defs>'
+    + '<circle cx="130" cy="130" r="118" fill="rgba(10,18,31,0.22)"></circle>'
+    + '<g transform="rotate(-220 130 130)">'
+    + '<circle class="finance-gauge-track" cx="130" cy="130" r="98" stroke-dasharray="444.7 171.1"></circle>'
+    + '<circle class="finance-gauge-progress" id="finStressGaugeProgress" cx="130" cy="130" r="98" stroke-dasharray="' + gaugeFill + ' 615.8" stroke-dashoffset="0"></circle>'
+    + '</g>'
+    + '<g id="finStressGaugeNeedleGroup" transform="rotate(' + needleAngle + ' 130 130)">'
+    + '<line x1="130" y1="130" x2="212" y2="130" stroke="rgba(115,201,166,0.58)" stroke-width="3.5" stroke-linecap="round"></line>'
+    + '</g>'
+    + '<circle cx="130" cy="130" r="60" fill="url(#finGaugeCoreFill)" stroke="rgba(255,255,255,0.09)" stroke-width="1.5"></circle>'
+    + '<circle cx="130" cy="130" r="14" fill="#dfe8f8" fill-opacity="0.96"></circle>'
+    + '<text id="finStressGaugeValue" x="130" y="108" text-anchor="middle" font-size="54" font-weight="800" fill="#f7faff" ' + 'font-family="Syne, system-ui, sans-serif"' + '>' + Math.round(metrics.systemStressGauge) + '</text>'
+    + '<text id="finStressGaugeState" x="130" y="162" text-anchor="middle" font-size="20" font-weight="800" letter-spacing="1.8" fill="rgba(220,230,245,0.92)" ' + 'font-family="Manrope, system-ui, sans-serif"' + '>' + status.label + '</text>'
     + '</svg>'
-    + '<div class="finance-gauge-needle" id="finStressGaugeNeedle"></div><div class="finance-gauge-center-dot"></div>'
-    + '<div class="finance-gauge-core"><div class="finance-gauge-label"><strong id="finStressGaugeValue">' + Math.round(metrics.systemStressGauge) + '</strong><span id="finStressGaugeState">' + status.label + '</span></div></div>'
     + '</div>'
     + '<div class="finance-gauge-meta">'
     + '<div class="finance-gauge-status" id="finStressGaugeBadge" style="--finance-gauge-color:' + status.color + ';"><i></i>' + status.label + ' mode</div>'
@@ -1150,16 +1164,16 @@ function updateFinanceLabUI() {
   });
   if (isStability) {
     var gaugeStatus = financeStressStatus(metrics.systemStressGauge);
-    var gaugeArc2 = 435.6; // 260° arc on r=96
+    var gaugeArc2 = 444.7; // 260° arc on r=98
     var gaugeFill2 = ((Math.max(0, Math.min(100, metrics.systemStressGauge)) / 100) * gaugeArc2).toFixed(2);
     var gaugeProgress = document.getElementById('finStressGaugeProgress');
     if (gaugeProgress) {
       gaugeProgress.style.stroke = gaugeStatus.color;
-      gaugeProgress.style.strokeDasharray = gaugeFill2 + ' 603.2';
+      gaugeProgress.style.strokeDasharray = gaugeFill2 + ' 615.8';
       gaugeProgress.style.strokeDashoffset = '0';
     }
-    var gaugeNeedle = document.getElementById('finStressGaugeNeedle');
-    if (gaugeNeedle) gaugeNeedle.style.transform = 'rotate(' + (-220 + metrics.systemStressGauge * 2.6).toFixed(1) + 'deg)';
+    var gaugeNeedle = document.getElementById('finStressGaugeNeedleGroup');
+    if (gaugeNeedle) gaugeNeedle.setAttribute('transform', 'rotate(' + (-220 + metrics.systemStressGauge * 2.6).toFixed(1) + ' 130 130)');
     var gaugeWrap = document.getElementById('finStressGauge');
     if (gaugeWrap) {
       gaugeWrap.style.setProperty('--finance-gauge-color', gaugeStatus.color);

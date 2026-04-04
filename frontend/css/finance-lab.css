@@ -213,7 +213,7 @@
 .finance-gauge-wrap svg {
   width: 100%;
   height: 100%;
-  transform: rotate(-220deg);
+  transform: none;
 }
 
 .finance-gauge-track,
@@ -235,33 +235,35 @@
 
 .finance-gauge-core {
   position: absolute;
-  inset: 56px;
+  inset: 50px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), rgba(14,21,34,0.96));
-  border: 1px solid rgba(255,255,255,0.06);
+  background: radial-gradient(circle at 50% 30%, rgba(45,58,78,0.96), rgba(16,24,37,0.995));
+  border: 1px solid rgba(255,255,255,0.08);
   z-index: 8;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px rgba(20,30,46,0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 0 0 1px rgba(20,30,46,0.22), 0 20px 44px rgba(5,10,18,0.24);
 }
 
 .finance-gauge-label {
   text-align: center;
+  transform: translateY(-4px);
 }
 
 .finance-gauge-label strong {
   display: block;
   color: #f7faff;
-  font-size: 2.35rem;
+  font-size: 2.7rem;
   line-height: 1;
   letter-spacing: -0.04em;
+  text-shadow: 0 2px 14px rgba(0,0,0,0.18);
 }
 
 .finance-gauge-label span {
   display: block;
   margin-top: 10px;
   color: rgba(210,222,244,0.86);
-  font-size: 0.86rem;
+  font-size: 0.92rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -270,15 +272,15 @@
 .finance-gauge-needle {
   position: absolute;
   left: 50%;
-  top: 50%;
-  width: 72px;
-  height: 4px;
-  margin-top: -2px;
+  top: calc(50% - 18px);
+  width: 54px;
+  height: 3px;
+  margin-top: -1.5px;
   transform-origin: 0 50%;
   transform: rotate(-220deg);
   transition: transform 0.9s cubic-bezier(.22,.61,.36,1);
   z-index: 4;
-  opacity: 0.78;
+  opacity: 0.52;
 }
 
 .finance-gauge-needle::before {
@@ -905,12 +907,12 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--bg-overlay) 76%, transparent), transparent);
   border: 1px solid var(--border);
   padding: 12px;
-  min-height: 320px;
+  min-height: 340px;
 }
 
 .finance-chart svg {
   width: 100%;
-  height: 280px;
+  height: 304px;
   display: block;
 }
 
@@ -1079,11 +1081,11 @@
 }
 
 .finance-report-card--wide .finance-chart {
-  min-height: 404px;
+  min-height: 432px;
 }
 
 .finance-report-card--wide .finance-chart svg {
-  height: 362px;
+  height: 388px;
 }
 
 .finance-report-card .finance-story {
