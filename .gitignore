@@ -25,6 +25,8 @@ backend/node_modules/
 # ── Runtime logs ──────────────────────────────────────────────────
 backend/logs/
 *.log
+test-results/
+playwright-report/
 
 # ── OS / editor ───────────────────────────────────────────────────
 .DS_Store

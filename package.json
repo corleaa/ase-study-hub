@@ -11,7 +11,9 @@
     "test:e2e": "playwright test",
     "test:e2e:stability": "playwright test tests/e2e/finance-lab-stability.flow.spec.js",
     "test:visual:stability": "playwright test tests/e2e/finance-lab-stability.visual.spec.js",
-    "test:review:stability": "node tests/review/finance-lab-stability-review.js"
+    "test:review:stability": "node tests/review/finance-lab-stability-review.js",
+    "test:audit:stability": "node tests/review/finance-lab-stability-audit.js",
+    "test:audit:stability:baseline": "node tests/review/promote-stability-baseline.js"
   },
   "engines": {
     "node": ">=18.0.0"
