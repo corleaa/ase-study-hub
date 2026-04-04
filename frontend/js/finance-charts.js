@@ -356,8 +356,10 @@
   // ─── 3. Bar Chart — Shock Transmission ──────────────────────────────────────
 
   window.financeStressSvg = function (metrics) {
-    var W = 640, H = 280, pad = 26, baseY = 228, barW = 96;
-    var plotH = baseY - 30;
+    var W = 700, H = 316, pL = 84, pR = 30, pT = 28, pB = 58;
+    var plotW = W - pL - pR;
+    var baseY = H - pB;
+    var plotH = baseY - pT;
     var isStab = metrics.finance.mode === 'stability';
 
     var items = isStab
@@ -379,6 +381,8 @@
     var barLabelClr  = isStab ? 'rgba(36,51,72,0.82)'  : 'rgba(255,255,255,0.5)';
     var threshClr    = isStab ? 'rgba(36,51,72,0.42)'  : 'rgba(255,255,255,0.28)';
 
+    var slotW = plotW / items.length;
+    var barW = Math.min(124, slotW * 0.64);
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '">';
 
     // Zone bands
@@ -390,16 +394,21 @@
         { y: 30 + zoneH * 2, color: 'rgba(224,141,134,0.09)', label: 'Zonă critică', lc: 'rgba(200,75,90,0.7)' }
       ];
       zones.forEach(function (z) {
-        svg += '<rect x="' + pad + '" y="' + z.y.toFixed(0) + '" width="' + (W - pad * 2) + '" height="' + zoneH.toFixed(0) + '" fill="' + z.color + '"/>';
-        svg += '<text x="' + (pad + 10) + '" y="' + (z.y + 16).toFixed(0) + '" fill="' + z.lc + '" font-size="10.5" font-weight="700" ' + FONT + '>' + z.label + '</text>';
+        svg += '<rect x="' + pL + '" y="' + z.y.toFixed(0) + '" width="' + plotW + '" height="' + zoneH.toFixed(0) + '" fill="' + z.color + '"/>';
+        svg += '<text x="18" y="' + (z.y + 18).toFixed(0) + '" fill="' + z.lc + '" font-size="11.5" font-weight="800" ' + FONT + '>' + z.label + '</text>';
       });
     }
 
-    svg += '<line x1="' + pad + '" y1="' + baseY + '" x2="' + (W - pad) + '" y2="' + baseY + '" stroke="' + axisColor + '" stroke-width="1"/>';
+    for (var gy = 0; gy <= 4; gy++) {
+      var y = pT + (plotH / 4) * gy;
+      var gv = items[gy === 4 ? 0 : 1] ? null : null;
+      svg += '<line x1="' + pL + '" y1="' + y.toFixed(1) + '" x2="' + (pL + plotW) + '" y2="' + y.toFixed(1) + '" stroke="' + axisColor + '" stroke-width="1"/>';
+    }
+    svg += '<line x1="' + pL + '" y1="' + baseY + '" x2="' + (pL + plotW) + '" y2="' + baseY + '" stroke="' + axisColor + '" stroke-width="1.5"/>';
 
     items.forEach(function (item, idx) {
-      var bx = 38 + idx * 152;
-      var h = Math.max(4, (item.v / item.max) * plotH);
+      var bx = pL + idx * slotW + (slotW - barW) / 2;
+      var h = Math.max(10, (item.v / item.max) * plotH);
       var barY = baseY - h;
 
       // Shadow
@@ -409,17 +418,17 @@
 
       // Threshold line
       var tY = baseY - (item.thresh / item.max) * plotH;
-      svg += '<line x1="' + (bx - 8) + '" y1="' + tY.toFixed(1) + '" x2="' + (bx + barW + 8) + '" y2="' + tY.toFixed(1) + '" stroke="' + threshClr + '" stroke-width="1.5" stroke-dasharray="4 4"/>';
-      svg += txt(bx + barW + 10, tY + 4, item.tLbl, { anchor: 'start', size: 9.5, fill: threshClr, weight: 700 });
+      svg += '<line x1="' + pL + '" y1="' + tY.toFixed(1) + '" x2="' + (pL + plotW) + '" y2="' + tY.toFixed(1) + '" stroke="' + threshClr + '" stroke-width="1.5" stroke-dasharray="4 4"/>';
+      svg += txt(pL + plotW + 8, tY + 4, item.tLbl, { anchor: 'start', size: 10, fill: threshClr, weight: 800 });
 
       // Value
       var vText = (item.label === 'Contagion' || item.label === 'Drag')
         ? Math.round(item.v) + (item.label === 'Contagion' ? '/100' : '')
         : pct(item.v);
-      svg += txt(bx + barW / 2, barY - 10, vText, { size: 13, weight: 700, fill: item.color });
+      svg += txt(bx + barW / 2, barY - 12, vText, { size: 14, weight: 800, fill: item.color });
 
       // Label
-      svg += txt(bx + barW / 2, baseY + 20, item.label, { size: 11.5, weight: 700, fill: barLabelClr });
+      svg += txt(bx + barW / 2, baseY + 28, item.label, { size: 12.5, weight: 800, fill: barLabelClr });
     });
 
     return svg + '</svg>';
@@ -517,7 +526,7 @@
   // ─── 5. Stacked Bar Chart — Macroprudential Policy ───────────────────────────
 
   window.financePolicySvg = function (metrics) {
-    var W = 640, H = 252, pL = 44, pR = 22, pT = 20, pB = 32;
+    var W = 700, H = 288, pL = 56, pR = 26, pT = 24, pB = 54;
     var pw = W - pL - pR, ph = H - pT - pB;
 
     var items = [
@@ -528,12 +537,12 @@
     ];
 
     var maxVal = Math.max.apply(null, items.map(function (it) { return it.base + it.top; }));
-    maxVal = Math.max(maxVal * 1.15, 32);
+    maxVal = Math.max(maxVal * 1.04, 32);
     var baseY = pT + ph;
 
     function bH(v) { return Math.max(0, (v / maxVal) * ph); }
 
-    var barW = Math.min(82, pw / items.length * 0.54);
+    var barW = Math.min(94, pw / items.length * 0.56);
     var barSlot = pw / items.length;
 
     // Policy chart always renders inside light .finance-report-card
@@ -571,7 +580,7 @@
       var gy2 = pT + (ph / 4) * g3;
       var gv2 = maxVal * (1 - g3 / 4);
       svg += '<line x1="' + pL + '" y1="' + gy2.toFixed(1) + '" x2="' + (pL + pw) + '" y2="' + gy2.toFixed(1) + '" stroke="' + pGridClr + '" stroke-width="1"/>';
-      svg += '<text x="' + (pL - 6) + '" y="' + (gy2 + 4).toFixed(1) + '" text-anchor="end" fill="' + pYLblClr + '" font-size="10" ' + FONT + '>' + round1(gv2) + '%</text>';
+      svg += '<text x="' + (pL - 8) + '" y="' + (gy2 + 4).toFixed(1) + '" text-anchor="end" fill="' + pYLblClr + '" font-size="11" font-weight="700" ' + FONT + '>' + round1(gv2) + '%</text>';
     }
     svg += '<line x1="' + pL + '" y1="' + baseY + '" x2="' + (pL + pw) + '" y2="' + baseY + '" stroke="' + pAxisClr + '" stroke-width="1.5"/>';
 
@@ -582,20 +591,21 @@
 
       // Stress top (requirement headroom)
       if (topH > 1) {
-        svg += '<rect x="' + bx.toFixed(1) + '" y="' + barTopY.toFixed(1) + '" width="' + barW + '" height="' + topH.toFixed(1) + '" rx="8" fill="' + item.color + '" fill-opacity="0.35"/>';
+        svg += '<rect x="' + bx.toFixed(1) + '" y="' + barTopY.toFixed(1) + '" width="' + barW + '" height="' + topH.toFixed(1) + '" rx="10" fill="' + item.color + '" fill-opacity="0.28"/>';
         svg += '<line x1="' + bx.toFixed(1) + '" y1="' + (baseY - baseH).toFixed(1) + '" x2="' + (bx + barW).toFixed(1) + '" y2="' + (baseY - baseH).toFixed(1) + '" stroke="' + item.color + '" stroke-width="1" stroke-dasharray="3 3" stroke-opacity="0.6"/>';
       }
       // Base bar
-      svg += '<rect x="' + bx.toFixed(1) + '" y="' + (baseY - baseH).toFixed(1) + '" width="' + barW + '" height="' + baseH.toFixed(1) + '" rx="8" fill="' + item.color + '" fill-opacity="0.9"/>';
+      svg += '<rect x="' + (bx + 4).toFixed(1) + '" y="' + (baseY - baseH + 4).toFixed(1) + '" width="' + (barW - 2).toFixed(1) + '" height="' + Math.max(0, baseH - 2).toFixed(1) + '" rx="10" fill="' + item.color + '" fill-opacity="0.14"/>';
+      svg += '<rect x="' + bx.toFixed(1) + '" y="' + (baseY - baseH).toFixed(1) + '" width="' + barW + '" height="' + baseH.toFixed(1) + '" rx="10" fill="' + item.color + '" fill-opacity="0.92"/>';
 
       // Value label
-      svg += txt(bx + barW / 2, barTopY - 10, round1(item.base + item.top) + '%', { size: 13, weight: 800, fill: item.color });
+      svg += txt(bx + barW / 2, barTopY - 12, round1(item.base + item.top) + '%', { size: 14, weight: 800, fill: item.color });
 
       // Instrument label
-      svg += txt(bx + barW / 2, H - 16, item.label, { size: 12, weight: 800, fill: pBarLblClr });
+      svg += txt(bx + barW / 2, H - 24, item.label, { size: 13, weight: 800, fill: pBarLblClr });
       // Description sub-label
       var desc = policyDesc[item.label] || '';
-      if (desc) svg += txt(bx + barW / 2, H - 4, desc, { size: 8.5, fill: 'rgba(60,78,104,0.62)' });
+      if (desc) svg += txt(bx + barW / 2, H - 8, desc, { size: 9.5, fill: 'rgba(52,70,98,0.72)' });
     });
 
     return svg + '</svg>';

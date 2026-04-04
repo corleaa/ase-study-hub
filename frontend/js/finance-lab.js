@@ -647,8 +647,8 @@ function financeShockNarrative(metrics) {
 function financeStabilityHeroHtml(metrics) {
   var presets = getFinanceStabilityScenarioPresets();
   var status = financeStressStatus(metrics.systemStressGauge);
-  // 260° gauge arc: circumference of 260/360 * 2π*90 = 408.4
-  var gaugeArc = 408.4;
+  // 260° gauge arc: circumference of 260/360 * 2π*96 = 435.6
+  var gaugeArc = 435.6;
   var gaugeFill = ((Math.max(0, Math.min(100, metrics.systemStressGauge)) / 100) * gaugeArc).toFixed(2);
   return '<section class="finance-sim-hero">'
     + '<div class="finance-sim-grid">'
@@ -666,9 +666,9 @@ function financeStabilityHeroHtml(metrics) {
     + '<div class="finance-gauge-shell">'
     + '<div class="finance-gauge-wrap" id="finStressGauge" style="--finance-gauge-color:' + status.color + ';">'
     + '<div class="finance-gauge-glow"></div>'
-    + '<svg viewBox="0 0 230 230">'
-    + '<circle class="finance-gauge-track" cx="115" cy="115" r="90" stroke-dasharray="408.4 157.1"></circle>'
-    + '<circle class="finance-gauge-progress" id="finStressGaugeProgress" cx="115" cy="115" r="90" stroke-dasharray="' + gaugeFill + ' 565.49" stroke-dashoffset="0"></circle>'
+    + '<svg viewBox="0 0 260 260" aria-hidden="true">'
+    + '<circle class="finance-gauge-track" cx="130" cy="130" r="96" stroke-dasharray="435.6 167.6"></circle>'
+    + '<circle class="finance-gauge-progress" id="finStressGaugeProgress" cx="130" cy="130" r="96" stroke-dasharray="' + gaugeFill + ' 603.2" stroke-dashoffset="0"></circle>'
     + '</svg>'
     + '<div class="finance-gauge-needle" id="finStressGaugeNeedle"></div><div class="finance-gauge-center-dot"></div>'
     + '<div class="finance-gauge-core"><div class="finance-gauge-label"><strong id="finStressGaugeValue">' + Math.round(metrics.systemStressGauge) + '</strong><span id="finStressGaugeState">' + status.label + '</span></div></div>'
@@ -1150,12 +1150,12 @@ function updateFinanceLabUI() {
   });
   if (isStability) {
     var gaugeStatus = financeStressStatus(metrics.systemStressGauge);
-    var gaugeArc2 = 408.4; // 260° arc
+    var gaugeArc2 = 435.6; // 260° arc on r=96
     var gaugeFill2 = ((Math.max(0, Math.min(100, metrics.systemStressGauge)) / 100) * gaugeArc2).toFixed(2);
     var gaugeProgress = document.getElementById('finStressGaugeProgress');
     if (gaugeProgress) {
       gaugeProgress.style.stroke = gaugeStatus.color;
-      gaugeProgress.style.strokeDasharray = gaugeFill2 + ' 565.49';
+      gaugeProgress.style.strokeDasharray = gaugeFill2 + ' 603.2';
       gaugeProgress.style.strokeDashoffset = '0';
     }
     var gaugeNeedle = document.getElementById('finStressGaugeNeedle');
