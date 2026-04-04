@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Hub — Frontend Audit Dashboard</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --bg2: #161b27;
+  --bg3: #1e2535;
+  --border: rgba(255,255,255,0.07);
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --accent: #6366f1;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --blue: #38bdf8;
+  --purple: #a78bfa;
+  --teal: #2dd4bf;
+  --r: 10px;
+  --font: 'system-ui', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 32px 24px 80px;
+  min-height: 100vh;
+}
+.page { max-width: 1100px; margin: 0 auto; }
+
+/* Header */
+.header { margin-bottom: 40px; }
+.header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; }
+.header p { color: var(--muted); font-size: 0.9rem; }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+.badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+.badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+.badge-blue { background: rgba(56,189,248,0.15); color: var(--blue); }
+.badge-purple { background: rgba(167,139,250,0.15); color: var(--purple); }
+
+/* Sections */
+.section { margin-bottom: 40px; }
+.section-title {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted);
+  margin-bottom: 16px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title .count {
+  background: var(--bg3); padding: 2px 8px; border-radius: 20px;
+  color: var(--text); font-size: 0.68rem;
+}
+
+/* Cards grid */
+.grid { display: grid; gap: 12px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Card */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+}
+.card-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.card-sub { color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+.card-meta { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 8px; }
+
+/* Issue cards */
+.issue { border-left: 3px solid; }
+.issue-critical { border-color: var(--red); }
+.issue-warning { border-color: var(--amber); }
+.issue-info { border-color: var(--blue); }
+.issue-ok { border-color: var(--green); }
+
+/* Stat cards */
+.stat { text-align: center; padding: 20px 16px; }
+.stat-val { font-size: 1.8rem; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* File tree */
+.tree { font-family: var(--mono); font-size: 0.8rem; line-height: 1.8; background: var(--bg3); border-radius: var(--r); padding: 18px 20px; border: 1px solid var(--border); }
+.tree .active { color: var(--green); }
+.tree .dead { color: var(--red); text-decoration: line-through; opacity: 0.6; }
+.tree .warn { color: var(--amber); }
+.tree .dir { color: var(--accent); font-weight: 600; }
+.tree .indent { padding-left: 20px; display: block; }
+
+/* Canon table */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 8px 12px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); border-bottom: 1px solid var(--border); }
+td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.82rem; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td code { font-family: var(--mono); font-size: 0.75rem; background: var(--bg3); padding: 2px 6px; border-radius: 4px; color: var(--blue); }
+td .risk-high { color: var(--red); font-weight: 600; }
+td .risk-med { color: var(--amber); }
+td .risk-low { color: var(--green); }
+
+/* Progress bar */
+.progress-wrap { margin-top: 8px; }
+.progress-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; }
+
+/* Collapse */
+details { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 8px; }
+summary { padding: 12px 16px; cursor: pointer; background: var(--bg2); font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 10px; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: '▶'; font-size: 0.65rem; color: var(--muted); transition: transform 0.2s; }
+details[open] summary::before { transform: rotate(90deg); }
+.details-body { padding: 16px; background: var(--bg); font-size: 0.82rem; color: var(--muted); line-height: 1.7; }
+.details-body code { font-family: var(--mono); font-size: 0.75rem; background: var(--bg3); padding: 2px 6px; border-radius: 4px; color: var(--blue); }
+
+@media (max-width: 700px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="header">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+    <div>
+      <h1>Study Hub — Frontend Audit Dashboard</h1>
+      <p>Audit complet · Generat 2026-04-04 · <span style="color:#6366f1">study-hub-final/frontend/</span></p>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <span class="badge badge-red">3 probleme critice</span>
+    <span class="badge badge-amber">4 avertismente</span>
+    <span class="badge badge-green">2 cleanup-uri aplicate</span>
+    <span class="badge badge-blue">17 fișiere JS · 2 CSS active</span>
+  </div>
+</div>
+
+<!-- STATS OVERVIEW -->
+<div class="section">
+  <div class="section-title">Statistici generale</div>
+  <div class="grid grid-4">
+    <div class="card stat">
+      <div class="stat-val" style="color:#6366f1">1665</div>
+      <div class="stat-label">linii index.html<br>(era 7625)</div>
+      <div style="margin-top:10px">
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" style="width:22%;background:#22c55e"></div></div>
+        </div>
+        <div style="font-size:0.7rem;color:#22c55e;margin-top:4px">-78% reducere</div>
+      </div>
+    </div>
+    <div class="card stat">
+      <div class="stat-val" style="color:#f59e0b">5959</div>
+      <div class="stat-label">linii CSS<br>extrase în app.css</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-val" style="color:#ef4444">8</div>
+      <div class="stat-label">fișiere JS<br>dead code (module)</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-val" style="color:#22c55e">8</div>
+      <div class="stat-label">fișiere JS<br>active în runtime</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEME CRITICE -->
+<div class="section">
+  <div class="section-title">Probleme critice <span class="count">3</span></div>
+  <div class="grid" style="grid-template-columns:1fr">
+
+    <div class="card issue issue-critical">
+      <div class="card-title">
+        <span class="badge badge-red">CRITIC</span>
+        JS logic în inline &lt;script&gt; — imposibil de testat izolat
+      </div>
+      <div class="card-sub">
+        Tot routing-ul aplicației (<code>renderPage()</code>), state management (<code>saveState()</code>),
+        auth, și PDF export sunt în 2 blocuri <code>&lt;script&gt;</code> inline din <code>index.html</code> (~1369 linii total).
+        Un AI repair bot nu poate modifica aceste funcții fără riscul de a rupe navigația întreagă.
+      </div>
+      <div class="card-meta">Locație: index.html liniile 6246–7399 și 7401–7615 | Impact: ÎNTREG UI-UL</div>
+      <div style="margin-top:12px;padding:10px 14px;background:rgba(239,68,68,0.08);border-radius:6px;font-size:0.78rem;color:#fca5a5">
+        <strong>Risc pentru automatizare:</strong> Orice modificare a inline script poate rupe renderPage(), saveState(), auth flow sau PDF export simultan.
+        <br><strong>Recomandare:</strong> Extrage renderPage() și saveState() în js/app-core.js (necesită review manual, nu automat).
+      </div>
+    </div>
+
+    <div class="card issue issue-critical">
+      <div class="card-title">
+        <span class="badge badge-red">CRITIC</span>
+        8 fișiere JS dead code (module system abandonat)
+      </div>
+      <div class="card-sub">
+        <code>app.js</code>, <code>auth.js</code>, <code>api.js</code>, <code>render.js</code>,
+        <code>quiz.js</code>, <code>mentor.js</code>, <code>flashcards.js</code>, <code>upload.js</code>
+        folosesc ES6 <code>import/export</code> dar nu sunt niciodată încărcate în <code>index.html</code>.
+        Reprezintă ~60KB de cod mort care poate confunda un agent AI ce caută "unde e logica de quiz".
+      </div>
+      <div class="card-meta">Dimensiune totală dead code JS: ~60 KB · Marcat cu header ⚠️ LEGACY</div>
+      <div style="margin-top:12px;padding:10px 14px;background:rgba(239,68,68,0.08);border-radius:6px;font-size:0.78rem;color:#fca5a5">
+        <strong>Risc pentru automatizare:</strong> Un bot care vede quiz.js poate crede că acolo e logica de quiz — dar nu este. Acum sunt marcate cu header.
+        <br><strong>Recomandare manuală:</strong> Mută în <code>_legacy/</code> sau șterge după confirmare.
+      </div>
+    </div>
+
+    <div class="card issue issue-critical">
+      <div class="card-title">
+        <span class="badge badge-red">CRITIC</span>
+        CSS era 100% inline în index.html — fix aplicat
+      </div>
+      <div class="card-sub">
+        5960 de linii de CSS erau inline în <code>&lt;style&gt;</code> din <code>index.html</code>,
+        fără separare de concerns, imposibil de cache-uit de browser, și confuz pentru agenți.
+        <br><br>
+        <strong style="color:#22c55e">✓ FIX APLICAT:</strong> Extras complet în <code>css/app.css</code>.
+        index.html a trecut de la 7625 la 1665 linii.
+      </div>
+      <div class="card-meta">css/app.css: 6042 linii (cu header documentar) · Linkuit în head</div>
+    </div>
+  </div>
+</div>
+
+<!-- AVERTISMENTE -->
+<div class="section">
+  <div class="section-title">Avertismente <span class="count">4</span></div>
+  <div class="grid grid-2">
+
+    <div class="card issue issue-warning">
+      <div class="card-title">
+        <span class="badge badge-amber">WARN</span>
+        css/main.css — fișier legacy nelinkuit
+      </div>
+      <div class="card-sub">
+        40KB de CSS cu o temă complet diferită (Electric Indigo/blue fintech).
+        Nu este linkuit nicăieri dar există în repo. Marcat cu header ⚠️ LEGACY.
+      </div>
+      <div class="card-meta">Acțiune: NEEDS MANUAL REVIEW — poate fi șters</div>
+    </div>
+
+    <div class="card issue issue-warning">
+      <div class="card-title">
+        <span class="badge badge-amber">WARN</span>
+        Fișiere JS mari — risc de side effects
+      </div>
+      <div class="card-sub">
+        <code>finance-lab.js</code> (119 KB, 1404 ln) și
+        <code>stats-mentor-page.js</code> (103 KB, 1937 ln) sunt foarte mari.
+        Modificările de clase CSS pot afecta zeci de locuri simultan.
+      </div>
+      <div class="card-meta">Risc: MED — Verifică grep înainte de orice modificare CSS în aceste module</div>
+    </div>
+
+    <div class="card issue issue-warning">
+      <div class="card-title">
+        <span class="badge badge-amber">WARN</span>
+        CSS override cascade — secțiuni V1.3/V7/V8
+      </div>
+      <div class="card-sub">
+        css/app.css conține secțiuni adăugate incremental: <code>V1.3</code>, <code>V7</code>, <code>V8</code>
+        care pot override stiluri anterioare. Secțiunea finală <code>UPDATED GLOBAL STYLES</code>
+        (ln ~5405) are override-uri globale.
+      </div>
+      <div class="card-meta">Dacă un fix CSS nu are efect, caută override în secțiunile ulterioare</div>
+    </div>
+
+    <div class="card issue issue-warning">
+      <div class="card-title">
+        <span class="badge badge-amber">WARN</span>
+        No build system — schimbările sunt immediate
+      </div>
+      <div class="card-sub">
+        Nu există webpack, vite sau alt bundler. Modificările în fișierele CSS/JS sunt
+        reflectate direct la refresh. Nu există minification sau tree-shaking automat.
+        Dead code rămâne în repo până la ștergere manuală.
+      </div>
+      <div class="card-meta">Impact: Pozitiv pentru debugging, negativ pentru performance</div>
+    </div>
+  </div>
+</div>
+
+<!-- HARTA FIȘIERELOR -->
+<div class="section">
+  <div class="section-title">Harta fișierelor — status runtime</div>
+  <div class="tree">
+    <span class="dir">frontend/</span>
+    <span class="indent"><span class="warn">index.html</span> <span style="color:#6b7280;font-size:0.72rem">← 1665 ln · shell HTML + 2x inline script (routing, auth, state)</span></span>
+    <span class="indent"></span>
+    <span class="indent"><span class="dir">css/</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">app.css</span> <span style="color:#6b7280;font-size:0.72rem">← 6042 ln · TOT CSS-ul aplicației ← SURSĂ CANONICĂ ✓</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">finance-lab.css</span> <span style="color:#6b7280;font-size:0.72rem">← 1324 ln · CSS Finance Lab ← SURSĂ CANONICĂ ✓</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">main.css</span> <span style="color:#6b7280;font-size:0.72rem">← LEGACY · nelinkuit · temă diferită</span></span>
+    <span class="indent"></span>
+    <span class="indent"><span class="dir">js/</span> <span style="color:#6b7280;font-size:0.72rem">— ACTIVE (loaded în index.html)</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">learning-layers.js</span> <span style="color:#6b7280;font-size:0.72rem">← 780 ln · IIFE</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">dashboard-page.js</span> <span style="color:#6b7280;font-size:0.72rem">← 579 ln · Dashboard</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">subject-page.js</span> <span style="color:#6b7280;font-size:0.72rem">← 2002 ln · Subject Page ⚠️ mare</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">study-tools-page.js</span> <span style="color:#6b7280;font-size:0.72rem">← 984 ln · Study Tools</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">system-pages.js</span> <span style="color:#6b7280;font-size:0.72rem">← 732 ln · Calendar, Settings</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">stats-mentor-page.js</span> <span style="color:#6b7280;font-size:0.72rem">← 1937 ln · Stats ⚠️ foarte mare</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">finance-lab.js</span> <span style="color:#6b7280;font-size:0.72rem">← 1404 ln · Finance Lab ⚠️ mare</span></span>
+    <span class="indent" style="padding-left:40px"><span class="active">finance-charts.js</span> <span style="color:#6b7280;font-size:0.72rem">← 612 ln · IIFE charts</span></span>
+    <span class="indent"></span>
+    <span class="indent"><span class="dir">js/</span> <span style="color:#6b7280;font-size:0.72rem">— DEAD CODE (ES6 modules, niciodată încărcate)</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">app.js</span> <span style="color:#6b7280;font-size:0.72rem">← 292 ln · ES6 entry point, LEGACY</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">auth.js</span> <span style="color:#6b7280;font-size:0.72rem">← 215 ln · ES6 auth module, LEGACY</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">api.js</span> <span style="color:#6b7280;font-size:0.72rem">← 172 ln · ES6 API client, LEGACY</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">render.js</span> <span style="color:#6b7280;font-size:0.72rem">← 237 ln · ES6 render utils, LEGACY</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">quiz.js</span> <span style="color:#6b7280;font-size:0.72rem">← 287 ln · ES6 quiz, LEGACY</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">mentor.js</span> <span style="color:#6b7280;font-size:0.72rem">← 139 ln · ES6 mentor, LEGACY</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">flashcards.js</span> <span style="color:#6b7280;font-size:0.72rem">← 245 ln · ES6 flashcards, LEGACY</span></span>
+    <span class="indent" style="padding-left:40px"><span class="dead">upload.js</span> <span style="color:#6b7280;font-size:0.72rem">← 116 ln · ES6 upload, LEGACY</span></span>
+  </div>
+</div>
+
+<!-- CANON MAP -->
+<div class="section">
+  <div class="section-title">Sursă canonică per suprafață UI</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead>
+        <tr>
+          <th>Suprafață UI</th>
+          <th>CSS canonic</th>
+          <th>JS canonic</th>
+          <th>Risc AI repair</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Shell / Layout</strong></td>
+          <td><code>app.css</code> → APP LAYOUT ~ln944</td>
+          <td>index.html inline</td>
+          <td><span class="risk-high">RIDICAT</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sidebar + Nav</strong></td>
+          <td><code>app.css</code> → SIDEBAR ~ln965</td>
+          <td>index.html inline</td>
+          <td><span class="risk-high">RIDICAT</span></td>
+        </tr>
+        <tr>
+          <td><strong>Dashboard / Home</strong></td>
+          <td><code>app.css</code> → DASHBOARD ~ln1373</td>
+          <td><code>dashboard-page.js</code></td>
+          <td><span class="risk-med">MEDIU</span></td>
+        </tr>
+        <tr>
+          <td><strong>Subject Page</strong></td>
+          <td><code>app.css</code> → SUBJECT HEADER ~ln2781</td>
+          <td><code>subject-page.js</code></td>
+          <td><span class="risk-med">MEDIU</span></td>
+        </tr>
+        <tr>
+          <td><strong>Quiz</strong></td>
+          <td><code>app.css</code> → QUIZ MODE ~ln130</td>
+          <td>index.html inline</td>
+          <td><span class="risk-low">SCĂZUT (CSS)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Flashcards</strong></td>
+          <td><code>app.css</code> → FLASHCARDS ~ln357</td>
+          <td>index.html inline</td>
+          <td><span class="risk-low">SCĂZUT (CSS)</span></td>
+        </tr>
+        <tr>
+          <td><strong>AI Mentor / Chat</strong></td>
+          <td><code>app.css</code> → AI CHAT ~ln1649</td>
+          <td>index.html inline + <code>stats-mentor-page.js</code></td>
+          <td><span class="risk-med">MEDIU</span></td>
+        </tr>
+        <tr>
+          <td><strong>Finance Lab</strong></td>
+          <td><code>finance-lab.css</code> (fișier separat)</td>
+          <td><code>finance-lab.js</code> + <code>finance-charts.js</code></td>
+          <td><span class="risk-low">SCĂZUT (separat)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Stats / Insight Center</strong></td>
+          <td><code>app.css</code> → V8 STATISTICI ~ln4509</td>
+          <td><code>stats-mentor-page.js</code></td>
+          <td><span class="risk-med">MEDIU</span></td>
+        </tr>
+        <tr>
+          <td><strong>Pomodoro</strong></td>
+          <td><code>app.css</code> → POMODORO ~ln2967</td>
+          <td><code>system-pages.js</code></td>
+          <td><span class="risk-low">SCĂZUT</span></td>
+        </tr>
+        <tr>
+          <td><strong>Tokens / Culori</strong></td>
+          <td><code>app.css</code> → :root (ln 1-83)</td>
+          <td>—</td>
+          <td><span class="risk-low">SCĂZUT</span></td>
+        </tr>
+        <tr>
+          <td><strong>Auth Modal</strong></td>
+          <td><code>app.css</code> → APP LAYOUT</td>
+          <td>index.html inline</td>
+          <td><span class="risk-high">RIDICAT</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- REPAIR ROUTING PENTRU AI -->
+<div class="section">
+  <div class="section-title">Repair routing pentru AI agents</div>
+  <div class="grid grid-2">
+
+    <div class="card">
+      <div class="card-title" style="color:#38bdf8">Spacing / Padding / Margin</div>
+      <div class="card-sub">
+        Caută selectorul specific în <code>css/app.css</code>.<br>
+        Verifică dacă nu există un override în secțiunile <strong>V1.3</strong>, <strong>V7</strong>, <strong>V8</strong> sau <strong>UPDATED GLOBAL STYLES</strong> (ultima secțiune, ~ln5405).
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:#38bdf8">Culori / Design tokens</div>
+      <div class="card-sub">
+        Modifică în <code>css/app.css</code> secțiunea <code>:root</code> (ln 1) pentru dark theme.<br>
+        Light mode: secțiunea <code>[data-theme="light"]</code> (ln ~50).
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:#38bdf8">Overflow / Clipping</div>
+      <div class="card-sub">
+        Caută <code>overflow</code> în <code>css/app.css</code> pentru contextul specific.<br>
+        Layout principal: APP LAYOUT (~ln944). Mobile: caută <code>@media</code>.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:#38bdf8">Responsive / Mobile</div>
+      <div class="card-sub">
+        Caută <code>@media</code> în <code>css/app.css</code>.<br>
+        Mobile nav: MOBILE BOTTOM NAV BAR (~ln1252).
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:#38bdf8">Alignment issues</div>
+      <div class="card-sub">
+        Caută <code>display: flex</code> sau <code>display: grid</code> în secțiunea componentei.<br>
+        Atenție: HTML-ul e generat dinamic din JS, nu e în index.html.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:#38bdf8">Finance Lab issues</div>
+      <div class="card-sub">
+        CSS: <code>css/finance-lab.css</code> (fișier complet separat).<br>
+        JS: <code>js/finance-lab.js</code> și <code>js/finance-charts.js</code>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ZONE DE RISC -->
+<div class="section">
+  <div class="section-title">Zone cu risc ridicat pentru automatizare</div>
+
+  <details open>
+    <summary><span class="badge badge-red" style="margin-right:8px">RIDICAT</span> index.html inline scripts — routing și auth</summary>
+    <div class="details-body">
+      Două blocuri <code>&lt;script&gt;</code> inline conțin ~1369 linii de logică critică:
+      <ul style="margin-top:8px;padding-left:20px">
+        <li><code>renderPage()</code> — tot routing-ul aplicației</li>
+        <li><code>saveState() / window.state</code> — state management global</li>
+        <li><code>unlock() / openAuthModal()</code> — auth flow</li>
+        <li><code>exportProgressPDF()</code> — generare PDF în popup</li>
+        <li><code>showToast() / initTheme()</code> — utility functions globale</li>
+      </ul>
+      <br>
+      <strong>Regulă pentru AI agents:</strong> NU modifica aceste funcții automat. Orice schimbare
+      în inline script poate rupe întreaga aplicație simultan.
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="badge badge-amber" style="margin-right:8px">MEDIU</span> subject-page.js (2002 ln) — HTML generat dinamic</summary>
+    <div class="details-body">
+      Aproape tot HTML-ul pentru pagina de materie e generat ca string în JS.
+      Dacă adaugi o clasă CSS nouă, trebuie să o adaugi și în stringul JS.
+      Verifică cu <code>grep "class-name" js/subject-page.js</code> înainte de a asuma că un selector CSS e vizibil.
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="badge badge-amber" style="margin-right:8px">MEDIU</span> CSS cascade — override-uri V1.3/V7/V8/GLOBAL</summary>
+    <div class="details-body">
+      <code>css/app.css</code> a fost construit incremental. Secțiunile mai noi pot override-ui selectori
+      definiți anterior. Ordinea de verificare pentru un selector:
+      <ol style="margin-top:8px;padding-left:20px">
+        <li>Găsește prima definiție în secțiunea relevantă</li>
+        <li>Caută override-uri în secțiunile V1.3, V7, V8</li>
+        <li>Verifică <strong>UPDATED GLOBAL STYLES</strong> (ultima secțiune, ~ln5405) — are override-uri globale</li>
+      </ol>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="badge badge-blue" style="margin-right:8px">INFO</span> Dead code — 8 fișiere JS module niciodată încărcate</summary>
+    <div class="details-body">
+      Fișierele <code>app.js, auth.js, api.js, render.js, quiz.js, mentor.js, flashcards.js, upload.js</code>
+      folosesc ES6 <code>import/export</code> dar nu sunt niciodată încărcate în <code>index.html</code>.
+      Sunt marcate cu header <code>⚠️ FIȘIER LEGACY</code> pentru a preveni confuzia.
+      <br><br>
+      Funcționalitățile lor sunt reimplementate în inline script și fișierele plain JS active.
+    </div>
+  </details>
+</div>
+
+<!-- CLEANUP-URI APLICATE -->
+<div class="section">
+  <div class="section-title">Cleanup-uri aplicate în această sesiune <span class="count">4 acțiuni</span></div>
+  <div class="grid" style="grid-template-columns:1fr">
+    <div class="card issue issue-ok">
+      <div class="card-title"><span class="badge badge-green">APLICAT</span> CSS extras din index.html în css/app.css</div>
+      <div class="card-sub">5960 linii de CSS inline au fost extrase în <code>css/app.css</code>. index.html a scăzut de la 7625 la 1665 linii. Link tag adăugat în head.</div>
+      <div class="card-meta">Fișiere modificate: index.html, css/app.css (nou)</div>
+    </div>
+    <div class="card issue issue-ok">
+      <div class="card-title"><span class="badge badge-green">APLICAT</span> Header documentar în css/app.css cu index complet de secțiuni</div>
+      <div class="card-sub">83 linii de documentație adăugate în header-ul app.css cu index de linii pentru fiecare secțiune și routing explicit pentru AI agents.</div>
+      <div class="card-meta">Fișier modificat: css/app.css</div>
+    </div>
+    <div class="card issue issue-ok">
+      <div class="card-title"><span class="badge badge-green">APLICAT</span> Fișiere dead JS/CSS marcate cu header ⚠️ LEGACY</div>
+      <div class="card-sub">8 fișiere JS module și css/main.css marcate explicit ca inactive pentru a preveni confuzia agenților AI.</div>
+      <div class="card-meta">Fișiere modificate: app.js, auth.js, api.js, render.js, quiz.js, mentor.js, flashcards.js, upload.js, main.css</div>
+    </div>
+    <div class="card issue issue-ok">
+      <div class="card-title"><span class="badge badge-green">APLICAT</span> Documentație canonică în docs/frontend-canon.md</div>
+      <div class="card-sub">Map complet al fișierelor active/inactive, tabel surse canonice per suprafață UI, routing pentru AI repair agents.</div>
+      <div class="card-meta">Fișier creat: docs/frontend-canon.md</div>
+    </div>
+  </div>
+</div>
+
+<!-- CE RĂMÂNE DE FĂCUT MANUAL -->
+<div class="section">
+  <div class="section-title">Pași următori recomandați — manual review</div>
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-title" style="color:#f59e0b">1. Șterge/mută fișierele dead JS</div>
+      <div class="card-sub">
+        Confirmă că <code>app.js, auth.js, api.js, render.js, quiz.js, mentor.js, flashcards.js, upload.js</code>
+        nu sunt folosite nicăieri, apoi mută în <code>_legacy/</code> sau șterge.
+        <br>Economie: ~60 KB, claritate maximă.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#f59e0b">2. Șterge css/main.css</div>
+      <div class="card-sub">
+        Verifică că nu e linkuit în niciun fișier HTML nou, apoi șterge.
+        Nu va afecta UI-ul.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#f59e0b">3. Extrage inline scripts din index.html</div>
+      <div class="card-sub">
+        Mută <code>renderPage()</code>, <code>saveState()</code>, state management în
+        <code>js/app-core.js</code>. Necesită atenție extremă — risc de a rupe routing-ul.
+        <br><em>Nu face automat — review manual obligatoriu.</em>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:#f59e0b">4. Împarte css/app.css în module</div>
+      <div class="card-sub">
+        Opțional: separă <code>css/tokens.css</code> (variabile), <code>css/layout.css</code>,
+        <code>css/components.css</code>. Crește claritatea pentru agents dar necesită
+        testare completă a UI-ului.
+        <br><em>Low priority — app.css este acum clar documentat.</em>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding-top:40px;color:#374151;font-size:0.75rem">
+  Study Hub Frontend Audit · 2026-04-04 · <code>docs/frontend-canon.md</code> pentru referință completă
+</div>
+
+</div>
+</body>
+</html>
