@@ -13,7 +13,12 @@
     "test:visual:stability": "playwright test tests/e2e/finance-lab-stability.visual.spec.js",
     "test:review:stability": "node tests/review/finance-lab-stability-review.js",
     "test:audit:stability": "node tests/review/finance-lab-stability-audit.js",
-    "test:audit:stability:baseline": "node tests/review/promote-stability-baseline.js"
+    "test:audit:stability:baseline": "node tests/review/promote-stability-baseline.js",
+    "audit:visual": "node tests/visual-audit/audit-global.js",
+    "audit:visual:desktop": "node tests/visual-audit/audit-global.js --viewport=desktop",
+    "audit:visual:mobile": "node tests/visual-audit/audit-global.js --viewport=mobile",
+    "audit:visual:page": "node tests/visual-audit/audit-global.js --pages=",
+    "audit:visual:quick": "node tests/visual-audit/audit-global.js --viewport=desktop --pages=dashboard,subject-map,finance-lab"
   },
   "engines": {
     "node": ">=18.0.0"
