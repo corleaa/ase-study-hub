@@ -39,32 +39,67 @@ function renderSubjectPage(element, key, subject) {
   const allPres = getAllPresentations(key);
   const activeIndex = state.activePresIndex[key] || 0;
   const presId = 'pres_' + key;
+  const todayStr2 = new Date().toISOString().split('T')[0];
+  const pomoToday = (state.pomoLog || []).filter(s => s.date === todayStr2).length;
+  const pomoTotal = (state.pomoLog || []).length;
+  const pomoMinTotal = (state.pomoLog || []).reduce((a,s) => a + (s.minutes||0), 0);
 
   let html = '<div class="anim">';
 
-  // Header
-  html += '<div class="subj-header">';
-  html += '<div class="subj-icon" style="background:var(--accent-muted);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;">' + subjectIcon(subject, 'lg') + '</div>';
-  html += '<div><div class="subj-name">' + subject.name + '</div>';
-  html += '<div class="subj-desc">' + subject.full + ' — ' + subject.desc + '</div></div></div>';
-
-  // Stats
-  html += '<div class="quick-stats anim-d1">';
-  html += '<div class="qs-card"><div class="qs-val">' + allPres.length + '</div><div class="qs-label">Prezentări</div></div>';
-  html += '<div class="qs-card"><div class="qs-val">' + todos.length + '</div><div class="qs-label">Tasks</div></div>';
-  html += '<div class="qs-card"><div class="qs-val">' + (todos.length ? Math.round(doneTodos / todos.length * 100) : 0) + '%</div><div class="qs-label">Completat</div></div>';
+  // === COMPACT HEADER ===
+  html += '<div class="subj-header-compact">';
+  html += '<div class="subj-icon-sm" style="background:var(--accent-muted);border:2px solid var(--accent);">' + subjectIcon(subject, 'sm') + '</div>';
+  html += '<div class="subj-header-info">';
+  html += '<div class="subj-name-compact">' + escapeHtml(subject.name) + '</div>';
+  html += '<div class="subj-desc-compact">' + escapeHtml(subject.full) + '</div>';
+  html += '</div>';
+  html += '<div class="subj-stats-inline">';
+  html += '<span class="subj-stat-badge">' + icon('layers2','xs') + ' ' + allPres.length + ' rezumate</span>';
+  html += '<span class="subj-stat-badge">✅ ' + (todos.length ? Math.round(doneTodos / todos.length * 100) : 0) + '%</span>';
+  html += '</div>';
   html += '</div>';
 
-  html += renderSubjectStudyPath(key, subject, allPres, todos);
-  html += renderInteractiveLearningStudio(key, subject, allPres);
+  // === HERO GENERATOR ZONE ===
+  html += '<div class="hero-gen anim-d1">';
+  html += '<div class="hero-gen-header">';
+  html += '<div>';
+  html += '<div class="hero-gen-title">' + icon('sparkle','sm') + ' Generează rezumat nou</div>';
+  html += '<div class="hero-gen-subtitle">Încarcă un PDF sau lipește text — AI-ul face restul în ~30s</div>';
+  html += '</div>';
+  html += '</div>';
 
-  html += '<div class="panels-grid">';
+  html += '<div class="summary-upload-zone" id="uploadZone">';
+  html += '<input type="file" id="fileUpload" accept=".pdf,.txt,.doc,.docx,.md,.csv,.pptx">';
+  html += '<div class="su-icon" style="display:flex;justify-content:center;color:var(--text-muted);">' + icon('upload','lg') + '</div>';
+  html += '<div class="su-text">Trage un fișier sau click pentru a încărca</div>';
+  html += '<div class="su-hint">PDF, TXT, DOCX, PPTX, MD, CSV — max 10MB</div>';
+  html += '</div>';
+
+  html += '<div class="summary-file-info" id="fileInfo">';
+  html += '<span>📎</span><span class="sf-name" id="fileName"></span>';
+  html += '<span class="sf-size" id="fileSize"></span>';
+  html += '<button class="sf-remove" data-subject-action="remove-uploaded-file">✕</button></div>';
+
+  html += '<div class="summary-or">sau lipește textul manual</div>';
+  html += '<textarea class="summary-textarea" id="summaryInput" placeholder="Lipește aici textul din curs, PDF, sau notițe..."></textarea>';
+
+  html += '<div style="margin-top:8px;">';
+  html += '<input class="todo-inp" id="presTitle" placeholder="Titlul rezumatului (ex: Curs 3 — Regresie Logistică)" style="width:100%;">';
+  html += '</div>';
+
+  html += '<div class="hero-gen-actions">';
+  html += '<button class="hero-gen-btn" id="summaryBtn" data-subject-action="generate-presentation" data-subject-key="' + key + '">';
+  html += icon('sparkle','sm') + ' Generează rezumatul</button>';
+  html += '<span class="summary-status" id="summaryStatus"></span>';
+  html += '</div>';
+
+  html += '</div>'; // close hero-gen
 
   // === PRESENTATIONS LIBRARY ===
-  html += '<div class="panel panel-full anim-d1">';
+  html += '<div class="panel panel-full anim-d2">';
   html += '<div class="panel-head">';
-  html += '<span>' + icon('layers2','sm') + ' Rezumate & Prezentări</span>';
-  html += '<span style="font-size:.72rem;color:var(--text-muted)">' + allPres.length + ' prezentări</span>';
+  html += '<span>' + icon('layers2','sm') + ' Rezumatele tale</span>';
+  html += '<span style="font-size:.72rem;color:var(--text-muted)">' + allPres.length + (allPres.length === 1 ? ' rezumat' : ' rezumate') + '</span>';
   html += '</div>';
   html += '<div class="panel-body">';
 
@@ -92,99 +127,50 @@ function renderSubjectPage(element, key, subject) {
     });
     html += '</div>';
   } else {
-    html += '<div class="empty-state">';
-    html += '<div class="empty-state-icon">' + icon('layers2','md') + '</div>';
-    html += '<div class="empty-state-title">Nicio prezentare încă</div>';
-    html += '<div class="empty-state-desc">Încarcă un fișier PDF, DOCX sau lipește text din cursul tău, iar AI-ul va genera o prezentare structurată cu slide-uri.</div>';
-    html += (state.apiKey ? '<button class="empty-state-btn" data-subject-action="scroll-generator">' + icon('sparkle','xs') + ' Generează prima prezentare</button>' : '<button class="empty-state-btn" data-nav-tab="settings">' + icon('key','xs') + ' Configurează API Key</button>');
+    html += '<div class="empty-state" style="padding:20px 0 10px;">';
+    html += '<div class="empty-state-desc" style="font-size:.82rem;text-align:center;color:var(--text-muted);">Primul rezumat generat va apărea aici.</div>';
     html += '</div>';
   }
 
   html += '</div></div>';
 
-  // === PRESENTATION GENERATOR ===
-  html += '<div class="panel panel-full anim-d2">';
-  html += '<div class="panel-head">' + icon('sparkle','sm') + ' <span>Generează Fișă de Învățare AI</span>';
-  html += '<span style="font-size:.72rem;color:var(--text-muted)">rezumat vizual, explicat pe niveluri</span></div>';
-  html += '<div class="panel-body">';
-  html += renderGeneratorGuide();
+  // === TOOLS TABS ===
+  html += '<div class="tools-tabs-wrap panel panel-full anim-d3">';
+  html += '<div class="tools-tab-bar">';
+  html += '<button class="tools-tab-btn active" data-subject-action="switch-tab" data-tab="tutor">' + icon('robot','xs') + ' AI Tutor</button>';
+  html += '<button class="tools-tab-btn" data-subject-action="switch-tab" data-tab="notes">📝 Notițe</button>';
+  html += '<button class="tools-tab-btn" data-subject-action="switch-tab" data-tab="todos">✅ To-Do</button>';
+  html += '<button class="tools-tab-btn" data-subject-action="switch-tab" data-tab="pomodoro">' + icon('timer','xs') + ' Pomodoro</button>';
+  html += '<button class="tools-tab-btn" data-subject-action="switch-tab" data-tab="links">' + icon('link','xs') + ' Linkuri</button>';
+  html += '</div>';
 
-  if (false) {
-    html += '<div style="text-align:center;padding:20px;color:var(--text-muted)">[!] Configurează API key-ul din Dashboard pentru a genera prezentări</div>';
-  } else {
-    html += '<div class="summary-upload-zone" id="uploadZone">';
-    html += '<input type="file" id="fileUpload" accept=".pdf,.txt,.doc,.docx,.md,.csv,.pptx">';
-    html += '<div class="su-icon" style="display:flex;justify-content:center;color:var(--text-muted);">' + icon('upload','lg') + '</div>';
-    html += '<div class="su-text">Trage un fișier aici sau click pentru a încărca</div>';
-    html += '<div class="su-hint">PDF, TXT, DOCX, PPTX, MD, CSV — max 10MB</div>';
-    html += '</div>';
-
-    html += '<div class="summary-file-info" id="fileInfo">';
-    html += '<span>📎</span><span class="sf-name" id="fileName"></span>';
-    html += '<span class="sf-size" id="fileSize"></span>';
-    html += '<button class="sf-remove" data-subject-action="remove-uploaded-file">✕</button></div>';
-
-    html += '<div class="summary-or">sau lipește textul manual</div>';
-    html += '<textarea class="summary-textarea" id="summaryInput" placeholder="Lipește aici textul din curs, PDF, sau notițe..."></textarea>';
-
-    html += '<div style="margin-top:8px;">';
-    html += '<input class="todo-inp" id="presTitle" placeholder="Titlul prezentării (ex: Curs 3 — Regresie Logistică)" style="width:100%;">';
-    html += '</div>';
-
-    html += '<div class="interactive-blocks" style="margin-top:18px;">';
-    html += '<div class="interactive-card"><span class="icon icon-sm" style="color:var(--accent)">' + icon('layers2','sm') + '</span><strong>Explicație pe straturi</strong><p>Rezumatul va fi împărțit în ideea simplă, explicația conceptuală și partea tehnică.</p></div>';
-    html += '<div class="interactive-card"><span class="icon icon-sm" style="color:var(--blue)">' + icon('chart','sm') + '</span><strong>Exemple și vizualizări</strong><p>Conceptele abstracte sunt însoțite de scenarii reale și blocuri interactive care pot fi deschise treptat.</p></div>';
-    html += '<div class="interactive-card"><span class="icon icon-sm" style="color:var(--green)">' + icon('brain','sm') + '</span><strong>Legătură directă cu quiz și cards</strong><p>După rezumat poți trece imediat la testare și memorare, fără să cauți următorul pas.</p></div>';
-    html += '<div class="interactive-card"><span class="icon icon-sm" style="color:var(--purple)">' + icon('target','sm') + '</span><strong>Claritate înainte de formulă</strong><p>Accentul este pe înțelegerea vizuală și cauzală, nu pe text dens.</p></div>';
-    html += '</div>';
-
-    html += '<div class="summary-actions">';
-    html += '<button class="summary-gen-btn" id="summaryBtn" data-subject-action="generate-presentation" data-subject-key="' + key + '">';
-    html += icon('sparkle','xs') + ' Generează fișa vizuală</button>';
-    html += '<span class="summary-status" id="summaryStatus"></span>';
-    html += '</div>';
-  }
-
-  html += '</div></div>';
-
-  // === AI CHAT ===
-  html += '<div class="panel panel-full anim-d2">';
-  html += '<div class="panel-head">' + icon('robot','sm') + ' <span>AI Tutor — ' + subject.name + '</span>';
-  html += '<div style="display:flex;gap:8px;align-items:center;">';
-  html += '<span style="font-size:.72rem;color:var(--text-muted)">powered by Claude</span>';
-  if (state.chatHistories[key] && state.chatHistories[key].length > 0) {
-    // === NOU: Buton export chat ca PDF ===
-    html += '<button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 12px;" data-subject-action="export-chat" data-subject-key="' + key + '">⬇️ Export PDF</button>';
-    html += '<button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 12px;color:var(--red);" data-subject-action="clear-chat" data-subject-key="' + key + '">' + icon('trash','xs') + ' Șterge</button>';
-  }
-  html += '</div></div>';
+  // --- TAB: AI TUTOR ---
+  html += '<div class="tools-tab-panel active" data-tab-panel="tutor">';
   html += '<div class="panel-body">';
   html += renderTutorGuide(subject.name);
-
-  if (false) {
-    html += '<div style="text-align:center;padding:20px;color:var(--text-muted)">[!] Configurează API key-ul din Dashboard pentru AI Tutor</div>';
-  } else {
-    html += '<div class="chat-container">';
-    html += '<div class="chat-messages" id="chatMessages">' + renderChatHistory(key) + '</div>';
-    html += '<div class="chat-input-row">';
-    html += '<input class="chat-input" id="chatInput" placeholder="Pune o întrebare despre ' + subject.name + '..." data-subject-key="' + key + '">';
-    html += '<button class="chat-send" id="chatSendBtn" data-subject-action="send-chat" data-subject-key="' + key + '">Trimite</button>';
-    html += '</div></div>';
+  html += '<div class="chat-container">';
+  html += '<div class="chat-messages" id="chatMessages">' + renderChatHistory(key) + '</div>';
+  html += '<div class="chat-input-row">';
+  html += '<input class="chat-input" id="chatInput" placeholder="Pune o întrebare despre ' + escapeHtml(subject.name) + '..." data-subject-key="' + key + '">';
+  html += '<button class="chat-send" id="chatSendBtn" data-subject-action="send-chat" data-subject-key="' + key + '">Trimite</button>';
+  html += '</div></div>';
+  if (state.chatHistories[key] && state.chatHistories[key].length > 0) {
+    html += '<div style="margin-top:10px;display:flex;gap:8px;">';
+    html += '<button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 12px;" data-subject-action="export-chat" data-subject-key="' + key + '">⬇️ Export PDF</button>';
+    html += '<button class="quiz-nav-btn" style="font-size:.72rem;padding:5px 12px;color:var(--red);" data-subject-action="clear-chat" data-subject-key="' + key + '">' + icon('trash','xs') + ' Șterge</button>';
+    html += '</div>';
   }
-
   html += '</div></div>';
 
-  // === NOTES ===
-  html += '<div class="panel">';
-  html += '<div class="panel-head"><span>📝 Notițe</span><span style="font-size:.72rem;color:var(--text-muted)">auto-save</span></div>';
+  // --- TAB: NOTIȚE ---
+  html += '<div class="tools-tab-panel" data-tab-panel="notes">';
   html += '<div class="panel-body">';
   html += '<textarea class="notes-textarea" id="notesArea" placeholder="Scrie notițele tale aici...">' + (state.notes[key] || '') + '</textarea>';
   html += '<div class="save-indicator" id="noteSaved">✓ Salvat</div>';
   html += '</div></div>';
 
-  // === TODOS ===
-  html += '<div class="panel">';
-  html += '<div class="panel-head"><span>[OK] To-Do</span></div>';
+  // --- TAB: TO-DO ---
+  html += '<div class="tools-tab-panel" data-tab-panel="todos">';
   html += '<div class="panel-body">';
   html += '<div class="todo-row">';
   html += '<input class="todo-inp" id="todoInput" placeholder="Adaugă un task..." data-subject-key="' + key + '">';
@@ -193,9 +179,44 @@ function renderSubjectPage(element, key, subject) {
   html += '<div id="todoList">' + renderTodos(key) + '</div>';
   html += '</div></div>';
 
-  // === QUICK LINKS ===
-  html += '<div class="panel">';
-  html += '<div class="panel-head">' + icon('link','sm') + ' <span>Linkuri Rapide</span></div>';
+  // --- TAB: POMODORO ---
+  html += '<div class="tools-tab-panel" data-tab-panel="pomodoro">';
+  html += '<div class="panel-body">';
+  html += '<div class="pomodoro-container">';
+  html += '<div class="pomo-ring-wrap">';
+  html += '<svg class="pomo-ring-svg" viewBox="0 0 160 160">';
+  html += '<circle class="pomo-ring-bg" cx="80" cy="80" r="70"/>';
+  html += '<circle class="pomo-ring-fill" id="pomoRingFill" cx="80" cy="80" r="70"/>';
+  html += '</svg>';
+  html += '<div class="pomo-ring-center">';
+  html += '<div class="pomo-time" id="pomoTime">25:00</div>';
+  html += '<div class="pomo-mode" id="pomoMode">Focus</div>';
+  html += '</div></div>';
+  html += '<div class="pomo-controls">';
+  html += '<button class="pomo-btn primary" id="pomoStartBtn" data-subject-action="toggle-pomodoro">' + icon('activity','sm') + ' Start</button>';
+  html += '<button class="pomo-btn" data-subject-action="reset-pomodoro">' + icon('arrow_left','xs') + ' Reset</button>';
+  html += '</div>';
+  html += '<div class="pomo-presets">';
+  html += '<button class="pomo-preset active" data-subject-action="set-pomo-preset" data-pomo-minutes="25">25 min</button>';
+  html += '<button class="pomo-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="45">45 min</button>';
+  html += '<button class="pomo-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="60">60 min</button>';
+  html += '<button class="pomo-preset break-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="5" data-pomo-break="true">5 min · pauză</button>';
+  html += '<button class="pomo-preset break-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="15" data-pomo-break="true">15 min · pauză</button>';
+  html += '</div>';
+  html += '<div class="pomo-custom-row">';
+  html += '<span class="pomo-custom-label">Custom:</span>';
+  html += '<input type="number" class="pomo-custom-inp" id="pomoCustomInp" min="1" max="180" placeholder="min">';
+  html += '<button class="pomo-custom-btn" data-subject-action="apply-pomo-custom">Set</button>';
+  html += '</div>';
+  html += '<div class="pomo-stats-row">';
+  html += '<div class="pomo-stat"><div class="pomo-stat-val">' + pomoToday + '</div><div class="pomo-stat-label">Azi</div></div>';
+  html += '<div class="pomo-stat"><div class="pomo-stat-val">' + pomoTotal + '</div><div class="pomo-stat-label">Total</div></div>';
+  html += '<div class="pomo-stat"><div class="pomo-stat-val">' + (pomoMinTotal >= 60 ? (Math.round(pomoMinTotal/60*10)/10) + 'h' : pomoMinTotal + 'm') + '</div><div class="pomo-stat-label">Focus</div></div>';
+  html += '</div>';
+  html += '</div></div></div>';
+
+  // --- TAB: LINKURI ---
+  html += '<div class="tools-tab-panel" data-tab-panel="links">';
   html += '<div class="panel-body">';
   html += '<div class="link-add-row">';
   html += '<input id="linkName" placeholder="Nume (ex: Colab S4)">';
@@ -206,69 +227,22 @@ function renderSubjectPage(element, key, subject) {
   html += '<div id="linkList" style="display:flex;flex-direction:column;gap:6px;">' + renderLinks(key) + '</div>';
   html += '</div></div>';
 
-  // === POMODORO TIMER ===
-  const todayStr2 = new Date().toISOString().split('T')[0];
-  const pomoToday = (state.pomoLog || []).filter(s => s.date === todayStr2).length;
-  const pomoTotal = (state.pomoLog || []).length;
-  const pomoMinTotal = (state.pomoLog || []).reduce((a,s) => a + (s.minutes||0), 0);
+  html += '</div>'; // close tools-tabs-wrap
 
-  html += '<div class="panel">';
-  html += '<div class="panel-head">' + icon('timer','sm') + ' <span>Pomodoro Timer</span></div>';
-  html += '<div class="panel-body">';
-  html += '<div class="pomodoro-container">';
+  // === ADVANCED SECTION (collapsed) ===
+  html += '<details class="advanced-section anim-d4">';
+  html += '<summary class="advanced-section-summary">⚙ Avansat &amp; Resurse</summary>';
+  html += '<div class="advanced-section-body">';
 
-  // SVG ring
-  html += '<div class="pomo-ring-wrap">';
-  html += '<svg class="pomo-ring-svg" viewBox="0 0 160 160">';
-  html += '<circle class="pomo-ring-bg" cx="80" cy="80" r="70"/>';
-  html += '<circle class="pomo-ring-fill" id="pomoRingFill" cx="80" cy="80" r="70"/>';
-  html += '</svg>';
-  html += '<div class="pomo-ring-center">';
-  html += '<div class="pomo-time" id="pomoTime">25:00</div>';
-  html += '<div class="pomo-mode" id="pomoMode">Focus</div>';
-  html += '</div></div>';
+  html += renderSubjectStudyPath(key, subject, allPres, todos);
+  html += renderInteractiveLearningStudio(key, subject, allPres);
 
-  // Controls
-  html += '<div class="pomo-controls">';
-  html += '<button class="pomo-btn primary" id="pomoStartBtn" data-subject-action="toggle-pomodoro">' + icon('activity','sm') + ' Start</button>';
-  html += '<button class="pomo-btn" data-subject-action="reset-pomodoro">' + icon('arrow_left','xs') + ' Reset</button>';
-  html += '</div>';
-
-  // Presets
-  html += '<div class="pomo-presets">';
-  html += '<button class="pomo-preset active" data-subject-action="set-pomo-preset" data-pomo-minutes="25">25 min</button>';
-  html += '<button class="pomo-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="45">45 min</button>';
-  html += '<button class="pomo-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="60">60 min</button>';
-  html += '<button class="pomo-preset break-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="5" data-pomo-break="true">5 min ·pauză</button>';
-  html += '<button class="pomo-preset break-preset" data-subject-action="set-pomo-preset" data-pomo-minutes="15" data-pomo-break="true">15 min ·pauză</button>';
-  html += '</div>';
-
-  // Custom input
-  html += '<div class="pomo-custom-row">';
-  html += '<span class="pomo-custom-label">Custom:</span>';
-  html += '<input type="number" class="pomo-custom-inp" id="pomoCustomInp" min="1" max="180" placeholder="min">';
-  html += '<button class="pomo-custom-btn" data-subject-action="apply-pomo-custom">Set</button>';
-  html += '</div>';
-
-  // Stats
-  html += '<div class="pomo-stats-row">';
-  html += '<div class="pomo-stat"><div class="pomo-stat-val">' + pomoToday + '</div><div class="pomo-stat-label">Azi</div></div>';
-  html += '<div class="pomo-stat"><div class="pomo-stat-val">' + pomoTotal + '</div><div class="pomo-stat-label">Total</div></div>';
-  html += '<div class="pomo-stat"><div class="pomo-stat-val">' + (pomoMinTotal >= 60 ? (Math.round(pomoMinTotal/60*10)/10) + 'h' : pomoMinTotal + 'm') + '</div><div class="pomo-stat-label">Focus</div></div>';
-  html += '</div>';
-
-  html += '</div></div></div>';
-
-  // === PROGRESS TRACKER ===
-  html += '<div class="panel panel-full">';
+  html += '<div class="panel panel-full" style="margin-bottom:16px;">';
   html += '<div class="panel-head"><span>Progres Cursuri</span>';
   html += '<span style="font-size:.72rem;color:var(--text-muted)">click + / − pentru a actualiza</span></div>';
-  html += '<div class="panel-body">';
-  html += '<div class="progress-grid" id="progressGrid">' + renderProgress(key, subject) + '</div>';
-  html += '</div></div>';
+  html += '<div class="panel-body"><div class="progress-grid" id="progressGrid">' + renderProgress(key, subject) + '</div></div></div>';
 
-  // === FILE ORGANIZER ===
-  html += '<div class="panel panel-full">';
+  html += '<div class="panel panel-full" style="margin-bottom:16px;">';
   html += '<div class="panel-head"><span>🗂️ Organizator Fișiere</span>';
   html += '<span style="font-size:.72rem;color:var(--text-muted)">ține evidența documentelor</span></div>';
   html += '<div class="panel-body">';
@@ -280,7 +254,6 @@ function renderSubjectPage(element, key, subject) {
   html += '<div id="fileList">' + renderFileOrganizer(key) + '</div>';
   html += '</div></div>';
 
-  // === RESOURCES ===
   html += '<div class="panel panel-full">';
   html += '<div class="panel-head">' + icon('layers2','sm') + ' <span>Resurse</span></div>';
   html += '<div class="panel-body"><div class="res-list">';
@@ -291,7 +264,9 @@ function renderSubjectPage(element, key, subject) {
   });
   html += '</div></div></div>';
 
-  html += '</div></div>';
+  html += '</div></details>'; // close advanced-section
+
+  html += '</div>'; // close .anim
   element.innerHTML = html;
 
   // Setup notes autosave
@@ -576,6 +551,19 @@ function setupSubjectPageInteractions(element, key, subject) {
           actionEl.dataset.progressKey,
           parseInt(actionEl.dataset.progressDelta, 10)
         );
+        return;
+      case 'switch-tab':
+        var tabName = actionEl.dataset.tab;
+        element.querySelectorAll('.tools-tab-btn').forEach(function(btn) {
+          btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        element.querySelectorAll('.tools-tab-panel').forEach(function(panel) {
+          panel.classList.toggle('active', panel.dataset.tabPanel === tabName);
+        });
+        if (tabName === 'tutor') {
+          var cm = document.getElementById('chatMessages');
+          if (cm) cm.scrollTop = cm.scrollHeight;
+        }
         return;
       default:
         return;
