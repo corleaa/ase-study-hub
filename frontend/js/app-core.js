@@ -349,7 +349,7 @@ function loadState() {
     SUBJECTS = getSubjects();
 
     // Calculeaza streak-ul la fiecare login
-    checkAndUpdateStreak();
+    if (typeof checkAndUpdateStreak === 'function') checkAndUpdateStreak();
   } catch (e) {
     console.error('Failed to load state:', e);
   }

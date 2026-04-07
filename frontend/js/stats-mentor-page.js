@@ -2094,4 +2094,3 @@ function renderProfilePage(element) {
     }
   });
 }
-}
