@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Hub — Înveți mai bine cu AI</title>
+  <meta name="description" content="Transformă orice curs în rezumat, quiz și flashcards în 30 de secunde. Platforma AI pentru studenți care vor să înțeleagă, nu să memoreze.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #161316;
+      --bg-card:  #211d21;
+      --bg-raise: #292329;
+      --border:   rgba(255,245,236,0.08);
+      --accent:   #f29b6d;
+      --accent-h: #f6ab83;
+      --accent-m: rgba(242,155,109,0.13);
+      --accent-b: rgba(242,155,109,0.26);
+      --text:     #f5efe8;
+      --text-s:   #c6b8ad;
+      --text-m:   #8d7f75;
+      --green:    #73c9a6;
+      --blue:     #8ab8d8;
+      --purple:   #ba9ed6;
+      --r:        12px;
+      --r-sm:     8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(22, 19, 22, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-logo-dot {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-ghost {
+      padding: 8px 18px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text-s);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-ghost:hover { border-color: var(--accent-b); color: var(--text); }
+
+    .btn-primary {
+      padding: 9px 22px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--r-sm);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s, box-shadow .15s;
+      box-shadow: 0 4px 16px rgba(242,155,109,0.28);
+    }
+    .btn-primary:hover { background: var(--accent-h); box-shadow: 0 6px 22px rgba(242,155,109,0.38); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(242,155,109,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--accent-m);
+      border: 1px solid var(--accent-b);
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      max-width: 780px;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 span {
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: var(--text-s);
+      max-width: 520px;
+      margin-bottom: 40px;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 60px;
+    }
+
+    .btn-hero {
+      padding: 15px 36px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--r-sm);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 6px 24px rgba(242,155,109,0.32);
+    }
+    .btn-hero:hover { background: var(--accent-h); transform: translateY(-2px); box-shadow: 0 10px 32px rgba(242,155,109,0.42); }
+    .btn-hero:active { transform: translateY(0); }
+
+    .btn-hero-ghost {
+      padding: 15px 36px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text-s);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-hero-ghost:hover { border-color: var(--accent-b); color: var(--text); }
+
+    .hero-social-proof {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .proof-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--text-m);
+    }
+
+    .proof-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    /* ── SECTION COMMON ── */
+    section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    .section-kicker {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+
+    .section-sub {
+      color: var(--text-s);
+      font-size: 1rem;
+      max-width: 540px;
+      line-height: 1.65;
+      margin-bottom: 48px;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 28px 24px;
+      position: relative;
+      transition: border-color .2s;
+    }
+    .step-card:hover { border-color: var(--accent-b); }
+
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      background: var(--accent-m);
+      border: 1px solid var(--accent-b);
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .step-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 0.85rem;
+      color: var(--text-s);
+      line-height: 1.6;
+    }
+
+    .step-time {
+      margin-top: 14px;
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--bg-raise);
+      border-radius: 20px;
+      font-size: 0.72rem;
+      color: var(--text-m);
+    }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 24px;
+      display: flex;
+      gap: 16px;
+      transition: border-color .2s;
+    }
+    .feature-card:hover { border-color: var(--accent-b); }
+
+    .feature-icon {
+      width: 42px; height: 42px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .feature-body {}
+    .feature-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    .feature-desc {
+      font-size: 0.82rem;
+      color: var(--text-s);
+      line-height: 1.55;
+    }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 80px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--text-s);
+    }
+
+    /* ── CTA FINAL ── */
+    .cta-section {
+      text-align: center;
+      padding: 80px 24px 100px;
+      position: relative;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(circle, rgba(242,155,109,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-box {
+      max-width: 620px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid var(--accent-b);
+      border-radius: calc(var(--r) + 4px);
+      padding: 48px 40px;
+    }
+
+    .cta-box h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2rem);
+      font-weight: 800;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .cta-box p {
+      color: var(--text-s);
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 100%;
+    }
+
+    .footer-brand {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-m);
+    }
+
+    .footer-note {
+      font-size: 0.75rem;
+      color: var(--text-m);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 24px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-cta .btn-ghost { display: none; }
+      .hero { padding: 100px 20px 60px; }
+      .steps { grid-template-columns: 1fr; gap: 12px; }
+      .features-grid { grid-template-columns: 1fr; gap: 12px; }
+      .stats-row { grid-template-columns: 1fr; gap: 12px; }
+      section { padding: 60px 20px; }
+      .cta-box { padding: 32px 24px; }
+      footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .anim-1 { animation: fadeUp .6s ease both; }
+    .anim-2 { animation: fadeUp .6s .1s ease both; }
+    .anim-3 { animation: fadeUp .6s .2s ease both; }
+    .anim-4 { animation: fadeUp .6s .3s ease both; }
+    .anim-5 { animation: fadeUp .6s .4s ease both; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-dot">✦</div>
+      Study Hub
+    </a>
+    <div class="nav-cta">
+      <a href="/app" class="btn-ghost">Intră în cont</a>
+      <a href="/app" class="btn-primary">Începe gratuit</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge anim-1">✦ AI-powered learning</div>
+    <h1 class="anim-2">
+      Înveți mai bine<br><span>cu AI</span>
+    </h1>
+    <p class="hero-sub anim-3">
+      Transformă orice curs în rezumat, quiz și flashcards în 30 de secunde.
+      Pentru studenți care vor să înțeleagă, nu să memoreze.
+    </p>
+    <div class="hero-actions anim-4">
+      <a href="/app" class="btn-hero">Începe gratuit →</a>
+      <a href="#cum-functioneaza" class="btn-hero-ghost">Cum funcționează</a>
+    </div>
+    <div class="hero-social-proof anim-5">
+      <span class="proof-item"><span class="proof-dot"></span>Fără card de credit</span>
+      <span class="proof-item"><span class="proof-dot"></span>Funcționează cu orice PDF</span>
+      <span class="proof-item"><span class="proof-dot"></span>Rezumat în 30 secunde</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- HOW IT WORKS -->
+  <section id="cum-functioneaza">
+    <div class="section-kicker">Cum funcționează</div>
+    <div class="section-title">Trei pași. Zero bătaie de cap.</div>
+    <p class="section-sub">De la PDF la material de studiu complet, fără să pierzi timp cu formatarea sau cu notițele.</p>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-title">Încarci materialul</div>
+        <p class="step-desc">PDF, DOCX, PPTX sau text lipit direct. Orice format, orice materie.</p>
+        <span class="step-time">⚡ instant</span>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-title">AI generează rezumatul</div>
+        <p class="step-desc">Claude analizează conținutul și îl structurează în idei clare, pe niveluri de înțelegere.</p>
+        <span class="step-time">⏱ ~30 secunde</span>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-title">Înveți și testezi</div>
+        <p class="step-desc">Din același material generezi quiz-uri, flashcards și discuți cu AI Tutorul dacă ceva nu e clar.</p>
+        <span class="step-time">📈 progres real</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-kicker">Funcționalități</div>
+    <div class="section-title">Tot ce ai nevoie pentru o sesiune reușită</div>
+    <p class="section-sub">Nu înlocuiește studiul — îl face mai eficient.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(242,155,109,0.13);">✦</div>
+        <div class="feature-body">
+          <div class="feature-title">Rezumate AI</div>
+          <p class="feature-desc">Din orice curs, AI-ul extrage ideile esențiale structurate pe niveluri — simplu, conceptual, tehnic.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(138,184,216,0.13);">🧠</div>
+        <div class="feature-body">
+          <div class="feature-title">Quiz Mode</div>
+          <p class="feature-desc">Generezi grile din materialul tău. Testezi ce știi cu adevărat, nu ce crezi că știi.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(115,201,166,0.13);">🃏</div>
+        <div class="feature-body">
+          <div class="feature-title">Flashcards</div>
+          <p class="feature-desc">Sistem spaced repetition generat automat. Memorezi mai repede, uiți mai greu.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(186,158,214,0.13);">💬</div>
+        <div class="feature-body">
+          <div class="feature-title">AI Tutor</div>
+          <p class="feature-desc">Ai o întrebare despre un concept? Tutorul știe contextul materiei tale și îți explică exact unde ești blocat.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(233,187,116,0.13);">📅</div>
+        <div class="feature-body">
+          <div class="feature-title">Calendar Sesiune</div>
+          <p class="feature-desc">Countdown pentru examene, planificare pe materii și urmărirea progresului pe tot semestrul.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(121,201,195,0.13);">📊</div>
+        <div class="feature-body">
+          <div class="feature-title">Finance Lab</div>
+          <p class="feature-desc">Simulări interactive pentru materii economice — risc, modele cantitative, scenarii de criză.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- STATS -->
+  <section>
+    <div style="max-width:1100px; margin:0 auto;">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val">30s</div>
+          <div class="stat-label">De la PDF la rezumat structurat</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">6+</div>
+          <div class="stat-label">Formate de fișiere acceptate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">100%</div>
+          <div class="stat-label">Bazat pe materialul tău, nu pe internet</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <div class="cta-section">
+    <div class="cta-box">
+      <h2>Gata să înveți altfel?</h2>
+      <p>Creează-ți contul gratuit și generează primul tău rezumat în mai puțin de un minut.</p>
+      <a href="/app" class="btn-hero" style="display:inline-block;">Creează cont gratuit →</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="footer-brand">✦ Study Hub</span>
+    <span class="footer-note">Construit pentru studenți care vor mai mult.</span>
+  </footer>
+
+</body>
+</html>
