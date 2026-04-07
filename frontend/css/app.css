@@ -6419,3 +6419,270 @@ details[open] .detail-chevron {
   .tools-tab-btn { padding: 7px 10px; font-size: 0.75rem; }
   .hero-gen-btn { width: 100%; justify-content: center; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DAILY SESSION — Widget + Card Review UI
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Dashboard Widget ─────────────────────────────────────────── */
+.ds-widget {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, var(--accent-muted) 0%, var(--bg-raised) 100%);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.ds-widget::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+.ds-widget-guest  { border-color: var(--border); background: var(--bg-raised); }
+.ds-widget-guest::before { display: none; }
+.ds-widget-done   { border-color: rgba(16,217,160,0.25); background: linear-gradient(135deg, var(--green-muted) 0%, var(--bg-raised) 100%); }
+.ds-widget-done::before { background: linear-gradient(90deg, var(--green), transparent); }
+
+.ds-widget-icon {
+  width: 42px; height: 42px;
+  background: var(--accent-muted);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.ds-widget-done .ds-widget-icon { background: var(--green-muted); }
+
+.ds-widget-body { flex: 1; min-width: 0; }
+.ds-widget-title {
+  font-family: var(--font-display);
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.ds-widget-sub {
+  font-size: .82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.ds-streak-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  background: var(--amber-muted);
+  border: 1px solid rgba(240,180,91,0.3);
+  border-radius: 20px;
+  font-size: .7rem; font-weight: 700;
+  color: var(--amber);
+}
+
+.ds-widget-cta {
+  padding: 10px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, transform .1s;
+  flex-shrink: 0;
+}
+.ds-widget-cta:hover { background: var(--accent-hover, var(--accent)); filter: brightness(1.1); }
+.ds-widget-cta:active { transform: scale(.97); }
+.ds-widget-cta.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.ds-widget-cta.secondary:hover { border-color: var(--accent-border); color: var(--accent); filter: none; }
+
+@media (max-width: 600px) {
+  .ds-widget { flex-wrap: wrap; }
+  .ds-widget-cta { width: 100%; text-align: center; }
+}
+
+/* ── Session Page ─────────────────────────────────────────────── */
+.ds-session {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 0 40px;
+}
+
+.ds-progress-bar {
+  height: 4px;
+  background: var(--bg-overlay);
+  border-radius: 2px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.ds-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width .4s ease;
+}
+
+.ds-counter {
+  text-align: center;
+  font-size: .78rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+}
+
+.ds-subject-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  font-size: .72rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ── Flip Card ────────────────────────────────────────────────── */
+.ds-card-wrap {
+  perspective: 1000px;
+  margin: 0 auto 20px;
+}
+
+.ds-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-height: 240px;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 32px 28px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.18);
+  transition: transform .05s;
+}
+.ds-card.flipped {
+  border-color: var(--accent-border);
+  background: linear-gradient(160deg, var(--accent-muted) 0%, var(--bg-raised) 100%);
+}
+
+.ds-card-label {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.ds-card-text {
+  font-size: 1.08rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+}
+
+.ds-card-front,
+.ds-card-back {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.ds-card-back { display: none; }
+
+.ds-reveal-btn {
+  padding: 10px 24px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .15s;
+  align-self: center;
+}
+.ds-reveal-btn:hover { filter: brightness(1.1); }
+
+/* ── Answer Buttons ───────────────────────────────────────────── */
+.ds-answer-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  align-self: stretch;
+}
+
+.ds-ans-btn {
+  flex: 1;
+  min-width: 90px;
+  padding: 12px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+.ds-ans-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.ds-ans-fail { border-color: rgba(239,69,101,.4); color: var(--red); }
+.ds-ans-fail:hover { background: var(--red-muted); border-color: var(--red); }
+
+.ds-ans-hard { border-color: rgba(240,180,91,.4); color: var(--amber); }
+.ds-ans-hard:hover { background: var(--amber-muted); border-color: var(--amber); }
+
+.ds-ans-good { border-color: rgba(16,217,160,.4); color: var(--green); }
+.ds-ans-good:hover { background: var(--green-muted); border-color: var(--green); }
+
+/* ── Session Complete ─────────────────────────────────────────── */
+.ds-complete {
+  text-align: center;
+  padding: 40px 20px;
+}
+.ds-complete-emoji { font-size: 3.5rem; margin-bottom: 16px; }
+.ds-complete-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+.ds-complete-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.ds-stat { text-align: center; }
+.ds-stat-val {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.ds-stat-label {
+  font-size: .72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-top: 4px;
+}
+.ds-complete-msg {
+  font-size: .9rem;
+  color: var(--text-secondary);
+  max-width: 360px;
+  margin: 0 auto;
+  line-height: 1.55;
+}

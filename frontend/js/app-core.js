@@ -404,6 +404,10 @@ function unlock() {
   try { renderSidebar(); } catch(e) {}
   try { renderPage(); } catch(e) {}
   try { renderBottomNav(); } catch(e) {}
+  // Load today's learning session from API (only when logged in)
+  setTimeout(function() {
+    try { if (typeof loadTodaySession === 'function') loadTodaySession(); } catch(e) {}
+  }, 400);
   setTimeout(function() {
     try {
       if (!state.lastStudyDate || state.lastStudyDate !== new Date().toISOString().split('T')[0]) {
@@ -720,7 +724,12 @@ function setupAppShellInteractions() {
       case 'drawer-import-ase': closeSubjectsDrawer(); importASETemplate(); return;
       case 'drawer-nav-tab': closeSubjectsDrawer(); navigateTo(actionEl.dataset.navTab); return;
       case 'open-auth-modal': openAuthModal(); return;
-      default: return;
+      default:
+        // Delegate to daily-session handler if available
+        if (typeof handleDailySessionAction === 'function') {
+          if (handleDailySessionAction(action, actionEl)) return;
+        }
+        return;
     }
   });
 
@@ -850,7 +859,11 @@ function renderPage() {
   // Reset subject theme
   resetSubjectTheme();
 
-  if (state.tab === 'dashboard') {
+  if (state.tab === 'daily-session') {
+    title.textContent = 'Sesiunea de azi';
+    if (typeof renderDailySessionPage === 'function') renderDailySessionPage(page);
+    else page.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+  } else if (state.tab === 'dashboard') {
     title.textContent = 'Pagina principală';
     renderDashboard(page);
   } else if (state.tab === 'calendar') {

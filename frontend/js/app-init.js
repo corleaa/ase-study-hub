@@ -164,6 +164,10 @@ async function submitAuth() {
     // Re-render to reflect logged-in state
     try { renderSidebar(); } catch(e) {}
     try { renderPage(); } catch(e) {}
+    // Load daily session after login
+    setTimeout(function() {
+      try { if (typeof loadTodaySession === 'function') loadTodaySession(); } catch(e) {}
+    }, 300);
   } catch (e) {
     if (errEl) { errEl.textContent = 'Eroare de conexiune cu serverul.'; errEl.style.display = 'block'; }
   } finally {

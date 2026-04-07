@@ -236,6 +236,11 @@ function renderDashboard(element) {
     html += '</div>';
   }
 
+  // ── DAILY SESSION WIDGET ─────────────────────
+  if (typeof renderDailySessionWidget === 'function') {
+    html += renderDailySessionWidget();
+  }
+
   const hour = new Date().getHours();
   const greet = hour < 12 ? 'Bun venit în sesiunea de studiu de azi' : hour < 18 ? 'Continuă sesiunea cu claritate' : 'Închide ziua cu o recapitulare bună';
   const streak = state.streak || 0;
