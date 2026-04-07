@@ -156,6 +156,7 @@ async function submitAuth() {
     }
     window.__shAccessToken = data.accessToken;
     closeAuthModal();
+    hideLanding();
     updateAuthUI(data.user);
     // Compatibilitate cu state vechi
     if (window.state) window.state.apiKey = 'backend';
@@ -195,8 +196,42 @@ document.addEventListener('click', function(e) {
 
 window.addEventListener('sh:session-expired', handleSessionExpired);
 
+// ── Landing overlay helpers ───────────────────────────────────────
+function showLanding() {
+  var overlay = document.getElementById('landingOverlay');
+  if (overlay) overlay.style.display = 'block';
+}
+
+function hideLanding() {
+  var overlay = document.getElementById('landingOverlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity .25s';
+    setTimeout(function() { overlay.style.display = 'none'; }, 260);
+  }
+}
+
+function setupLandingButtons() {
+  function openRegister() { hideLanding(); openAuthModal(); switchAuthTab('register'); }
+  function openLogin()    { hideLanding(); openAuthModal(); switchAuthTab('login'); }
+
+  var ids = ['landingRegisterBtn', 'landingHeroRegisterBtn', 'landingCtaBtn'];
+  ids.forEach(function(id) {
+    var btn = document.getElementById(id);
+    if (btn) btn.addEventListener('click', openRegister);
+  });
+  var loginBtn = document.getElementById('landingLoginBtn');
+  if (loginBtn) loginBtn.addEventListener('click', openLogin);
+
+  var scrollBtn = document.getElementById('landingScrollBtn');
+  if (scrollBtn) scrollBtn.addEventListener('click', function() {
+    var target = document.getElementById('landingHowItWorks');
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
 // ── On page load: try to restore session via HttpOnly cookie ─────
-// If no valid session → treat as guest (app stays visible)
+// If no valid session → show landing page
 (async function() {
   try {
     var res = await fetch('/api/auth/refresh', {
@@ -221,13 +256,19 @@ window.addEventListener('sh:session-expired', handleSessionExpired);
       } catch(e) {}
       if (window.state) window.state.apiKey = 'backend';
       if (window.saveState) window.saveState();
+      // Logged in — go straight to app
+      try { unlock(); } catch(e) {}
     } else {
-      // No valid session — guest mode (app already visible)
+      // No valid session — show landing page
       updateAuthUI(null);
+      showLanding();
+      setupLandingButtons();
+      try { unlock(); } catch(e) {} // unlock app in background (behind landing)
     }
   } catch(e) {
     updateAuthUI(null);
+    showLanding();
+    setupLandingButtons();
+    try { unlock(); } catch(e) {}
   }
-  // Always unlock/render the app (it's visible for everyone)
-  try { unlock(); } catch(e) {}
 })();

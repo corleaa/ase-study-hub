@@ -144,13 +144,6 @@ if (fs.existsSync(FRONTEND_DIR)) {
       return res.status(404).json({ error: 'Not found.' });
     }
 
-    // Serve landing page at root
-    const isRoot = req.path === '/' || req.path === '';
-    const landingPath = path.join(FRONTEND_DIR, 'landing.html');
-    if (isRoot && fs.existsSync(landingPath)) {
-      return res.sendFile(landingPath);
-    }
-
     const htmlPath = path.join(FRONTEND_DIR, 'index.html');
     try {
       let html = fs.readFileSync(htmlPath, 'utf8');
