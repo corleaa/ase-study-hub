@@ -845,6 +845,7 @@ function closeSubjectsDrawer() {
 function renderPage() {
   const page = document.getElementById('pageContent');
   const title = document.getElementById('topbarTitle');
+  if (!page || !title) return;
 
   // Reset subject theme
   resetSubjectTheme();
