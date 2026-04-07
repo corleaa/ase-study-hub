@@ -13,6 +13,11 @@
 window.__learningToday = null;        // { due_cards, due_count, est_minutes, streak, level }
 window.__reviewSession = null;        // { cards, idx, correct, total }
 
+// Safe icon wrapper — icon() is defined in stats-mentor-page.js (loaded after)
+function dsIcon(name, size) {
+  try { return typeof icon === 'function' ? icon(name, size) : ''; } catch(e) { return ''; }
+}
+
 // ─────────────────────────────────────────────────────────────────
 // LOAD — fetch today's session from API
 // ─────────────────────────────────────────────────────────────────
@@ -53,7 +58,7 @@ function renderDailySessionWidget() {
   if (!user) {
     // Guest — CTA to sign in
     return '<div class="ds-widget ds-widget-guest" id="dailySessionWidget">'
-      + '<div class="ds-widget-icon">' + icon('brain', 'sm') + '</div>'
+      + '<div class="ds-widget-icon">' + dsIcon('brain', 'sm') + '</div>'
       + '<div class="ds-widget-body">'
       + '<div class="ds-widget-title">Sistemul tău de studiu zilnic</div>'
       + '<div class="ds-widget-sub">Conectează-te pentru a activa spaced repetition, streak și progresul tău real.</div>'
@@ -66,7 +71,7 @@ function renderDailySessionWidget() {
     // Logged in, no cards due
     var streakVal = (today && today.streak) ? today.streak.current_streak : (state.streak || 0);
     return '<div class="ds-widget ds-widget-done" id="dailySessionWidget">'
-      + '<div class="ds-widget-icon" style="color:var(--green)">' + icon('check_circle', 'sm') + '</div>'
+      + '<div class="ds-widget-icon" style="color:var(--green)">' + dsIcon('check_circle', 'sm') + '</div>'
       + '<div class="ds-widget-body">'
       + '<div class="ds-widget-title">Sesiunea de azi: completă ' + (streakVal >= 1 ? '🔥' : '') + '</div>'
       + '<div class="ds-widget-sub">Nu ai carduri scadente. Revino mâine sau adaugă materie nouă.</div>'
@@ -79,11 +84,11 @@ function renderDailySessionWidget() {
   var estMin     = today.est_minutes || Math.max(1, Math.round(dueCount * 0.5));
   var streakVal2 = today.streak ? today.streak.current_streak : (state.streak || 0);
   var streakHtml = streakVal2 > 0
-    ? '<span class="ds-streak-badge">' + icon('trending','xs') + ' ' + streakVal2 + ' zile</span>'
+    ? '<span class="ds-streak-badge">' + dsIcon('trending','xs') + ' ' + streakVal2 + ' zile</span>'
     : '';
 
   return '<div class="ds-widget" id="dailySessionWidget">'
-    + '<div class="ds-widget-icon">' + icon('cards', 'sm') + '</div>'
+    + '<div class="ds-widget-icon">' + dsIcon('cards', 'sm') + '</div>'
     + '<div class="ds-widget-body">'
     + '<div class="ds-widget-title">Sesiunea de azi' + (streakHtml ? ' &nbsp;' + streakHtml : '') + '</div>'
     + '<div class="ds-widget-sub">'
