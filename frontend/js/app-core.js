@@ -881,6 +881,12 @@ function renderPage() {
     title.textContent = 'Finance Lab';
     renderFinanceLab(page);
   } else if (state.tab === 'profile') {
+    if (!window.__shUser) {
+      navigateTo('dashboard');
+      if (typeof openAuthModal === 'function') openAuthModal();
+      if (typeof switchAuthTab === 'function') switchAuthTab('register');
+      return;
+    }
     title.textContent = 'Contul meu';
     renderProfilePage(page);
   } else if (state.tab === 'settings') {
