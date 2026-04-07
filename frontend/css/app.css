@@ -6151,6 +6151,39 @@ details[open] .detail-chevron {
 }
 
 /* =============================================
+   PROFILE PAGE — AI Personality cards
+   ============================================= */
+.ai-persona-card {
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  transition: border-color .15s, background .15s;
+}
+.ai-persona-card:hover { border-color: var(--accent-border); }
+.ai-persona-card.active {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+/* Add subject button in sidebar */
+.nav-item-add-subject {
+  border: 1px dashed var(--border) !important;
+  color: var(--text-muted) !important;
+  font-size: .8rem !important;
+  margin: 2px 0 !important;
+}
+.nav-item-add-subject:hover {
+  border-color: var(--accent-border) !important;
+  color: var(--accent) !important;
+}
+
+/* =============================================
    SUBJECT PAGE REDESIGN — Action-first layout
    ============================================= */
 

@@ -162,51 +162,14 @@ function resetSubjectTheme() {
 // =============================================
 // Materiile default sunt ASE — dar pot fi complet șterse/înlocuite
 const DEFAULT_SUBJECTS = {
-  map: {
-    icon: 'puzzle', name: 'MAP', full: 'Metode și Abordări în Programare',
-    desc: 'Design patterns, OOP avansat, principii SOLID', themeId: 'violet',
+  demo: {
+    icon: 'graduation', name: 'Materie Demo', full: 'Cum funcționează Study Hub',
+    desc: 'Exemplu — încarcă un PDF și generează primul rezumat', themeId: 'violet',
     resources: [
-      { tag: 'slides', label: 'Curs 1-6: Design Patterns' },
-      { tag: 'slides', label: 'Curs 7-12: Architectural Patterns' },
-      { tag: 'lab', label: 'Lab: Singleton, Factory, Observer' }
+      { tag: 'slides', label: 'Exemplu: Curs 1 — Introducere' }
     ],
-    systemPrompt: 'Ești un profesor expert în Design Patterns și OOP. Explică cu analogii din viața reală și exemple Java/Python. Răspunde în română.'
-  },
-  python: {
-    icon: 'cpu', name: 'Python & ML', full: 'Python și Machine Learning',
-    desc: 'Pandas, Scikit-learn, Neural Networks', themeId: 'green',
-    resources: [
-      { tag: 'slides', label: 'Curs: Intro Python + NumPy' },
-      { tag: 'lab', label: 'Lab: Regression & Classification' }
-    ],
-    systemPrompt: 'Ești un profesor expert în Python și Machine Learning. Explică cu cod Python clar. Răspunde în română.'
-  },
-  banking: {
-    icon: 'building', name: 'Banking', full: 'Sisteme și Operațiuni Bancare',
-    desc: 'Produse bancare, risk management, Basel III', themeId: 'blue',
-    resources: [
-      { tag: 'slides', label: 'Curs 1-8: Produse & Servicii bancare' },
-      { tag: 'slides', label: 'Curs 9-12: Managementul riscului' }
-    ],
-    systemPrompt: 'Ești un profesor de Banking de la ASE. Explică cu exemple din piața românească. Răspunde în română.'
-  },
-  econometrie: {
-    icon: 'trending', name: 'Econometrie', full: 'Econometrie',
-    desc: 'Regresie liniară, serii de timp, modele panel', themeId: 'amber',
-    resources: [
-      { tag: 'slides', label: 'Curs: OLS & Ipoteze clasice' },
-      { tag: 'lab', label: 'Lab: EViews — Estimare & Testare' }
-    ],
-    systemPrompt: 'Ești un profesor de Econometrie de la ASE. Explică cu formule clare și interpretări economice. Răspunde în română.'
-  },
-  mccp: {
-    icon: 'layers', name: 'MCCP', full: 'Modele Cantitative în Controlul Performanței',
-    desc: 'Modele de rating, scoring, analiză cantitativă', themeId: 'teal',
-    resources: [
-      { tag: 'slides', label: 'Curs: Modele de Scoring & Rating' },
-      { tag: 'lab', label: 'Lab: Construcția unui model de rating' }
-    ],
-    systemPrompt: 'Ești expert în MCCP, modele de rating, Basel IRB, Z-Score Altman, regresie logistică. Răspunde în română.'
+    systemPrompt: 'Ești un profesor AI. Explică conceptele clar și cu exemple practice. Răspunde în română.',
+    isDemo: true
   }
 };
 
@@ -338,6 +301,19 @@ let state = {
   mentorHistory: [],      // istoricul conversatiilor cu AI Mentor
   subjectGroups: [],      // grupari materii: [{id, name, keys:[]}]
   pomoLog: [],            // log sesiuni pomodoro [{date, minutes, type}]
+  // === v9 features ===
+  aiPersonality: {        // configurare personalitate AI
+    tone: 'friendly',     // 'friendly' | 'formal' | 'concise'
+    detail: 'medium',     // 'brief' | 'medium' | 'detailed'
+    examples: true,       // include exemple practice
+    language: 'ro'        // limba de răspuns
+  },
+  userProfile: {          // profilul utilizatorului
+    displayName: '',
+    faculty: '',
+    year: '',
+    bio: ''
+  }
 };
 
 let presSlidePositions = {};
@@ -363,6 +339,8 @@ function loadState() {
     if (!state.mentorHistory) state.mentorHistory = [];
     if (!state.subjectGroups) state.subjectGroups = [];
     if (!state.pomoLog) state.pomoLog = [];
+    if (!state.aiPersonality) state.aiPersonality = { tone: 'friendly', detail: 'medium', examples: true, language: 'ro' };
+    if (!state.userProfile) state.userProfile = { displayName: '', faculty: '', year: '', bio: '' };
     if (state.xp === undefined) state.xp = 0;
     if (state.level === undefined) state.level = 1;
     if (state.streak === undefined) state.streak = 0;
@@ -586,22 +564,24 @@ function renderSidebar() {
   html += '</div>';
 
   html += '<div class="nav-section">General</div>';
-  html += navBtn('dashboard', 'home', 'Dashboard');
+  html += navBtn('dashboard', 'home', 'Pagina principală');
   html += navBtn('calendar', 'calendar', 'Calendar', getUpcomingExamBadge());
-  html += navBtn('achievements', 'trophy', 'Realizări & XP', getAchievementBadge());
 
-  html += '<div class="nav-section">Materii' + (isFirstRun() ? ' <span style="font-size:.6rem;background:var(--amber-muted);color:var(--amber);padding:1px 5px;border-radius:4px;vertical-align:middle;">demo</span>' : '') + '</div>';
+  html += '<div class="nav-section">Materii</div>';
 
-  if (Object.keys(subjects).length === 0) {
-    html += '<button class="nav-item" data-app-action="open-subject-manager" style="border:1px dashed var(--border);margin:4px 10px;width:calc(100% - 20px);justify-content:center;color:var(--text-muted);">';
-    html += icon('plus', 'sm') + ' Adaugă prima materie</button>';
-  } else {
+  // Buton "Adaugă o materie" mereu vizibil deasupra listei
+  html += '<button class="nav-item nav-item-add-subject" data-app-action="open-subject-manager">';
+  html += '<span class="ni-icon">' + icon('plus', 'sm') + '</span> Adaugă o materie</button>';
+
+  if (Object.keys(subjects).length > 0) {
     for (const [key, subject] of Object.entries(subjects)) {
       const todoCount = (state.todos[key] || []).filter(t => !t.done).length;
       const presCount = getAllPresentations(key).length;
       const theme = getSubjectTheme(subject);
+      const isDemoSubj = subject.isDemo;
       html += '<button class="nav-item ' + (state.tab === key ? 'active' : '') + '" data-nav-tab="' + key + '" style="' + (state.tab === key ? '--accent:' + theme.accent + ';--accent-muted:' + theme.muted + ';--accent-border:' + theme.border : '') + '">';
       html += '<span class="ni-icon">' + subjectIcon(subject, 'sm') + '</span> ' + subject.name;
+      if (isDemoSubj) html += '<span class="ni-badge" style="background:var(--amber-muted);color:var(--amber);font-size:.6rem;">demo</span>';
       if (todoCount) html += '<span class="ni-badge">' + todoCount + '</span>';
       if (presCount) html += '<span class="ni-badge" style="background:var(--green-muted);color:var(--green)">' + presCount + '</span>';
       html += '</button>';
@@ -620,6 +600,7 @@ function renderSidebar() {
   html += navBtn('stats', 'chart', 'Statistici Avansate');
   html += navBtn('mentor', 'robot', 'AI Mentor');
   html += '<div class="nav-section">Cont</div>';
+  html += navBtn('profile', 'user', 'Contul meu', getAchievementBadge());
   html += navBtn('settings', 'settings', 'Setări & API Key');
 
   nav.innerHTML = html;
@@ -869,7 +850,7 @@ function renderPage() {
   resetSubjectTheme();
 
   if (state.tab === 'dashboard') {
-    title.textContent = 'Study Hub';
+    title.textContent = 'Pagina principală';
     renderDashboard(page);
   } else if (state.tab === 'calendar') {
     title.textContent = 'Calendar Sesiune';
@@ -898,6 +879,9 @@ function renderPage() {
   } else if (state.tab === 'finance') {
     title.textContent = 'Finance Lab';
     renderFinanceLab(page);
+  } else if (state.tab === 'profile') {
+    title.textContent = 'Contul meu';
+    renderProfilePage(page);
   } else if (state.tab === 'settings') {
     title.textContent = 'Setări & Date';
     renderSettingsPage(page);

@@ -1935,3 +1935,163 @@ function checkAndNotify() {
     }
   }
 }
+
+// =============================================
+// PROFILE PAGE — Contul meu
+// =============================================
+function renderProfilePage(element) {
+  if (!element) return;
+  const p = state.userProfile || {};
+  const ai = state.aiPersonality || {};
+  const user = window.__shUser || {};
+  const achievements = state.achievements || [];
+  const xp = state.xp || 0;
+  const level = state.level || 1;
+  const streak = state.streak || 0;
+
+  const toneOptions = [
+    { val: 'friendly', label: '😊 Prietenos', desc: 'Explicații calde, cu analogii și încurajări' },
+    { val: 'formal',   label: '🎓 Formal',    desc: 'Ton academic, precis, fără digresiuni' },
+    { val: 'concise',  label: '⚡ Concis',    desc: 'Răspunsuri scurte, direct la subiect' }
+  ];
+  const detailOptions = [
+    { val: 'brief',    label: 'Scurt',    desc: 'Ideia principală, fără detalii extra' },
+    { val: 'medium',   label: 'Mediu',    desc: 'Echilibrat — concept + 1-2 exemple' },
+    { val: 'detailed', label: 'Detaliat', desc: 'Explicație completă, toate straturile' }
+  ];
+
+  let html = '<div class="anim">';
+
+  // ── HEADER ──
+  html += '<div class="dash-hero" style="padding:28px 20px 20px">';
+  html += '<div style="display:flex;align-items:center;gap:14px;">';
+  html += '<div style="width:52px;height:52px;border-radius:50%;background:var(--accent-muted);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.4rem;">👤</div>';
+  html += '<div>';
+  html += '<div style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;">' + escapeHtml(p.displayName || user.email || 'Utilizator') + '</div>';
+  html += '<div style="font-size:.8rem;color:var(--text-muted);">' + escapeHtml(user.email || '') + '</div>';
+  html += '</div></div></div>';
+
+  // ── PROFIL ──
+  html += '<div class="quiz-gen-section">';
+  html += '<h3 style="margin-bottom:16px;">' + icon('user','sm') + ' Profilul tău</h3>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
+  html += '<div><label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Nume afișat</label><input class="todo-inp" id="profileName" placeholder="ex: Andrei" value="' + escapeHtml(p.displayName||'') + '" style="width:100%;"></div>';
+  html += '<div><label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Facultate</label><input class="todo-inp" id="profileFaculty" placeholder="ex: ASE București" value="' + escapeHtml(p.faculty||'') + '" style="width:100%;"></div>';
+  html += '<div><label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">An de studiu</label><input class="todo-inp" id="profileYear" placeholder="ex: Anul 2" value="' + escapeHtml(p.year||'') + '" style="width:100%;"></div>';
+  html += '</div>';
+  html += '<button class="summary-gen-btn" data-profile-action="save-profile" style="margin-top:4px;">' + icon('check','xs') + ' Salvează profilul</button>';
+  html += '<span id="profileSaved" style="display:none;margin-left:10px;font-size:.8rem;color:var(--green);">✓ Salvat</span>';
+  html += '</div>';
+
+  // ── AI PERSONALITY ──
+  html += '<div class="quiz-gen-section">';
+  html += '<h3 style="margin-bottom:6px;">' + icon('robot','sm') + ' Cum să explice AI-ul</h3>';
+  html += '<p style="font-size:.82rem;color:var(--text-muted);margin-bottom:20px;">Configurează stilul AI Tutorului și al rezumatelor generate pentru toate materiile.</p>';
+
+  // Ton
+  html += '<div style="margin-bottom:18px;">';
+  html += '<div style="font-size:.78rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Ton</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+  toneOptions.forEach(function(opt) {
+    const active = (ai.tone || 'friendly') === opt.val;
+    html += '<button class="ai-persona-card ' + (active ? 'active' : '') + '" data-profile-action="set-tone" data-val="' + opt.val + '">';
+    html += '<div style="font-weight:600;font-size:.88rem;margin-bottom:3px;">' + opt.label + '</div>';
+    html += '<div style="font-size:.72rem;color:var(--text-muted);line-height:1.4;">' + opt.desc + '</div>';
+    html += '</button>';
+  });
+  html += '</div></div>';
+
+  // Nivel detaliu
+  html += '<div style="margin-bottom:18px;">';
+  html += '<div style="font-size:.78rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Nivel de detaliu</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+  detailOptions.forEach(function(opt) {
+    const active = (ai.detail || 'medium') === opt.val;
+    html += '<button class="ai-persona-card ' + (active ? 'active' : '') + '" data-profile-action="set-detail" data-val="' + opt.val + '">';
+    html += '<div style="font-weight:600;font-size:.88rem;margin-bottom:3px;">' + opt.label + '</div>';
+    html += '<div style="font-size:.72rem;color:var(--text-muted);line-height:1.4;">' + opt.desc + '</div>';
+    html += '</button>';
+  });
+  html += '</div></div>';
+
+  // Exemple
+  html += '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-surface);border-radius:var(--radius-sm);border:1px solid var(--border);">';
+  html += '<input type="checkbox" id="aiExamples" ' + (ai.examples !== false ? 'checked' : '') + ' style="accent-color:var(--accent);width:16px;height:16px;">';
+  html += '<label for="aiExamples" style="font-size:.88rem;cursor:pointer;"><strong>Include exemple practice</strong> <span style="font-size:.78rem;color:var(--text-muted);">— AI-ul adaugă scenarii reale la fiecare concept</span></label>';
+  html += '</div>';
+
+  html += '<button class="summary-gen-btn" data-profile-action="save-ai-personality" style="margin-top:16px;">' + icon('sparkle','xs') + ' Salvează configurarea AI</button>';
+  html += '<span id="aiPersonalitySaved" style="display:none;margin-left:10px;font-size:.8rem;color:var(--green);">✓ Salvat</span>';
+  html += '</div>';
+
+  // ── REALIZĂRI ──
+  html += '<div class="quiz-gen-section">';
+  html += '<h3 style="margin-bottom:4px;">' + icon('trophy','sm') + ' Realizări & XP</h3>';
+  html += '<div style="display:flex;gap:12px;margin:14px 0;flex-wrap:wrap;">';
+  html += '<div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 20px;text-align:center;min-width:80px;"><div style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--accent);">' + xp + '</div><div style="font-size:.72rem;color:var(--text-muted);">XP Total</div></div>';
+  html += '<div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 20px;text-align:center;min-width:80px;"><div style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--accent);">' + level + '</div><div style="font-size:.72rem;color:var(--text-muted);">Nivel</div></div>';
+  html += '<div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 20px;text-align:center;min-width:80px;"><div style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--accent);">' + streak + '</div><div style="font-size:.72rem;color:var(--text-muted);">Zile streak</div></div>';
+  html += '<div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 20px;text-align:center;min-width:80px;"><div style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--amber);">' + achievements.length + '</div><div style="font-size:.72rem;color:var(--text-muted);">Realizări</div></div>';
+  html += '</div>';
+
+  if (achievements.length > 0) {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    achievements.forEach(function(ach) {
+      html += '<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--amber-muted);border:1px solid rgba(233,187,116,.3);border-radius:20px;font-size:.78rem;">';
+      html += '<span>' + (ach.icon || '🏆') + '</span><span>' + escapeHtml(ach.name || ach) + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div style="font-size:.82rem;color:var(--text-muted);">Nicio realizare încă — începe să folosești platforma pentru a debloca primele badge-uri.</div>';
+  }
+  html += '</div>';
+
+  html += '</div>';
+  element.innerHTML = html;
+
+  // ── INTERACȚIUNI ──
+  element.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-profile-action]');
+    if (!btn) return;
+    var action = btn.dataset.profileAction;
+
+    if (action === 'set-tone') {
+      if (!state.aiPersonality) state.aiPersonality = {};
+      state.aiPersonality.tone = btn.dataset.val;
+      element.querySelectorAll('[data-profile-action="set-tone"]').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.val === btn.dataset.val);
+      });
+      saveState();
+    }
+
+    if (action === 'set-detail') {
+      if (!state.aiPersonality) state.aiPersonality = {};
+      state.aiPersonality.detail = btn.dataset.val;
+      element.querySelectorAll('[data-profile-action="set-detail"]').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.val === btn.dataset.val);
+      });
+      saveState();
+    }
+
+    if (action === 'save-profile') {
+      if (!state.userProfile) state.userProfile = {};
+      state.userProfile.displayName = document.getElementById('profileName').value.trim();
+      state.userProfile.faculty     = document.getElementById('profileFaculty').value.trim();
+      state.userProfile.year        = document.getElementById('profileYear').value.trim();
+      saveState();
+      var s = document.getElementById('profileSaved');
+      if (s) { s.style.display = 'inline'; setTimeout(function() { s.style.display = 'none'; }, 2000); }
+    }
+
+    if (action === 'save-ai-personality') {
+      if (!state.aiPersonality) state.aiPersonality = {};
+      state.aiPersonality.examples = document.getElementById('aiExamples').checked;
+      saveState();
+      var s2 = document.getElementById('aiPersonalitySaved');
+      if (s2) { s2.style.display = 'inline'; setTimeout(function() { s2.style.display = 'none'; }, 2000); }
+      showToast('Configurare AI salvată!');
+    }
+  });
+}
+}
