@@ -859,7 +859,11 @@ function renderPage() {
   // Reset subject theme
   resetSubjectTheme();
 
-  if (state.tab === 'daily-session') {
+  if (state.tab === 'session') {
+    title.textContent = 'Sesiune de învățare';
+    if (typeof renderLearningSessionPage === 'function') renderLearningSessionPage(page);
+    else page.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+  } else if (state.tab === 'daily-session') {
     title.textContent = 'Sesiunea de azi';
     if (typeof renderDailySessionPage === 'function') renderDailySessionPage(page);
     else page.innerHTML = '<div class="empty-state">Se încarcă...</div>';

@@ -115,6 +115,7 @@ app.use('/api/ai',       require('./routes/ai'));
 app.use('/api/upload',   require('./routes/upload'));
 app.use('/api/subjects', require('./routes/subjects'));
 app.use('/api/learning', require('./routes/learning'));
+app.use('/api/concepts', require('./routes/concepts'));
 
 // ── CSP violation reports ─────────────────────────────────────────
 app.post('/api/csp-report',

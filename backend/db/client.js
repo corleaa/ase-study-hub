@@ -161,6 +161,58 @@ function initDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- ── ADAPTIVE RECALL ENGINE ───────────────────────────────────
+
+    -- concepts: key concepts extracted from documents by AI
+    CREATE TABLE IF NOT EXISTS concepts (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      document_id  INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+      subject_id   INTEGER REFERENCES subjects(id) ON DELETE CASCADE,
+      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title        TEXT    NOT NULL,
+      importance   TEXT    NOT NULL DEFAULT 'medium' CHECK(importance IN ('high','medium','low')),
+      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- concept_questions: 3 question types per concept
+    CREATE TABLE IF NOT EXISTS concept_questions (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      concept_id    INTEGER NOT NULL REFERENCES concepts(id) ON DELETE CASCADE,
+      type          TEXT    NOT NULL CHECK(type IN ('free_recall','logic','application')),
+      question_text TEXT    NOT NULL,
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- concept_answers: user answers with AI scoring
+    CREATE TABLE IF NOT EXISTS concept_answers (
+      id             INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      concept_id     INTEGER NOT NULL REFERENCES concepts(id) ON DELETE CASCADE,
+      question_id    INTEGER NOT NULL REFERENCES concept_questions(id) ON DELETE CASCADE,
+      answer_text    TEXT    NOT NULL,
+      score          INTEGER NOT NULL DEFAULT 0,
+      confidence     INTEGER,
+      ai_feedback    TEXT,
+      ai_explanation TEXT,
+      created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- concept_progress: per-concept SRS + difficulty tracking
+    CREATE TABLE IF NOT EXISTS concept_progress (
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      concept_id       INTEGER NOT NULL REFERENCES concepts(id) ON DELETE CASCADE,
+      difficulty_level TEXT    NOT NULL DEFAULT 'medium' CHECK(difficulty_level IN ('easy','medium','hard')),
+      success_rate     REAL    NOT NULL DEFAULT 0.0,
+      total_attempts   INTEGER NOT NULL DEFAULT 0,
+      correct_attempts INTEGER NOT NULL DEFAULT 0,
+      ease_factor      REAL    NOT NULL DEFAULT 2.5,
+      interval_days    INTEGER NOT NULL DEFAULT 1,
+      next_review_date DATE    NOT NULL DEFAULT (date('now')),
+      last_seen        DATETIME,
+      UNIQUE(user_id, concept_id)
+    );
+
     -- ── INDEXES ──────────────────────────────────────────────────
 
     CREATE INDEX IF NOT EXISTS idx_ai_calls_user_feature
@@ -195,6 +247,21 @@ function initDb() {
 
     CREATE INDEX IF NOT EXISTS idx_xp_events_user
       ON xp_events(user_id, created_at);
+
+    CREATE INDEX IF NOT EXISTS idx_concepts_user
+      ON concepts(user_id, created_at);
+
+    CREATE INDEX IF NOT EXISTS idx_concepts_document
+      ON concepts(document_id, user_id);
+
+    CREATE INDEX IF NOT EXISTS idx_concept_questions_concept
+      ON concept_questions(concept_id);
+
+    CREATE INDEX IF NOT EXISTS idx_concept_answers_user
+      ON concept_answers(user_id, created_at);
+
+    CREATE INDEX IF NOT EXISTS idx_concept_progress_review
+      ON concept_progress(user_id, next_review_date);
   `);
 
   // Migrate existing databases: add role column if it doesn't exist
@@ -714,6 +781,177 @@ function getSubjectStats(userId) {
   });
 }
 
+// ─────────────────────────────────────────────────────────────────
+// ADAPTIVE RECALL ENGINE
+// ─────────────────────────────────────────────────────────────────
+
+function createConceptsBatch(userId, subjectId, documentId, concepts) {
+  const insertConcept = getDb().prepare(
+    "INSERT INTO concepts (user_id, subject_id, document_id, title, importance) VALUES (?, ?, ?, ?, ?)"
+  );
+  const insertQuestion = getDb().prepare(
+    "INSERT INTO concept_questions (concept_id, type, question_text) VALUES (?, ?, ?)"
+  );
+  const insertAll = getDb().transaction((items) => {
+    const ids = [];
+    for (const c of items) {
+      const r = insertConcept.run(userId, subjectId || null, documentId || null, c.title, c.importance || 'medium');
+      ids.push(r.lastInsertRowid);
+      for (const q of (c.questions || [])) {
+        insertQuestion.run(r.lastInsertRowid, q.type, q.question_text);
+      }
+    }
+    return ids;
+  });
+  return insertAll(concepts);
+}
+
+function getConceptsByUser(userId) {
+  return getDb()
+    .prepare('SELECT * FROM concepts WHERE user_id = ? ORDER BY importance DESC, created_at DESC')
+    .all(userId);
+}
+
+function getDueConcepts(userId, limit = 20) {
+  return getDb()
+    .prepare(`
+      SELECT c.*, cp.difficulty_level, cp.success_rate, cp.total_attempts,
+             cp.ease_factor, cp.interval_days, cp.next_review_date, cp.last_seen
+      FROM concepts c
+      LEFT JOIN concept_progress cp ON cp.concept_id = c.id AND cp.user_id = c.user_id
+      WHERE c.user_id = ?
+        AND (cp.next_review_date IS NULL OR cp.next_review_date <= date('now'))
+      ORDER BY
+        CASE c.importance WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END ASC,
+        cp.success_rate ASC NULLS FIRST
+      LIMIT ?
+    `)
+    .all(userId, limit);
+}
+
+function getConceptStats(userId) {
+  const total = getDb()
+    .prepare('SELECT COUNT(*) AS cnt FROM concepts WHERE user_id = ?')
+    .get(userId)?.cnt ?? 0;
+
+  const dueToday = getDb()
+    .prepare(`
+      SELECT COUNT(*) AS cnt
+      FROM concepts c
+      LEFT JOIN concept_progress cp ON cp.concept_id = c.id AND cp.user_id = c.user_id
+      WHERE c.user_id = ?
+        AND (cp.next_review_date IS NULL OR cp.next_review_date <= date('now'))
+    `)
+    .get(userId)?.cnt ?? 0;
+
+  const weak = getDb()
+    .prepare(`
+      SELECT COUNT(*) AS cnt FROM concept_progress
+      WHERE user_id = ? AND success_rate < 0.5 AND total_attempts >= 2
+    `)
+    .get(userId)?.cnt ?? 0;
+
+  return { total, dueToday, weak };
+}
+
+function getQuestionsForConcept(conceptId) {
+  return getDb()
+    .prepare('SELECT * FROM concept_questions WHERE concept_id = ? ORDER BY type ASC')
+    .all(conceptId);
+}
+
+function getPrimaryQuestion(conceptId) {
+  return getDb()
+    .prepare("SELECT * FROM concept_questions WHERE concept_id = ? AND type = 'free_recall' LIMIT 1")
+    .get(conceptId)
+    || getDb()
+    .prepare('SELECT * FROM concept_questions WHERE concept_id = ? LIMIT 1')
+    .get(conceptId);
+}
+
+function saveConceptAnswer(userId, conceptId, questionId, { answerText, score, confidence, aiFeedback, aiExplanation }) {
+  const result = getDb()
+    .prepare(`
+      INSERT INTO concept_answers (user_id, concept_id, question_id, answer_text, score, confidence, ai_feedback, ai_explanation)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    .run(userId, conceptId, questionId, answerText, score, confidence || null, aiFeedback || null, aiExplanation || null);
+  return result.lastInsertRowid;
+}
+
+function updateConceptProgress(userId, conceptId, score) {
+  const isCorrect = score >= 60;
+  const existing = getDb()
+    .prepare('SELECT * FROM concept_progress WHERE user_id = ? AND concept_id = ?')
+    .get(userId, conceptId);
+
+  if (!existing) {
+    // First attempt — create progress row
+    const interval = isCorrect ? 1 : 0;
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + interval);
+    const nextReview = nextDate.toISOString().split('T')[0];
+    getDb()
+      .prepare(`
+        INSERT INTO concept_progress
+          (user_id, concept_id, difficulty_level, success_rate, total_attempts, correct_attempts,
+           ease_factor, interval_days, next_review_date, last_seen)
+        VALUES (?, ?, ?, ?, 1, ?, 2.5, ?, ?, datetime('now'))
+      `)
+      .run(
+        userId, conceptId,
+        isCorrect ? 'medium' : 'hard',
+        isCorrect ? 1.0 : 0.0,
+        isCorrect ? 1 : 0,
+        interval,
+        nextReview
+      );
+    return;
+  }
+
+  const total    = existing.total_attempts + 1;
+  const correct  = existing.correct_attempts + (isCorrect ? 1 : 0);
+  const rate     = correct / total;
+
+  // Adaptive difficulty
+  let diff = existing.difficulty_level;
+  if (rate > 0.8 && total >= 3) diff = 'easy';
+  else if (rate < 0.5 && total >= 2) diff = 'hard';
+  else diff = 'medium';
+
+  // SRS interval (simplified SM-2)
+  let ease   = existing.ease_factor;
+  let iDays  = existing.interval_days;
+
+  if (isCorrect) {
+    ease  = Math.max(1.3, Math.min(2.5, ease + 0.1));
+    iDays = iDays === 0 ? 1 : Math.round(iDays * ease);
+    iDays = Math.min(iDays, 30);
+  } else {
+    ease  = Math.max(1.3, ease - 0.2);
+    iDays = 0; // review again today
+  }
+
+  const nextDate = new Date();
+  nextDate.setDate(nextDate.getDate() + iDays);
+  const nextReview = nextDate.toISOString().split('T')[0];
+
+  getDb()
+    .prepare(`
+      UPDATE concept_progress
+      SET difficulty_level  = ?,
+          success_rate      = ?,
+          total_attempts    = ?,
+          correct_attempts  = ?,
+          ease_factor       = ?,
+          interval_days     = ?,
+          next_review_date  = ?,
+          last_seen         = datetime('now')
+      WHERE user_id = ? AND concept_id = ?
+    `)
+    .run(diff, rate, total, correct, ease, iDays, nextReview, userId, conceptId);
+}
+
 module.exports = {
   initDb,
   getDb,
@@ -764,4 +1002,13 @@ module.exports = {
   // Stats
   getReadinessScore,
   getSubjectStats,
+  // Adaptive recall engine
+  createConceptsBatch,
+  getConceptsByUser,
+  getDueConcepts,
+  getConceptStats,
+  getQuestionsForConcept,
+  getPrimaryQuestion,
+  saveConceptAnswer,
+  updateConceptProgress,
 };

@@ -212,6 +212,122 @@ document.addEventListener('wheel', function(e) {
 }, { passive: false });
 
 function renderDashboard(element) {
+  // Show skeleton while fetching concept stats
+  element.innerHTML = '<div class="anim"><div class="dash-skeleton"></div></div>';
+
+  authFetch('/api/concepts/stats')
+    .then(function(res) { return res.json(); })
+    .then(function(stats) {
+      _renderDashboardWithStats(element, stats);
+    })
+    .catch(function() {
+      _renderDashboardWithStats(element, null);
+    });
+}
+
+function _renderDashboardWithStats(element, stats) {
+  const hasContent   = stats && stats.total > 0;
+  const dueToday     = (stats && stats.dueToday) || 0;
+  const weakCount    = (stats && stats.weak) || 0;
+  const streak       = (stats && stats.streak) || 0;
+  const level        = (stats && stats.level) || { level: 1, xp: 0, label: 'Beginner', progress: 0 };
+
+  let html = '<div class="anim">';
+
+  if (!hasContent) {
+    // ── STATE 1: new user — upload to start ──────────────────────
+    html += `
+      <div class="dash-hero dash-hero--new">
+        <div class="dash-hero-content">
+          <div class="dash-hero-eyebrow">🧠 Adaptive Learning</div>
+          <h1 class="dash-hero-title">Începe să înveți</h1>
+          <p class="dash-hero-sub">Încarcă un document și Study Hub extrage automat conceptele cheie pe care le va testa adaptiv.</p>
+        </div>
+
+        <div class="dash-upload-card" id="dash-upload-zone">
+          <div class="dash-upload-icon">📄</div>
+          <div class="dash-upload-title">Adaugă primul tău document</div>
+          <div class="dash-upload-sub">PDF, DOCX sau text — AI extrage concepte și generează întrebări</div>
+          <button class="dash-cta-primary" data-nav-tab="study-tools">Start learning →</button>
+        </div>
+
+        <div class="dash-how-it-works">
+          <div class="dash-step"><span class="dash-step-n">1</span><span>Încarci document</span></div>
+          <div class="dash-step-arrow">→</div>
+          <div class="dash-step"><span class="dash-step-n">2</span><span>AI extrage concepte</span></div>
+          <div class="dash-step-arrow">→</div>
+          <div class="dash-step"><span class="dash-step-n">3</span><span>Ești testat adaptiv</span></div>
+          <div class="dash-step-arrow">→</div>
+          <div class="dash-step"><span class="dash-step-n">4</span><span>Revizuiești ce nu știi</span></div>
+        </div>
+      </div>`;
+  } else {
+    // ── STATE 2: returning user — show due concepts ───────────────
+    const dueLabel  = dueToday === 1 ? '1 concept' : `${dueToday} concepte`;
+    const weakLabel = weakCount > 0 ? `${weakCount} concepte slabe` : null;
+    const streakTxt = streak > 0 ? `🔥 ${streak} zile consecutiv` : '';
+
+    html += `
+      <div class="dash-hero dash-hero--returning">
+        <div class="dash-hero-content">
+          ${streakTxt ? `<div class="dash-hero-eyebrow">${streakTxt}</div>` : ''}
+          <h1 class="dash-hero-title">
+            ${dueToday > 0
+              ? `Ai <span class="dash-due-num">${dueLabel}</span> de revizuit azi`
+              : 'Ești la zi cu revizuirile! 🎉'}
+          </h1>
+          ${weakLabel ? `<p class="dash-hero-sub">${weakLabel} au nevoie de atenție extra.</p>` : ''}
+          <div class="dash-level-row">
+            <span>Nivel ${level.level} · ${level.label}</span>
+            <div class="dash-xp-bar"><div class="dash-xp-fill" style="width:${level.progress || 0}%"></div></div>
+            <span>${level.xp} XP</span>
+          </div>
+        </div>
+
+        <div class="dash-session-card">
+          ${dueToday > 0 ? `
+            <div class="dash-session-count">
+              <span class="dash-session-num">${dueToday}</span>
+              <span class="dash-session-label">concepte de revizuit</span>
+            </div>
+            ${weakCount > 0 ? `<div class="dash-weak-hint">${weakCount} concepte slabe incluse</div>` : ''}
+            <button class="dash-cta-primary" data-nav-tab="session">Continuă să înveți →</button>
+          ` : `
+            <div class="dash-done-msg">✅ Toate conceptele sunt la zi</div>
+            <div class="dash-done-sub">Revino mâine pentru noile recapitulări</div>
+          `}
+          <button class="dash-cta-ghost" data-nav-tab="study-tools">+ Încarcă document nou</button>
+        </div>
+      </div>`;
+  }
+
+  // ── COMPACT TOOLS (mereu vizibil, dar discret) ────────────────
+  const dueFC = getFlashcardsDueCount ? getFlashcardsDueCount() : 0;
+  html += `
+    <div class="dash-tools-row">
+      <div class="dash-tool-item" data-nav-tab="quiz">
+        <span>🧩</span><span>Quiz</span>
+      </div>
+      <div class="dash-tool-item" data-nav-tab="flashcards">
+        <span>🃏</span><span>Flashcards${dueFC > 0 ? ' <b>'+dueFC+'</b>' : ''}</span>
+      </div>
+      <div class="dash-tool-item" data-nav-tab="mentor">
+        <span>🤖</span><span>AI Mentor</span>
+      </div>
+      <div class="dash-tool-item" data-nav-tab="stats">
+        <span>📊</span><span>Statistici</span>
+      </div>
+      <div class="dash-tool-item" data-nav-tab="finance">
+        <span>📈</span><span>Finance Lab</span>
+      </div>
+    </div>`;
+
+  html += '</div>';
+  element.innerHTML = html;
+  setupDashboardPageInteractions(element);
+}
+
+function _renderDashboardOld(element) {
   const subjects = getSubjects();
   const hasSubjects = Object.keys(subjects).length > 0;
 
@@ -449,7 +565,7 @@ function renderDashboard(element) {
   html += '</div>';
   element.innerHTML = html;
   setupDashboardPageInteractions(element);
-}
+}  // end _renderDashboardOld
 
 function setupDashboardPageInteractions(element) {
   if (element.__dashboardInteractionsBound) return;
