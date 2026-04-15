@@ -64,6 +64,16 @@ async function loginUser(page, email, password) {
     return !m || m.style.display === 'none' || m.style.display === '';
   }, { timeout: 8000 });
   await page.waitForTimeout(1000);
+  // Close onboarding overlay if it appeared (expected for new users in each fresh test)
+  await page.evaluate(() => {
+    const overlay = document.getElementById('onboardingOverlay');
+    if (overlay && overlay.classList.contains('open')) {
+      overlay.classList.remove('open');
+      overlay.style.display = 'none';
+    }
+    // Also mark onboarding complete so it doesn't reopen
+    try { localStorage.setItem('sh_onboarding_complete', '1'); } catch(e) {}
+  });
 }
 
 // ════════════════════════════════════════════════════════════════
