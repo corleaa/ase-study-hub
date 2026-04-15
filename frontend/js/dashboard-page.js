@@ -302,7 +302,7 @@ function _renderDashboardWithStats(element, stats) {
   }
 
   // ── COMPACT TOOLS (mereu vizibil, dar discret) ────────────────
-  const dueFC = getFlashcardsDueCount ? getFlashcardsDueCount() : 0;
+  const dueFC = (typeof getFlashcardsDueCount === 'function') ? getFlashcardsDueCount() : 0;
   html += `
     <div class="dash-tools-row">
       <div class="dash-tool-item" data-nav-tab="quiz">

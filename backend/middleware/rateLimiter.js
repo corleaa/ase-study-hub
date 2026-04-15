@@ -60,10 +60,10 @@ const FEATURE_LIMITS = {
 
 // ── 1. IP-level limiter for auth routes ──────────────────────────
 // Protects login / register from brute force.
-// 10 attempts per 15 minutes per IP.
+// 10 attempts per 15 minutes per IP (higher in dev/test).
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: process.env.NODE_ENV === 'production' ? 10 : 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please wait and try again.' },

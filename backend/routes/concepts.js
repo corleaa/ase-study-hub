@@ -25,6 +25,7 @@ const {
   getTotalXp,
   getXpLevel,
   getStreak,
+  getDb,
 } = require('../db/client');
 
 // ─────────────────────────────────────────────────────────────────
@@ -216,7 +217,6 @@ router.post('/answer', authenticate, async (req, res) => {
     if (!question) return res.status(404).json({ error: 'Question not found.' });
 
     // Get concept title for context
-    const { getDb } = require('../db/client');
     const concept = getDb()
       .prepare('SELECT title FROM concepts WHERE id = ? AND user_id = ?')
       .get(concept_id, userId);

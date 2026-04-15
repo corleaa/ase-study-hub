@@ -91,12 +91,19 @@ app.use((req, res, next) => {
 });
 
 // ── CORS ──────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3001')
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3001,http://127.0.0.1:3001')
   .split(',').map(o => o.trim());
+
+// Always allow 127.0.0.1 equivalents of localhost origins (for Playwright/test environments)
+const loopbackOrigins = new Set(allowedOrigins);
+allowedOrigins.forEach(o => {
+  loopbackOrigins.add(o.replace('localhost', '127.0.0.1'));
+  loopbackOrigins.add(o.replace('127.0.0.1', 'localhost'));
+});
 
 app.use(cors({
   origin(origin, cb) {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin || loopbackOrigins.has(origin)) return cb(null, true);
     logger.warn('CORS blocked', { origin });
     cb(new Error('CORS: origin not allowed'));
   },

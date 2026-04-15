@@ -24,7 +24,7 @@
      ============================================= -->
 <!-- ── AUTH MODAL ────────────────────────────────────────────────── -->
 <!-- Opens via openAuthModal(), not shown automatically on load      -->
-<div id="authModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+<div id="authModal" style="display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:380px;background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:32px;position:relative;box-shadow:var(--shadow);">
     <!-- Close button -->
     <button data-app-action="close-auth-modal" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;line-height:1;padding:4px;">✕</button>
@@ -38,12 +38,12 @@
     <div id="authError" style="display:none;background:var(--red-muted);border:1px solid rgba(239,69,101,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;color:var(--red);font-size:.85rem;"></div>
 
     <div style="display:flex;gap:8px;margin-bottom:20px;">
-      <button id="authTabLogin" data-app-action="switch-auth-tab" data-auth-tab="login" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:.87rem;font-family:inherit;">Autentificare</button>
-      <button id="authTabRegister" data-app-action="switch-auth-tab" data-auth-tab="register" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.87rem;font-family:inherit;">Cont nou</button>
+      <button id="authTabLogin" data-testid="auth-tab-login" data-app-action="switch-auth-tab" data-auth-tab="login" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:.87rem;font-family:inherit;">Autentificare</button>
+      <button id="authTabRegister" data-testid="auth-tab-register" data-app-action="switch-auth-tab" data-auth-tab="register" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.87rem;font-family:inherit;">Cont nou</button>
     </div>
     <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);font-size:.9rem;margin-bottom:12px;box-sizing:border-box;font-family:inherit;">
     <input id="authPassword" type="password" placeholder="Parolă (min. 8 caractere)" autocomplete="current-password" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);font-size:.9rem;margin-bottom:16px;box-sizing:border-box;font-family:inherit;">
-    <button id="authSubmitBtn" data-app-action="submit-auth" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;">Intră în cont</button>
+    <button id="authSubmitBtn" data-testid="auth-submit-btn" data-app-action="submit-auth" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;">Intră în cont</button>
 
     <p style="text-align:center;color:var(--text-muted);font-size:.76rem;margin-top:14px;">Fără abonament. Cont gratuit pentru acces extins.</p>
   </div>
@@ -163,8 +163,8 @@
       Study Hub
     </div>
     <div id="lo-nav-btns">
-      <button class="lo-ghost" id="landingLoginBtn">Intră în cont</button>
-      <button class="lo-primary" id="landingRegisterBtn">Începe gratuit</button>
+      <button class="lo-ghost" id="landingLoginBtn" data-testid="landing-login-btn">Intră în cont</button>
+      <button class="lo-primary" id="landingRegisterBtn" data-testid="landing-register-btn">Începe gratuit</button>
     </div>
   </div>
 
@@ -174,7 +174,7 @@
     <h1 id="lo-h1" class="lo-anim-2">Înveți mai bine<br><em>cu AI</em></h1>
     <p id="lo-sub" class="lo-anim-3">Transformă orice curs în rezumat, quiz și flashcards în 30 de secunde. Pentru studenți care vor să înțeleagă, nu să memoreze.</p>
     <div id="lo-actions" class="lo-anim-4">
-      <button class="lo-btn-big" id="landingHeroRegisterBtn">Începe gratuit →</button>
+      <button class="lo-btn-big" id="landingHeroRegisterBtn" data-testid="landing-hero-register-btn">Începe gratuit →</button>
       <button class="lo-btn-outline" id="landingScrollBtn">Cum funcționează ↓</button>
     </div>
     <div id="lo-proof">

@@ -168,6 +168,14 @@ async function submitAuth() {
     setTimeout(function() {
       try { if (typeof loadTodaySession === 'function') loadTodaySession(); } catch(e) {}
     }, 300);
+    // Show onboarding for new users (after landing is hidden)
+    setTimeout(function() {
+      try {
+        if (typeof shouldShowOnboarding === 'function' && shouldShowOnboarding()) {
+          if (typeof openOnboarding === 'function') openOnboarding();
+        }
+      } catch(e) {}
+    }, 800);
   } catch (e) {
     if (errEl) { errEl.textContent = 'Eroare de conexiune cu serverul.'; errEl.style.display = 'block'; }
   } finally {

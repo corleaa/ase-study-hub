@@ -418,6 +418,8 @@ function unlock() {
   }, 1200);
   setTimeout(function() {
     try {
+      // Only show onboarding when the user is authenticated
+      if (!window.__shUser) return;
       if (shouldShowOnboarding()) {
         openOnboarding();
       } else {
