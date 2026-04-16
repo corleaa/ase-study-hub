@@ -87,20 +87,19 @@ async function _submitAnswer(answerText, conceptId, questionId) {
   }
 }
 
-async function _submitConfidence(confidence, conceptId, questionId) {
-  // Post confidence update silently (best-effort)
-  try {
-    await authFetch('/api/concepts/answer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        concept_id:  conceptId,
-        question_id: questionId,
-        answer_text: _lastResult?._answerText || '(reviewed)',
-        confidence,
-      }),
-    });
-  } catch {}
+function _submitConfidence(confidence, conceptId, questionId) {
+  // Post confidence update silently in background — fire and forget, don't block navigation
+  authFetch('/api/concepts/answer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      concept_id:  conceptId,
+      question_id: questionId,
+      answer_text: _lastResult?._answerText || '(reviewed)',
+      confidence,
+    }),
+  }).catch(() => {});
+  // Advance immediately — don't wait for the API response
   _advanceToNext();
 }
 

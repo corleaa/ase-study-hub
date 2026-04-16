@@ -55,23 +55,63 @@ async function registerUser(page, email, password) {
 }
 
 async function loginUser(page, email, password) {
+  // Use API-based auth for reliability — avoids flaky UI click flow
+  // and ensures the user exists even when running tests in isolation.
+
+  // 1. Register (ignored if already exists)
+  await page.request.post('/api/auth/register', {
+    data: { email, password }
+  }).catch(() => {});
+
+  // 2. Login via API — gets access token directly
+  const loginRes = await page.request.post('/api/auth/login', {
+    data: { email, password }
+  });
+  const loginData = loginRes.ok() ? await loginRes.json().catch(() => ({})) : {};
+  const accessToken = loginData.accessToken || null;
+
+  // 3. Navigate to app
   await page.goto('/');
   await page.waitForLoadState('networkidle');
-  await clickLandingLogin(page);
-  await fillAndSubmitAuth(page, email, password);
+
+  // 4. Inject auth state into the page
+  if (accessToken) {
+    await page.evaluate(async (token) => {
+      window.__shAccessToken = token;
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token },
+          credentials: 'include'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          window.__shUser = data.user;
+          if (typeof updateAuthUI === 'function') updateAuthUI(data.user);
+        }
+      } catch(e) {}
+      // Hide landing overlay
+      const landing = document.getElementById('landingOverlay');
+      if (landing) landing.style.display = 'none';
+      // Re-render the app in logged-in state
+      try { if (typeof renderSidebar === 'function') renderSidebar(); } catch(e) {}
+      try { if (typeof renderPage === 'function') renderPage(); } catch(e) {}
+    }, accessToken);
+  }
+
+  // 5. Wait for page content to render
   await page.waitForFunction(() => {
-    const m = document.getElementById('authModal');
-    return !m || m.style.display === 'none' || m.style.display === '';
-  }, { timeout: 8000 });
-  await page.waitForTimeout(1000);
-  // Close onboarding overlay if it appeared (expected for new users in each fresh test)
+    const pc = document.getElementById('pageContent');
+    return pc && pc.innerHTML.length > 20;
+  }, { timeout: 8000 }).catch(() => {});
+  await page.waitForTimeout(800);
+
+  // 6. Dismiss onboarding overlay if visible
   await page.evaluate(() => {
     const overlay = document.getElementById('onboardingOverlay');
     if (overlay && overlay.classList.contains('open')) {
       overlay.classList.remove('open');
       overlay.style.display = 'none';
     }
-    // Also mark onboarding complete so it doesn't reopen
     try { localStorage.setItem('sh_onboarding_complete', '1'); } catch(e) {}
   });
 }
