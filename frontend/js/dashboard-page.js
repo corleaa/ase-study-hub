@@ -253,6 +253,111 @@ function _renderWindowTool(title, sub, colorToken, iconName, navTab) {
     + '</div>';
 }
 
+// ── Collect all user-generated presentations across subjects ──
+function _getAllRecentSummaries() {
+  var result = [];
+  var subjects = getSubjects();
+  var pres = state.presentations || {};
+  for (var key in pres) {
+    var arr = pres[key] || [];
+    // getAllPresentations returns [...builtins, ...userGenerated]
+    // so user-generated idx in getAllPresentations = builtins.length + userIdx
+    var builtinCount = (typeof BUILTIN_PRESENTATIONS !== 'undefined' && BUILTIN_PRESENTATIONS[key])
+      ? BUILTIN_PRESENTATIONS[key].length : 0;
+    arr.forEach(function(p, userIdx) {
+      result.push({ key: key, idx: builtinCount + userIdx, pres: p, subject: subjects[key] });
+    });
+  }
+  // Sort by newest first (presentations don't have timestamps, so use array order reversed)
+  result.reverse();
+  return result;
+}
+
+// ── Recent summaries section for the returning user dashboard ──
+function _renderRecentSummaries() {
+  var all = _getAllRecentSummaries();
+  if (!all.length) return '';
+
+  var recent = all.slice(0, 3);
+  var html = '<div class="dash-summaries-section">';
+  html += '<div class="dash-section-header">'
+    + '<span class="dash-section-label">' + icon('layers2','xs') + ' Rezumate recente</span>'
+    + '<button class="dash-section-link" data-nav-tab="study-tools">Toate →</button>'
+    + '</div>';
+
+  recent.forEach(function(item) {
+    var subj = item.subject;
+    var p = item.pres;
+    // Build preview text from slides
+    var previewText = '';
+    if (p.slides && p.slides.length) {
+      var firstSlide = p.slides[0];
+      // Strip HTML tags
+      previewText = (firstSlide.content || '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 220);
+      if (previewText.length === 220) previewText += '…';
+    }
+    // Build full content (all slides as sections)
+    var fullHtml = '';
+    if (p.slides && p.slides.length) {
+      p.slides.forEach(function(slide) {
+        fullHtml += '<div class="dsum-slide">';
+        if (slide.tag) fullHtml += '<div class="dsum-slide-tag">' + escapeHtml(slide.tag) + '</div>';
+        if (slide.title) fullHtml += '<div class="dsum-slide-title">' + escapeHtml(slide.title) + '</div>';
+        fullHtml += '<div class="dsum-slide-body">' + (slide.content || '') + '</div>';
+        fullHtml += '</div>';
+      });
+    }
+
+    var cardId = 'dsum_' + item.key + '_' + item.idx;
+    var subjLabel = subj ? (subj.icon || '') + ' ' + subj.name : item.key;
+
+    html += '<div class="dash-summary-card" id="' + cardId + '" data-dsum-key="' + escapeHtml(item.key) + '" data-dsum-idx="' + item.idx + '">';
+    html += '<div class="dsum-head" data-dsum-toggle="' + cardId + '">';
+    html += '<span class="dsum-subject-badge">' + subjLabel + '</span>';
+    html += '<span class="dsum-title">' + escapeHtml(p.title || 'Rezumat') + '</span>';
+    html += '<span class="dsum-chevron" id="' + cardId + '_chev">▼</span>';
+    html += '</div>';
+    if (previewText) {
+      html += '<p class="dsum-preview" id="' + cardId + '_prev">' + escapeHtml(previewText) + '</p>';
+    }
+    html += '<div class="dsum-body" id="' + cardId + '_body" style="display:none">' + fullHtml + '</div>';
+    html += '<div class="dsum-actions" id="' + cardId + '_acts" style="display:none">';
+    html += '<button class="dsum-open-full" data-dsum-open-key="' + escapeHtml(item.key) + '" data-dsum-open-idx="' + item.idx + '">' + icon('layers2','xs') + ' Deschide complet</button>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+// ── Quick AI Mentor widget for the dashboard ──
+function _renderDashMentorWidget() {
+  var history = state.mentorHistory || [];
+  var lastMsg = history.filter(function(m) { return m.role === 'assistant'; }).slice(-1)[0];
+  var html = '<div class="dash-mentor-widget">';
+  html += '<div class="dash-section-header" style="margin-bottom:10px;">'
+    + '<span class="dash-section-label">' + icon('robot','xs') + ' AI Mentor</span>'
+    + '<button class="dash-section-link" data-nav-tab="mentor">Deschide chat →</button>'
+    + '</div>';
+  if (lastMsg) {
+    html += '<div class="dmw-last-reply">'
+      + '<div class="dmw-last-label">Ultimul răspuns</div>'
+      + '<div class="dmw-last-text">' + formatAIText(lastMsg.content.substring(0, 180) + (lastMsg.content.length > 180 ? '…' : '')) + '</div>'
+      + '</div>';
+  }
+  html += '<div class="dmw-input-row">';
+  html += '<input class="dmw-input" id="dashMentorInput" type="text" placeholder="Pune o întrebare rapidă…" autocomplete="off">';
+  html += '<button class="dmw-send-btn" id="dashMentorSend">' + icon('robot','xs') + ' Trimite</button>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
 function _renderDashboardWithStats(element, stats) {
   const hasContent   = stats && stats.total > 0;
   const dueToday     = (stats && stats.dueToday) || 0;
@@ -384,6 +489,10 @@ function _renderDashboardWithStats(element, stats) {
         <span>📈</span><span>Finance Lab</span>
       </div>
     </div>`;
+
+    // Recent summaries + mentor widget
+    html += _renderRecentSummaries();
+    html += _renderDashMentorWidget();
   }
 
   html += '</div>';
@@ -642,6 +751,16 @@ function _renderDashboardOld(element) {
   setupDashboardPageInteractions(element);
 }  // end _renderDashboardOld
 
+function _sendDashMentorMessage() {
+  var input = document.getElementById('dashMentorInput');
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) { navigateTo('mentor'); return; }
+  state.pendingMentorMessage = text;
+  saveState();
+  navigateTo('mentor');
+}
+
 function setupDashboardPageInteractions(element) {
   if (element.__dashboardInteractionsBound) return;
   element.__dashboardInteractionsBound = true;
@@ -673,6 +792,49 @@ function setupDashboardPageInteractions(element) {
     const groupEl = e.target.closest('[data-group-edit]');
     if (groupEl) {
       editGroupName(groupEl.getAttribute('data-group-edit'));
+    }
+
+    // ── Summary card toggle ──
+    const toggleEl = e.target.closest('[data-dsum-toggle]');
+    if (toggleEl) {
+      var cardId = toggleEl.getAttribute('data-dsum-toggle');
+      var body = document.getElementById(cardId + '_body');
+      var acts = document.getElementById(cardId + '_acts');
+      var prev = document.getElementById(cardId + '_prev');
+      var chev = document.getElementById(cardId + '_chev');
+      var card = document.getElementById(cardId);
+      if (!body) return;
+      var isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      if (acts) acts.style.display = isOpen ? 'none' : 'flex';
+      if (prev) prev.style.display = isOpen ? '' : 'none';
+      if (chev) chev.textContent = isOpen ? '▼' : '▲';
+      if (card) card.classList.toggle('dsum-open', !isOpen);
+      return;
+    }
+
+    // ── Open full presentation viewer ──
+    const openFullEl = e.target.closest('[data-dsum-open-key]');
+    if (openFullEl) {
+      var key = openFullEl.getAttribute('data-dsum-open-key');
+      var idx = parseInt(openFullEl.getAttribute('data-dsum-open-idx'), 10);
+      if (typeof openPresentationViewer === 'function') {
+        openPresentationViewer(key, idx);
+      }
+      return;
+    }
+
+    // ── Dashboard quick mentor send ──
+    const mentorSendEl = e.target.closest('#dashMentorSend');
+    if (mentorSendEl) {
+      _sendDashMentorMessage();
+      return;
+    }
+  });
+
+  element.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.target.id === 'dashMentorInput') {
+      _sendDashMentorMessage();
     }
   });
 

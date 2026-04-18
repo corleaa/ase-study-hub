@@ -1114,6 +1114,20 @@ function renderMentorPage(element) {
     const msgs = document.getElementById('mentorMessages');
     if (msgs) msgs.scrollTop = msgs.scrollHeight;
   }, 50);
+
+  // Auto-send if triggered from dashboard quick mentor widget
+  if (state.pendingMentorMessage) {
+    var pendingText = state.pendingMentorMessage;
+    state.pendingMentorMessage = null;
+    saveState();
+    setTimeout(function() {
+      var inp = document.getElementById('mentorInput');
+      if (inp) {
+        inp.value = pendingText;
+        sendMentorMessage();
+      }
+    }, 150);
+  }
 }
 
 function setupStatsMentorInteractions(element) {
