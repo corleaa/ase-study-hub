@@ -914,6 +914,17 @@ function renderPage() {
   } else if (state.tab === 'settings') {
     title.textContent = 'Setări & Date';
     renderSettingsPage(page);
+  } else if (state.tab === 'study-tools') {
+    // Redirect: if subjects exist go to first one (with upload trigger), else open subject manager
+    const allSubjectKeys = Object.keys(getSubjects());
+    if (allSubjectKeys.length > 0) {
+      state.pendingUploadTrigger = true;
+      navigateTo(allSubjectKeys[0]);
+    } else {
+      navigateTo('dashboard');
+      if (typeof openSubjectManager === 'function') openSubjectManager();
+    }
+    return;
   } else {
     // Subject page
     const subject = getSubjects()[state.tab];

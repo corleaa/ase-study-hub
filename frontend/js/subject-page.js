@@ -301,6 +301,15 @@ function renderSubjectPage(element, key, subject) {
 
   // Init pomodoro display
   updatePomoDisplay();
+
+  // Auto-trigger file picker if navigated via "Alege fișier" from dashboard
+  if (state.pendingUploadTrigger) {
+    state.pendingUploadTrigger = false;
+    setTimeout(function() {
+      var fileInput = document.getElementById('fileUpload');
+      if (fileInput) fileInput.click();
+    }, 200);
+  }
 }
 
 // =============================================
