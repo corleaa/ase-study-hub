@@ -370,6 +370,8 @@ function _renderDashboardWithStats(element, stats) {
   if (!hasContent) {
     // ── STATE 1: new user — "Fereastra" design ───────────────────
     const userName = (state.userProfile && state.userProfile.displayName) || 'Student';
+    const _hour = new Date().getHours();
+    const _greet = _hour >= 18 || _hour < 5 ? 'Bună seara' : 'Bună ziua';
 
     html += '<div class="dash-window">'
       + '<div class="dash-window-bg"></div>'
@@ -380,7 +382,7 @@ function _renderDashboardWithStats(element, stats) {
       // ── Hero glass card ──
       + '<div class="dw-hero">'
       + '<div class="dw-badge"><span class="dw-badge-dot"></span>Ziua 1 · cont nou</div>'
-      + '<div class="dw-title">Bună, ' + escapeHtml(userName) + '. Aici începe <span class="dw-accent">sesiunea</span>.</div>'
+      + '<div class="dw-title">' + _greet + ', ' + escapeHtml(userName) + '. Aici începe <span class="dw-accent">sesiunea</span>.</div>'
       + '<p class="dw-desc">Platforma nu știe încă nimic despre tine. Urcă un curs și vei avea rezumat, quiz, flashcards și un tutor care îl citește cu tine.</p>'
 
       // ── Upload + steps row ──
@@ -433,13 +435,16 @@ function _renderDashboardWithStats(element, stats) {
     const dueLabel  = dueToday === 1 ? '1 concept' : `${dueToday} concepte`;
     const weakLabel = weakCount > 0 ? `${weakCount} concepte slabe` : null;
     const streakTxt = streak > 0 ? `🔥 ${streak} zile consecutiv` : '';
+    const _h = new Date().getHours();
+    const _g = _h >= 18 || _h < 5 ? 'Bună seara' : 'Bună ziua';
+    const _name = (state.userProfile && state.userProfile.displayName) || '';
 
     html += `
       <div class="dash-hero dash-hero--returning">
         <div class="dash-hero-content">
           ${streakTxt ? `<div class="dash-hero-eyebrow">${streakTxt}</div>` : ''}
           <h1 class="dash-hero-title">
-            ${dueToday > 0
+            ${_name ? `${_g}, ${escapeHtml(_name)}. ` : ''}${dueToday > 0
               ? `Ai <span class="dash-due-num">${dueLabel}</span> de revizuit azi`
               : 'Ești la zi cu revizuirile! 🎉'}
           </h1>
