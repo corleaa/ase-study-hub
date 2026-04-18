@@ -858,6 +858,9 @@ function renderPage() {
   const title = document.getElementById('topbarTitle');
   if (!page || !title) return;
 
+  // Clear dashboard "Fereastra" full-bleed mode on every navigation
+  page.classList.remove('page--dash-window');
+
   // Reset subject theme
   resetSubjectTheme();
 

@@ -7259,3 +7259,457 @@ details[open] .detail-chevron {
 @keyframes ls-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DASHBOARD "FEREASTRA" — Variation C
+   New-user empty state with full-bleed ambient background + glass UI.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Outer wrapper — breaks out of .page padding constraints ── */
+.dash-window {
+  position: relative;
+  margin: -28px -32px;
+  min-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0d0b0d;
+}
+
+/* ── Background image ── */
+.dash-window-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/assets/dash-bg.jpg');
+  background-size: cover;
+  background-position: center top;
+  z-index: 0;
+}
+
+/* ── Dark gradient wash ── */
+.dash-window-wash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 14, 0.38) 0%,
+    rgba(10, 10, 14, 0.55) 55%,
+    rgba(10, 10, 14, 0.84) 100%
+  );
+  z-index: 1;
+}
+
+/* ── Accent glow from bottom ── */
+.dash-window-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 115%,
+    rgba(242, 155, 109, 0.18) 0%,
+    transparent 55%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Inner content layer ── */
+.dash-window-inner {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 36px 32px;
+  gap: 14px;
+}
+
+/* ── Hero glass card ── */
+.dw-hero {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 19, 22, 0.55) 0%,
+    rgba(22, 19, 22, 0.74) 100%
+  );
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 245, 236, 0.16);
+  border-radius: 20px;
+  padding: 34px 40px 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Badge ── */
+.dw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: var(--accent-muted);
+  border: 1px solid var(--accent-border);
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  margin-bottom: 16px;
+}
+.dw-badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Main heading ── */
+.dw-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.dw-accent { color: var(--accent); }
+
+/* ── Description ── */
+.dw-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 620px;
+  margin: 0 0 26px;
+}
+
+/* ── Upload + steps grid ── */
+.dw-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 16px;
+}
+
+/* ── Upload zone ── */
+.dw-upload-zone {
+  background: rgba(10, 8, 10, 0.5);
+  border: 1.5px dashed var(--accent-border);
+  border-radius: 14px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.dw-upload-zone:hover {
+  border-color: var(--accent);
+  background: rgba(242, 155, 109, 0.05);
+}
+
+/* ── PDF icon stack ── */
+.dw-pdf-icon {
+  width: 56px;
+  height: 68px;
+  position: relative;
+  flex-shrink: 0;
+}
+.dw-pdf-shadow {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 25, 30, 0.9);
+  border: 1px solid rgba(255, 245, 236, 0.16);
+  border-radius: 6px;
+  transform: rotate(-6deg) translate(-3px, 2px);
+}
+.dw-pdf-card {
+  position: absolute;
+  inset: 0;
+  background: rgba(40, 35, 40, 0.95);
+  border: 1px solid rgba(242, 155, 109, 0.4);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  gap: 3px;
+}
+.dw-pdf-line {
+  height: 2px;
+  width: 88%;
+  background: rgba(255, 245, 236, 0.16);
+  border-radius: 1px;
+}
+.dw-pdf-tag {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  margin-top: auto;
+}
+
+/* ── Upload text area ── */
+.dw-upload-body { flex: 1; }
+
+.dw-upload-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+.dw-upload-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.dw-upload-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dw-btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(242, 155, 109, 0.38);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.dw-btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 8px 24px rgba(242, 155, 109, 0.5);
+}
+.dw-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 245, 236, 0.16);
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.dw-btn-ghost:hover {
+  border-color: rgba(255, 245, 236, 0.28);
+  color: var(--text-primary);
+}
+
+/* ── Session steps card ── */
+.dw-steps-card {
+  background: rgba(10, 8, 10, 0.45);
+  border: 1px solid rgba(255, 245, 236, 0.09);
+  border-radius: 14px;
+  padding: 18px 22px;
+}
+.dw-steps-kicker {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+/* ── Individual session step ── */
+.dw-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  padding-bottom: 8px;
+}
+.dw-step.last { padding-bottom: 0; }
+
+.dw-step-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 245, 236, 0.09);
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+.dw-step-dot.active {
+  border-color: var(--accent);
+  background: rgba(242, 155, 109, 0.13);
+  color: var(--accent);
+}
+
+.dw-step-body {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+.dw-step-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.dw-step-label.active {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.dw-step-time {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.dw-step-line {
+  position: absolute;
+  left: 9.5px;
+  top: 20px;
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 245, 236, 0.09);
+}
+
+/* ── Bottom 4 tool cards ── */
+.dw-tools {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.dw-tool {
+  background: rgba(22, 19, 22, 0.58);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 245, 236, 0.09);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+.dw-tool:hover { border-color: rgba(255, 245, 236, 0.18); }
+
+.dw-tool-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dw-tool-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dw-tool-info { flex: 1; min-width: 0; }
+.dw-tool-name {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dw-tool-sub {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+.dw-tool-empty {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  padding: 2px 7px;
+  border: 1px dashed rgba(255, 245, 236, 0.16);
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.dw-tool-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dw-tool-bar {
+  height: 4px;
+  border-radius: 2px;
+}
+
+/* ── Light theme overrides ── */
+[data-theme="light"] .dash-window {
+  background: #1a1520;
+}
+[data-theme="light"] .dash-window-wash {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 8, 14, 0.45) 0%,
+    rgba(10, 8, 14, 0.65) 55%,
+    rgba(10, 8, 14, 0.88) 100%
+  );
+}
+[data-theme="light"] .dw-title,
+[data-theme="light"] .dw-desc,
+[data-theme="light"] .dw-upload-title,
+[data-theme="light"] .dw-step-label,
+[data-theme="light"] .dw-tool-name {
+  color: #f5efe8;
+}
+[data-theme="light"] .dw-upload-sub,
+[data-theme="light"] .dw-step-label.active,
+[data-theme="light"] .dw-badge {
+  color: #c6b8ad;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .dash-window { margin: -16px -14px; }
+  .dw-grid { grid-template-columns: 1fr; }
+  .dw-tools { grid-template-columns: repeat(2, 1fr); }
+  .dw-hero { padding: 22px 20px 18px; }
+  .dash-window-inner { padding: 18px 16px 24px; }
+}
+@media (max-width: 600px) {
+  .dw-tools { grid-template-columns: 1fr; }
+  .dw-title { font-size: 1.7rem; }
+}
+
+/* ── dw-tool color tokens ── */
+.dw-tool--accent .dw-tool-icon { color: var(--accent); background: var(--accent-muted); }
+.dw-tool--accent .dw-tool-bar  { background: var(--accent-muted); }
+
+.dw-tool--blue .dw-tool-icon   { color: var(--blue); background: var(--blue-muted); }
+.dw-tool--blue .dw-tool-bar    { background: var(--blue-muted); }
+
+.dw-tool--green .dw-tool-icon  { color: var(--green); background: var(--green-muted); }
+.dw-tool--green .dw-tool-bar   { background: var(--green-muted); }
+
+.dw-tool--purple .dw-tool-icon { color: var(--purple); background: var(--purple-muted); }
+.dw-tool--purple .dw-tool-bar  { background: var(--purple-muted); }
+
+/* ── Full-bleed page mode for "Fereastra" dashboard ── */
+.page--dash-window {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}

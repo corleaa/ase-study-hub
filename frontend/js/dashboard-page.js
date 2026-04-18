@@ -225,6 +225,34 @@ function renderDashboard(element) {
     });
 }
 
+function _renderWindowStep(n, label, time, active, last) {
+  return '<div class="dw-step' + (last ? ' last' : '') + '">'
+    + '<div class="dw-step-dot' + (active ? ' active' : '') + '">' + n + '</div>'
+    + '<div class="dw-step-body">'
+    + '<span class="dw-step-label' + (active ? ' active' : '') + '">' + escapeHtml(label) + '</span>'
+    + '<span class="dw-step-time">' + escapeHtml(time) + '</span>'
+    + '</div>'
+    + (!last ? '<div class="dw-step-line"></div>' : '')
+    + '</div>';
+}
+
+// colorToken: 'accent' | 'blue' | 'green' | 'purple'
+function _renderWindowTool(title, sub, colorToken, iconName) {
+  return '<div class="dw-tool dw-tool--' + colorToken + '">'
+    + '<div class="dw-tool-head">'
+    + '<div class="dw-tool-icon">' + icon(iconName, 'xs') + '</div>'
+    + '<div class="dw-tool-info"><div class="dw-tool-name">' + escapeHtml(title) + '</div><div class="dw-tool-sub">' + escapeHtml(sub) + '</div></div>'
+    + '<div class="dw-tool-empty">gol</div>'
+    + '</div>'
+    + '<div class="dw-tool-bars">'
+    + '<div class="dw-tool-bar" style="width:86%"></div>'
+    + '<div class="dw-tool-bar" style="width:64%"></div>'
+    + '<div class="dw-tool-bar" style="width:72%"></div>'
+    + '<div class="dw-tool-bar" style="width:50%"></div>'
+    + '</div>'
+    + '</div>';
+}
+
 function _renderDashboardWithStats(element, stats) {
   const hasContent   = stats && stats.total > 0;
   const dueToday     = (stats && stats.dueToday) || 0;
@@ -235,32 +263,66 @@ function _renderDashboardWithStats(element, stats) {
   let html = '<div class="anim">';
 
   if (!hasContent) {
-    // ── STATE 1: new user — upload to start ──────────────────────
-    html += `
-      <div class="dash-hero dash-hero--new">
-        <div class="dash-hero-content">
-          <div class="dash-hero-eyebrow">🧠 Adaptive Learning</div>
-          <h1 class="dash-hero-title">Începe să înveți</h1>
-          <p class="dash-hero-sub">Încarcă un document și Study Hub extrage automat conceptele cheie pe care le va testa adaptiv.</p>
-        </div>
+    // ── STATE 1: new user — "Fereastra" design ───────────────────
+    const userName = (state.userProfile && state.userProfile.displayName) || 'Student';
 
-        <div class="dash-upload-card" id="dash-upload-zone">
-          <div class="dash-upload-icon">📄</div>
-          <div class="dash-upload-title">Adaugă primul tău document</div>
-          <div class="dash-upload-sub">PDF, DOCX sau text — AI extrage concepte și generează întrebări</div>
-          <button class="dash-cta-primary" data-nav-tab="study-tools">Start learning →</button>
-        </div>
+    html += '<div class="dash-window">'
+      + '<div class="dash-window-bg"></div>'
+      + '<div class="dash-window-wash"></div>'
+      + '<div class="dash-window-glow"></div>'
+      + '<div class="dash-window-inner">'
 
-        <div class="dash-how-it-works">
-          <div class="dash-step"><span class="dash-step-n">1</span><span>Încarci document</span></div>
-          <div class="dash-step-arrow">→</div>
-          <div class="dash-step"><span class="dash-step-n">2</span><span>AI extrage concepte</span></div>
-          <div class="dash-step-arrow">→</div>
-          <div class="dash-step"><span class="dash-step-n">3</span><span>Ești testat adaptiv</span></div>
-          <div class="dash-step-arrow">→</div>
-          <div class="dash-step"><span class="dash-step-n">4</span><span>Revizuiești ce nu știi</span></div>
-        </div>
-      </div>`;
+      // ── Hero glass card ──
+      + '<div class="dw-hero">'
+      + '<div class="dw-badge"><span class="dw-badge-dot"></span>Ziua 1 · cont nou</div>'
+      + '<div class="dw-title">Bună, ' + escapeHtml(userName) + '. Aici începe <span class="dw-accent">sesiunea</span>.</div>'
+      + '<p class="dw-desc">Platforma nu știe încă nimic despre tine. Urcă un curs și vei avea rezumat, quiz, flashcards și un tutor care îl citește cu tine.</p>'
+
+      // ── Upload + steps row ──
+      + '<div class="dw-grid">'
+
+      // Upload zone
+      + '<div class="dw-upload-zone" data-nav-tab="study-tools">'
+      + '<div class="dw-pdf-icon">'
+      + '<div class="dw-pdf-shadow"></div>'
+      + '<div class="dw-pdf-card">'
+      + '<div class="dw-pdf-line"></div>'
+      + '<div class="dw-pdf-line" style="width:70%"></div>'
+      + '<div class="dw-pdf-line" style="width:80%"></div>'
+      + '<span class="dw-pdf-tag">PDF</span>'
+      + '</div>'
+      + '</div>'
+      + '<div class="dw-upload-body">'
+      + '<div class="dw-upload-title">Trage primul curs aici.</div>'
+      + '<p class="dw-upload-sub">PDF, DOCX, PPTX sau text lipit. ~30 secunde.</p>'
+      + '<div class="dw-upload-row">'
+      + '<button class="dw-btn-primary" data-nav-tab="study-tools">Alege fișier</button>'
+      + '<button class="dw-btn-ghost" data-nav-tab="study-tools">curs demo</button>'
+      + '</div>'
+      + '</div>'
+      + '</div>'
+
+      // Session steps
+      + '<div class="dw-steps-card">'
+      + '<div class="dw-steps-kicker">Prima sesiune · 20 min</div>'
+      + _renderWindowStep(1, 'Urcă un curs', '1 min', true, false)
+      + _renderWindowStep(2, 'Citește rezumatul', '5 min', false, false)
+      + _renderWindowStep(3, 'Dă un quiz', '8 min', false, false)
+      + _renderWindowStep(4, 'Salvează 10 cartonașe', '6 min', false, true)
+      + '</div>'
+      + '</div>'
+      + '</div>'
+
+      // ── Bottom 4 tool preview cards ──
+      + '<div class="dw-tools">'
+      + _renderWindowTool('Rezumat', '3 niveluri', 'accent', 'layers2')
+      + _renderWindowTool('Quiz', 'grilă · A/F', 'blue', 'brain')
+      + _renderWindowTool('Flashcards', 'spaced repetition', 'green', 'cards')
+      + _renderWindowTool('AI Mentor', 'știe cursul tău', 'purple', 'robot')
+      + '</div>'
+
+      + '</div>'
+      + '</div>';
   } else {
     // ── STATE 2: returning user — show due concepts ───────────────
     const dueLabel  = dueToday === 1 ? '1 concept' : `${dueToday} concepte`;
@@ -301,9 +363,10 @@ function _renderDashboardWithStats(element, stats) {
       </div>`;
   }
 
-  // ── COMPACT TOOLS (mereu vizibil, dar discret) ────────────────
-  const dueFC = (typeof getFlashcardsDueCount === 'function') ? getFlashcardsDueCount() : 0;
-  html += `
+  // ── COMPACT TOOLS (only for returning users — new user gets the window design tools) ──
+  if (hasContent) {
+    const dueFC = (typeof getFlashcardsDueCount === 'function') ? getFlashcardsDueCount() : 0;
+    html += `
     <div class="dash-tools-row">
       <div class="dash-tool-item" data-nav-tab="quiz">
         <span>🧩</span><span>Quiz</span>
@@ -321,9 +384,21 @@ function _renderDashboardWithStats(element, stats) {
         <span>📈</span><span>Finance Lab</span>
       </div>
     </div>`;
+  }
 
   html += '</div>';
   element.innerHTML = html;
+
+  // Toggle full-bleed page mode for the "Fereastra" empty state
+  var pageEl = document.getElementById('pageContent');
+  if (pageEl) {
+    if (!hasContent) {
+      pageEl.classList.add('page--dash-window');
+    } else {
+      pageEl.classList.remove('page--dash-window');
+    }
+  }
+
   setupDashboardPageInteractions(element);
 }
 
