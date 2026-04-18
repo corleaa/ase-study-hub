@@ -7330,8 +7330,8 @@ details[open] .detail-chevron {
     rgba(22, 19, 22, 0.55) 0%,
     rgba(22, 19, 22, 0.74) 100%
   );
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 245, 236, 0.16);
   border-radius: 20px;
   padding: 34px 40px 30px;
@@ -7592,8 +7592,8 @@ details[open] .detail-chevron {
 
 .dw-tool {
   background: rgba(22, 19, 22, 0.58);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 245, 236, 0.09);
   border-radius: 14px;
   padding: 14px 16px;
