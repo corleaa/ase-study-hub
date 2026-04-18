@@ -237,8 +237,8 @@ function _renderWindowStep(n, label, time, active, last) {
 }
 
 // colorToken: 'accent' | 'blue' | 'green' | 'purple'
-function _renderWindowTool(title, sub, colorToken, iconName) {
-  return '<div class="dw-tool dw-tool--' + colorToken + '">'
+function _renderWindowTool(title, sub, colorToken, iconName, navTab) {
+  return '<div class="dw-tool dw-tool--' + colorToken + (navTab ? '" data-nav-tab="' + navTab + '" style="cursor:pointer"' : '"') + '>'
     + '<div class="dw-tool-head">'
     + '<div class="dw-tool-icon">' + icon(iconName, 'xs') + '</div>'
     + '<div class="dw-tool-info"><div class="dw-tool-name">' + escapeHtml(title) + '</div><div class="dw-tool-sub">' + escapeHtml(sub) + '</div></div>'
@@ -315,10 +315,10 @@ function _renderDashboardWithStats(element, stats) {
 
       // ── Bottom 4 tool preview cards ──
       + '<div class="dw-tools">'
-      + _renderWindowTool('Rezumat', '3 niveluri', 'accent', 'layers2')
-      + _renderWindowTool('Quiz', 'grilă · A/F', 'blue', 'brain')
-      + _renderWindowTool('Flashcards', 'spaced repetition', 'green', 'cards')
-      + _renderWindowTool('AI Mentor', 'știe cursul tău', 'purple', 'robot')
+      + _renderWindowTool('Rezumat', '3 niveluri', 'accent', 'layers2', 'study-tools')
+      + _renderWindowTool('Quiz', 'grilă · A/F', 'blue', 'brain', 'quiz')
+      + _renderWindowTool('Flashcards', 'spaced repetition', 'green', 'cards', 'flashcards')
+      + _renderWindowTool('AI Mentor', 'știe cursul tău', 'purple', 'robot', 'mentor')
       + '</div>'
 
       + '</div>'
@@ -685,6 +685,23 @@ function setupDashboardPageInteractions(element) {
       input.value
     );
   });
+
+  // Drag & drop on window upload zone — navigate to study-tools
+  var uploadZone = element.querySelector('.dw-upload-zone');
+  if (uploadZone) {
+    uploadZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      uploadZone.classList.add('dw-upload-zone--drag');
+    });
+    uploadZone.addEventListener('dragleave', function() {
+      uploadZone.classList.remove('dw-upload-zone--drag');
+    });
+    uploadZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadZone.classList.remove('dw-upload-zone--drag');
+      navigateTo('study-tools');
+    });
+  }
 }
 
 // ── Subject groups helpers ──────────────────

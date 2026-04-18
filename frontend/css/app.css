@@ -113,7 +113,7 @@
   --teal:        #79c9c3;
   --pink:        #df9ebb;
 
-  --border:       rgba(255, 245, 236, 0.08);
+  --border:       rgba(255, 245, 236, 0.10);
   --border-hover: rgba(255, 245, 236, 0.14);
   --border-accent:rgba(242, 155, 109, 0.34);
   --shadow:       0 30px 80px rgba(0, 0, 0, 0.36);
@@ -7712,4 +7712,100 @@ details[open] .detail-chevron {
   max-width: none;
   padding: 0;
   margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLOBAL WARM CARD SYSTEM — consistent with Fereastra dashboard
+   Applies a subtle gradient + shadow across all major card surfaces.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Universal card treatment ── */
+.panel,
+.quiz-question-card,
+.quiz-gen-section,
+.chart-panel,
+.exam-countdown-card,
+.calendar-mini,
+.home-subj-card,
+.home-tool-card,
+.achievement-card,
+.hts-card,
+.next-step-card,
+.dash-hero,
+.dash-session-card,
+.dash-upload-card,
+.graph-playground,
+.layer-card,
+.mentor-context-card,
+.stat-card,
+.add-exam-form,
+.fc-info-panel,
+.mindmap-container,
+.quiz-result-card,
+.scenario-callout,
+.example-card,
+.slider-card {
+  background: linear-gradient(
+    160deg,
+    var(--bg-raised) 0%,
+    rgba(18, 14, 18, 0.98) 100%
+  ) !important;
+  border-color: rgba(255, 245, 236, 0.10) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28),
+              0 1px 0 rgba(255, 245, 236, 0.04) inset !important;
+}
+
+/* ── Section heading consistency ── */
+.panel-head,
+.quiz-gen-section h3,
+.chart-title,
+.section-title,
+.ecc-subject,
+.mentor-context-card .section-kicker {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* ── Hover lift on interactive cards ── */
+.home-subj-card:hover,
+.home-tool-card:hover,
+.achievement-card:hover,
+.hts-card:hover,
+.exam-countdown-card:hover,
+.next-step-card:hover {
+  border-color: rgba(255, 245, 236, 0.18) !important;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35),
+              0 1px 0 rgba(255, 245, 236, 0.06) inset !important;
+  transform: translateY(-2px);
+}
+
+/* ── Accent top-bar on hovered cards (echo of exam-countdown style) ── */
+.home-tool-card:hover::after {
+  opacity: 1;
+}
+
+/* ── Upload zone drag-over state ── */
+.dw-upload-zone--drag {
+  border-color: var(--accent) !important;
+  background: rgba(242, 155, 109, 0.08) !important;
+}
+.dw-upload-zone--drag .dw-upload-title {
+  color: var(--accent);
+}
+
+/* ── Light theme: keep clean white cards, just tweak shadow ── */
+[data-theme="light"] .panel,
+[data-theme="light"] .quiz-question-card,
+[data-theme="light"] .quiz-gen-section,
+[data-theme="light"] .chart-panel,
+[data-theme="light"] .exam-countdown-card,
+[data-theme="light"] .home-subj-card,
+[data-theme="light"] .home-tool-card,
+[data-theme="light"] .next-step-card,
+[data-theme="light"] .achievement-card,
+[data-theme="light"] .hts-card,
+[data-theme="light"] .layer-card {
+  background: var(--bg-raised) !important;
+  box-shadow: 0 2px 10px rgba(95, 72, 55, 0.09),
+              0 1px 0 rgba(255,255,255,0.7) inset !important;
 }
