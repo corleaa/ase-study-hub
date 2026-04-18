@@ -113,7 +113,7 @@ function renderOnboarding() {
   // Hero onboarding
   html += '<div style="text-align:center;padding:48px 20px 32px;">';
   html += '<div style="margin-bottom:16px;">' + iconBadge('graduation','','lg') + '</div>';
-  html += '<div style="font-family:Syne,sans-serif;font-size:2rem;font-weight:800;margin-bottom:8px;">Bun venit la Study Hub!</div>';
+  html += '<div style="font-family:Syne,sans-serif;font-size:2rem;font-weight:800;margin-bottom:8px;">Bun venit la Real Study!</div>';
   html += '<div style="color:var(--text-secondary);font-size:1rem;max-width:480px;margin:0 auto;">Platforma ta AI-powered pentru studiu. Începe prin a-ți adăuga materiile.</div>';
   html += '</div>';
 
@@ -148,7 +148,7 @@ function renderOnboarding() {
 
   // Features preview
   html += '<div class="anim anim-d3" style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">';
-  html += '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:16px;">Ce poți face cu Study Hub</div>';
+  html += '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:16px;">Ce poți face cu Real Study</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">';
   const features = [
     ['robot', 'AI Tutor', 'Chat cu Claude per materie'],
@@ -554,7 +554,7 @@ function _renderDashboardOld(element) {
   html += '<div>';
   html += '<div class="clarity-label">' + icon('sparkle','xs') + ' Learning Platform</div>';
   html += '<div class="clarity-title">' + greet + '</div>';
-  html += '<p class="clarity-copy">Study Hub este construit pentru patru lucruri foarte clare: rezumate structurate, flashcards, quiz-uri și învățare interactivă. Totul pornește din materia ta și se transformă în explicații mai ușor de înțeles.</p>';
+  html += '<p class="clarity-copy">Real Study este construit pentru patru lucruri foarte clare: rezumate structurate, flashcards, quiz-uri și învățare interactivă. Totul pornește din materia ta și se transformă în explicații mai ușor de înțeles.</p>';
   html += '<div class="clarity-actions" style="margin-top:18px;">';
   html += '<button class="summary-gen-btn" data-dashboard-action="open-subject-manager">' + icon('plus','xs') + ' Adaugă materie</button>';
   html += '<button class="quiz-nav-btn primary" data-nav-tab="quiz">' + icon('brain','xs') + ' Începe un quiz</button>';

@@ -1748,9 +1748,9 @@ function updatePomoDisplay() {
 
   // Tab title while running
   if (pomoRunning) {
-    document.title = display + ' — ' + (pomoIsBreak ? 'Pauză' : 'Focus') + ' · Study Hub';
+    document.title = display + ' — ' + (pomoIsBreak ? 'Pauză' : 'Focus') + ' · Real Study';
   } else {
-    document.title = 'Study Hub';
+    document.title = 'Real Study';
   }
 }
 
@@ -1891,7 +1891,7 @@ async function exportChatAsPDF(key) {
     <html lang="ro">
     <head>
       <meta charset="UTF-8">
-      <title>Study Hub — ${subject.name} Chat Export</title>
+      <title>Real Study — ${subject.name} Chat Export</title>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1961,7 +1961,7 @@ async function exportChatAsPDF(key) {
     <body>
       <div class="header">
         <div class="header-top">
-          <div class="logo">Study Hub</div>
+          <div class="logo">Real Study</div>
           <div class="meta">Exportat: ${exportDate}, ${exportTime}</div>
         </div>
         <div class="title">AI Tutor — ${subject.name}</div>
@@ -1979,7 +1979,7 @@ async function exportChatAsPDF(key) {
       </div>
 
       <div class="footer">
-        Study Hub · Generat cu Claude by Anthropic
+        Real Study · Generat cu Claude by Anthropic
       </div>
 
       <scr" + "ipt>

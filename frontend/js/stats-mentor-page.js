@@ -705,7 +705,7 @@ function renderSettingsPage(element) {
 
   html += '<div class="quiz-gen-section"><h3>' + icon('upload','sm') + ' Import Date</h3>';
   html += '<p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:14px;">Restaurează dintr-un backup JSON.</p>';
-  html += '<div class="import-export-zone"><input type="file" id="settingsImportInput" accept=".json"><div style="font-size:2rem;margin-bottom:8px;">📁</div><div style="font-weight:600;">Trage fișierul JSON sau click</div><div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Fișier exportat din ASE Study Hub</div></div></div>';
+  html += '<div class="import-export-zone"><input type="file" id="settingsImportInput" accept=".json"><div style="font-size:2rem;margin-bottom:8px;">📁</div><div style="font-weight:600;">Trage fișierul JSON sau click</div><div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Fișier exportat din ASE Real Study</div></div></div>';
 
   html += '<div class="quiz-gen-section"><h3>' + icon('layers','sm') + ' Collab Mode</h3>';
   html += '<p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:14px;">Partajează prezentările cu un coleg folosind un cod.</p>';

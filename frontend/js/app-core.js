@@ -163,7 +163,7 @@ function resetSubjectTheme() {
 // Materiile default sunt ASE — dar pot fi complet șterse/înlocuite
 const DEFAULT_SUBJECTS = {
   demo: {
-    icon: 'graduation', name: 'Materie Demo', full: 'Cum funcționează Study Hub',
+    icon: 'graduation', name: 'Materie Demo', full: 'Cum funcționează Real Study',
     desc: 'Exemplu — încarcă un PDF și generează primul rezumat', themeId: 'violet',
     resources: [
       { tag: 'slides', label: 'Exemplu: Curs 1 — Introducere' }
@@ -977,7 +977,7 @@ function onbNext() {
 
   if (onbCurrentStep >= ONB_TOTAL) {
     closeOnboarding();
-    showToast('Bun venit!', 'Study Hub e configurat. Apasă ? pentru shortcut-uri.', 'success', 5000);
+    showToast('Bun venit!', 'Real Study e configurat. Apasă ? pentru shortcut-uri.', 'success', 5000);
     return;
   }
   onbCurrentStep++;
@@ -1141,7 +1141,7 @@ async function exportProgressPDF() {
 
   win.document.write(`<!DOCTYPE html><html><head>
 <meta charset="UTF-8">
-<title>Raport Progres — Study Hub</title>
+<title>Raport Progres — Real Study</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -1170,7 +1170,7 @@ async function exportProgressPDF() {
 <div class="header">
   <div class="header-logo">
     <div class="logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg></div>
-    <div><div class="logo-title">Study Hub</div><div class="logo-sub">Progress Report</div></div>
+    <div><div class="logo-title">Real Study</div><div class="logo-sub">Progress Report</div></div>
   </div>
   <div class="header-meta">
     <div class="header-name">Nivel ${state.level||1} · ${state.xp||0} XP</div>
@@ -1188,7 +1188,7 @@ async function exportProgressPDF() {
   <thead><tr><th>Materie</th><th style="width:220px">Tasks</th><th>Prez.</th><th>Quiz avg</th><th>Flashcards</th><th>Studiu</th></tr></thead>
   <tbody>${subjectRows||'<tr><td colspan="6" style="text-align:center;color:#414860;padding:24px;">Nicio materie configurată</td></tr>'}</tbody>
 </table>
-<div class="footer"><span>Study Hub</span><span>${today}</span></div>
+<div class="footer"><span>Real Study</span><span>${today}</span></div>
 <scr" + "ipt>window.print();<\/scr" + "ipt>
 </body></html>`);
   win.document.close();
