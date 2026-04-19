@@ -22,6 +22,7 @@ const { logApiCall } = require('../db/client');
 const { logger }     = require('../utils/logger');
 const {
   askMessages,
+  askMessagesWithUsage,
   askSingleTurn,
   askStructuredJson,
   normalizeChatPayload,
@@ -52,8 +53,12 @@ router.post('/chat',
   async (req, res, next) => {
     try {
       const { system, messages, maxTokens } = normalizeChatPayload(req.body);
-      const content = await askMessages({ system, messages, maxTokens });
-      logApiCall(req.user?.id ?? null, 'chat', req.clientIpHash);
+      const { content, inputTokens, outputTokens } = await askMessagesWithUsage({ system, messages, maxTokens });
+      const costUsd = (inputTokens * 3 + outputTokens * 15) / 1_000_000;
+      // Detect subject from system prompt for analytics
+      const subjectMatch = (req.body.system || '').match(/(?:profesor|materia)\s+(?:de\s+)?([^\n.]{2,40})/i);
+      const subject = subjectMatch ? subjectMatch[1].trim().substring(0, 60) : null;
+      logApiCall(req.user?.id ?? null, 'chat', req.clientIpHash, inputTokens, outputTokens, costUsd, subject);
       res.json(chatResponse(content));
     } catch (e) {
       next(e);

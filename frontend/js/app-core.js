@@ -608,6 +608,10 @@ function renderSidebar() {
   html += '<div class="nav-section">Cont</div>';
   html += navBtn('profile', 'user', 'Contul meu', getAchievementBadge());
   html += navBtn('settings', 'settings', 'Setări & API Key');
+  if (window.__shUser && window.__shUser.role === 'admin') {
+    html += '<div class="nav-section">Admin</div>';
+    html += navBtn('admin', 'chart', 'Admin Dashboard');
+  }
 
   nav.innerHTML = html;
 }
@@ -914,6 +918,10 @@ function renderPage() {
   } else if (state.tab === 'settings') {
     title.textContent = 'Setări & Date';
     renderSettingsPage(page);
+  } else if (state.tab === 'admin') {
+    title.textContent = 'Admin Dashboard';
+    if (typeof renderAdminPage === 'function') renderAdminPage(page);
+    else page.innerHTML = '<div class="empty-state">Se încarcă...</div>';
   } else if (state.tab === 'study-tools') {
     // Redirect: if subjects exist go to first one (with upload trigger), else open subject manager
     const allSubjectKeys = Object.keys(getSubjects());

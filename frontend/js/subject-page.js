@@ -986,12 +986,34 @@ function isFinanceTopic(subjectFull) {
 }
 
 // Construiește system prompt adaptat domeniului
-function buildSummarySystemPrompt(subjectFull, isFinance) {
-  const domainHint = isFinance
-    ? 'Subiectul este din domeniul financiar/economic. Când e relevant, include formule matematice, relații cauză-efect între variabile financiare, și date numerice exemplificative.'
-    : 'Subiectul poate fi din orice domeniu academic (psihologie, drept, medicină, știință etc.). Adaptează tipul de exemple și relații la domeniu.';
+function detectSummaryDomain(subjectFull) {
+  var s = (subjectFull || '').toLowerCase();
+  if (/medic|biolog|anatom|fiziolog|farmac|chirurg|clinic|diagnostic|patolog/.test(s)) return 'medicina';
+  if (/drept|juridic|penal|civil|comercial|constitut|contrav|cod |articol|lege/.test(s)) return 'drept';
+  if (/econom|financ|contab|banc|fiscal|monetar|investit|capital|piata|bursa|statistic|econometr|adea/.test(s)) return 'economie';
+  if (/program|algoritm|software|hardware|retea|baze de date|web |cod |develop|informatica/.test(s)) return 'informatica';
+  if (/psiholog|sociolog|comportament|cognitiv|mental|terapie|personalitat/.test(s)) return 'psihologie';
+  if (/fizic|chim|matematic|calcul|algebr|geometr/.test(s)) return 'stiinte';
+  return 'general';
+}
 
-  return `Ești un profesor expert care creează fișe de învățare vizuale și structurate.
+var DOMAIN_HINTS = {
+  medicina: 'Domeniu: Medicină. Pune accent pe: fiziopatologie (mecanismul bolii), semne clinice, diagnostic diferențial, protocol de tratament, complicații. Când e relevant include: valori normale vs. patologice, doze, timpi critici.',
+  drept: 'Domeniu: Drept. Pune accent pe: textul legal exact (articol, cod), condițiile cumulative de aplicare, excepții și prezumții, consecința juridică, speță ilustrativă. Evită parafrazarea — citează precis.',
+  economie: 'Domeniu: Economie & Finanțe. Pune accent pe: formule matematice, relații cauză-efect între variabile, date numerice exemplificative, comparații (ex: Basel I vs II), implicații practice pentru piețe sau bănci.',
+  informatica: 'Domeniu: Informatică. Pune accent pe: pseudocod sau cod real, complexitate timp/spațiu (Big-O), cazuri limită și optimizări, comparații cu algoritmi/structuri alternative.',
+  psihologie: 'Domeniu: Psihologie. Pune accent pe: autori și an studiu, paradigma experimentală, rezultate numerice (effect size, p-value), critici și replicabilitate, aplicații practice.',
+  stiinte: 'Domeniu: Științe exacte. Pune accent pe: derivarea formulelor din principii, condițiile de aplicabilitate, greșeli de intuiție frecvente, legătura cu fenomene observabile.',
+  general: 'Domeniu general academic. Adaptează tipul de exemple și secțiuni la subiectul specific. Prioritizează claritatea conceptuală și legătura cu aplicații reale.',
+};
+
+function buildSummarySystemPrompt(subjectFull, isFinance) {
+  var domain = detectSummaryDomain(subjectFull);
+  var domainHint = DOMAIN_HINTS[domain] || DOMAIN_HINTS.general;
+
+  return `Ești un profesor expert care creează scaffold cognitiv — nu rezumate, ci structura mentală minimă necesară ca studentul să înțeleagă documentul complet prima dată când îl citește.
+
+Scopul: după ce citești fișa, când deschizi documentul original, fiecare paragraf nou să provoace reacția „aha, asta se leagă de ce am văzut în fișă".
 
 ${domainHint}
 

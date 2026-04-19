@@ -264,10 +264,14 @@ function initDb() {
       ON concept_progress(user_id, next_review_date);
   `);
 
-  // Migrate existing databases: add role column if it doesn't exist
+  // Migrations — safe to re-run (errors mean column already exists)
   try {
     db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'free' CHECK(role IN ('free', 'pro', 'admin'))");
-  } catch { /* Column already exists — safe to ignore */ }
+  } catch { /* already exists */ }
+  try { db.exec('ALTER TABLE ai_calls ADD COLUMN tokens_input INTEGER NOT NULL DEFAULT 0'); } catch {}
+  try { db.exec('ALTER TABLE ai_calls ADD COLUMN tokens_output INTEGER NOT NULL DEFAULT 0'); } catch {}
+  try { db.exec('ALTER TABLE ai_calls ADD COLUMN cost_usd REAL NOT NULL DEFAULT 0.0'); } catch {}
+  try { db.exec('ALTER TABLE ai_calls ADD COLUMN subject TEXT'); } catch {}
 
   // Remove expired tokens on startup
   cleanExpiredTokens();
@@ -415,11 +419,11 @@ function cleanUsageLogs(retentionDays = USAGE_LOG_RETENTION_DAYS) {
  * Record one AI call for rate-limit accounting.
  * For authenticated users pass userId; for guests pass null + ipHash.
  */
-function logApiCall(userId, feature, ipHash) {
+function logApiCall(userId, feature, ipHash, tokensInput = 0, tokensOutput = 0, costUsd = 0, subject = null) {
   if (userId !== null && userId !== undefined) {
     getDb()
-      .prepare('INSERT INTO ai_calls (user_id, feature) VALUES (?, ?)')
-      .run(userId, feature);
+      .prepare('INSERT INTO ai_calls (user_id, feature, tokens_input, tokens_output, cost_usd, subject) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(userId, feature, tokensInput, tokensOutput, costUsd, subject || null);
   } else if (ipHash) {
     getDb()
       .prepare('INSERT INTO guest_ai_calls (ip_hash, feature) VALUES (?, ?)')
@@ -952,6 +956,79 @@ function updateConceptProgress(userId, conceptId, score) {
     .run(diff, rate, total, correct, ease, iDays, nextReview, userId, conceptId);
 }
 
+// ─────────────────────────────────────────────────────────────────
+// ADMIN STATS
+// ─────────────────────────────────────────────────────────────────
+function getAdminStats() {
+  const db = getDb();
+
+  const totalUsers = db.prepare('SELECT COUNT(*) AS cnt FROM users').get()?.cnt ?? 0;
+  const totalCostToday = db.prepare("SELECT COALESCE(SUM(cost_usd),0) AS c FROM ai_calls WHERE called_at >= date('now')").get()?.c ?? 0;
+  const callsToday = db.prepare("SELECT COUNT(*) AS cnt FROM ai_calls WHERE called_at >= date('now')").get()?.cnt ?? 0;
+  const activeToday = db.prepare("SELECT COUNT(DISTINCT user_id) AS cnt FROM ai_calls WHERE called_at >= date('now')").get()?.cnt ?? 0;
+  const totalCostAllTime = db.prepare('SELECT COALESCE(SUM(cost_usd),0) AS c FROM ai_calls').get()?.c ?? 0;
+  const totalCalls = db.prepare('SELECT COUNT(*) AS cnt FROM ai_calls').get()?.cnt ?? 0;
+
+  const costLast7Days = db.prepare(`
+    SELECT date(called_at) AS day,
+           COUNT(*) AS calls,
+           COALESCE(SUM(cost_usd),0) AS cost,
+           COALESCE(SUM(tokens_input+tokens_output),0) AS tokens
+    FROM ai_calls
+    WHERE called_at >= date('now','-6 days')
+    GROUP BY date(called_at)
+    ORDER BY day ASC
+  `).all();
+
+  const byFeature = db.prepare(`
+    SELECT feature,
+           COUNT(*) AS calls,
+           COALESCE(SUM(cost_usd),0) AS cost,
+           COALESCE(SUM(tokens_input),0) AS tokens_in,
+           COALESCE(SUM(tokens_output),0) AS tokens_out
+    FROM ai_calls
+    GROUP BY feature
+    ORDER BY cost DESC
+  `).all();
+
+  const topSubjects = db.prepare(`
+    SELECT subject, COUNT(*) AS cnt, COALESCE(SUM(cost_usd),0) AS cost
+    FROM ai_calls
+    WHERE subject IS NOT NULL
+    GROUP BY subject
+    ORDER BY cnt DESC
+    LIMIT 8
+  `).all();
+
+  const recentCalls = db.prepare(`
+    SELECT ac.id, ac.feature, ac.tokens_input, ac.tokens_output, ac.cost_usd,
+           ac.subject, ac.called_at, u.email
+    FROM ai_calls ac
+    LEFT JOIN users u ON u.id = ac.user_id
+    ORDER BY ac.called_at DESC
+    LIMIT 30
+  `).all();
+
+  const topUsersByCost = db.prepare(`
+    SELECT u.email, u.role, COUNT(*) AS calls,
+           COALESCE(SUM(ac.cost_usd),0) AS cost
+    FROM ai_calls ac
+    JOIN users u ON u.id = ac.user_id
+    GROUP BY ac.user_id
+    ORDER BY cost DESC
+    LIMIT 10
+  `).all();
+
+  return {
+    overview: { totalUsers, totalCostToday, callsToday, activeToday, totalCostAllTime, totalCalls },
+    costLast7Days,
+    byFeature,
+    topSubjects,
+    recentCalls,
+    topUsersByCost,
+  };
+}
+
 module.exports = {
   initDb,
   getDb,
@@ -1002,6 +1079,8 @@ module.exports = {
   // Stats
   getReadinessScore,
   getSubjectStats,
+  // Admin
+  getAdminStats,
   // Adaptive recall engine
   createConceptsBatch,
   getConceptsByUser,

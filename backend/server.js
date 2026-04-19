@@ -123,6 +123,7 @@ app.use('/api/upload',   require('./routes/upload'));
 app.use('/api/subjects', require('./routes/subjects'));
 app.use('/api/learning', require('./routes/learning'));
 app.use('/api/concepts', require('./routes/concepts'));
+app.use('/api/admin',    require('./routes/admin'));
 
 // ── CSP violation reports ─────────────────────────────────────────
 app.post('/api/csp-report',

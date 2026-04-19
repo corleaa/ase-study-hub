@@ -211,10 +211,36 @@ async function askStructuredJson({ system, userContent, maxTokens = 3000 }) {
   return JSON.parse(stripJsonFences(raw));
 }
 
+// Returns { content, inputTokens, outputTokens } — Anthropic only; Google returns 0 tokens
+async function askMessagesWithUsage({ system, messages, maxTokens = 1500 }) {
+  if (getActiveProvider() === 'anthropic' && anthropicClient) {
+    try {
+      const response = await anthropicClient.messages.create({
+        model: DEFAULT_ANTHROPIC_MODEL,
+        max_tokens: clampMaxTokens(maxTokens),
+        system,
+        messages: sanitizeMessages(messages),
+      });
+      return {
+        content: response.content[0]?.text || '',
+        inputTokens: response.usage?.input_tokens || 0,
+        outputTokens: response.usage?.output_tokens || 0,
+      };
+    } catch (err) {
+      // Fall through to standard path on error
+      const content = await askMessages({ system, messages, maxTokens });
+      return { content, inputTokens: 0, outputTokens: 0 };
+    }
+  }
+  const content = await askMessages({ system, messages, maxTokens });
+  return { content, inputTokens: 0, outputTokens: 0 };
+}
+
 module.exports = {
   AI_PROVIDER,
   AI_FALLBACK_PROVIDER,
   askMessages,
+  askMessagesWithUsage,
   askSingleTurn,
   askStructuredJson,
   clampMaxTokens,
