@@ -50,9 +50,19 @@ async function renderAdminPage(container) {
   const maxDayCost = Math.max(...days.map(d => d.cost || 0), 0.001);
   const maxFeatureCost = Math.max(...features.map(f => f.cost || 0), 0.001);
 
+  const featureLabel = f => ({
+    'chat':          'AI Mentor',
+    'smart-summary': 'Rezumat',
+    'summarize':     'Rezumat',
+    'quiz':          'Quiz',
+    'flashcards':    'Flashcards',
+    'exam':          'Exam Simulator',
+    'concepts':      'Concepte',
+  }[f] || f);
+
   const featureColor = f => ({
     chat: 'var(--accent)', quiz: 'var(--blue)', flashcards: 'var(--green)',
-    summarize: 'var(--purple)', exam: 'var(--amber)',
+    summarize: 'var(--purple)', 'smart-summary': 'var(--purple)', exam: 'var(--amber)',
   }[f] || 'var(--text-muted)');
 
   let html = '';
@@ -137,7 +147,7 @@ async function renderAdminPage(container) {
       const col = featureColor(f.feature);
       html += '<div style="margin-bottom:10px;">';
       html += '<div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:4px;">';
-      html += '<span style="color:var(--text-secondary);font-weight:500;">' + f.feature + '</span>';
+      html += '<span style="color:var(--text-secondary);font-weight:500;">' + featureLabel(f.feature) + '</span>';
       html += '<span style="color:' + col + ';font-family:var(--font-mono);">' + fmtCost(f.cost) + ' · ' + fmt(f.calls) + ' calls</span>';
       html += '</div>';
       html += '<div style="background:var(--bg-overlay);border-radius:4px;height:6px;">';
@@ -202,7 +212,7 @@ async function renderAdminPage(container) {
     recent.forEach(r => {
       const col = featureColor(r.feature);
       html += '<tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background=\'var(--bg-surface)\'" onmouseout="this.style.background=\'\';">';
-      html += '<td style="padding:7px 10px;"><span style="background:' + col + '1a;color:' + col + ';border-radius:6px;padding:2px 9px;font-size:.72rem;font-weight:600;">' + r.feature + '</span></td>';
+      html += '<td style="padding:7px 10px;"><span style="background:' + col + '1a;color:' + col + ';border-radius:6px;padding:2px 9px;font-size:.72rem;font-weight:600;">' + featureLabel(r.feature) + '</span></td>';
       html += '<td style="padding:7px 10px;color:var(--text-secondary);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (r.email||'guest') + '">' + (r.email||'<span style="color:var(--text-muted)">guest</span>') + '</td>';
       html += '<td style="padding:7px 10px;color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.subject || '—') + '</td>';
       html += '<td style="padding:7px 10px;color:var(--text-secondary);font-family:var(--font-mono);">' + fmt(r.tokens_input) + '</td>';
