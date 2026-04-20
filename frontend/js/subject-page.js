@@ -1171,13 +1171,16 @@ async function generatePresentation(key) {
       uploadedFileText = '';
       if (inputEl) inputEl.value = '';
 
-      var cacheMsg = resData.fromCache ? ' (din cache)' : '';
+      var cacheMsg = resData.fromCache ? ' (din cache ⚡)' : '';
       if (statusEl) statusEl.textContent = '[OK] Fișă generată!' + cacheMsg;
 
       renderPage();
       renderSidebar();
-      var newIdx = getAllPresentations(key).length - 1;
-      setTimeout(function() { openRichSummaryViewer(key, newIdx); }, 200);
+      setTimeout(function() {
+        if (typeof openSmartSummaryModal === 'function') {
+          openSmartSummaryModal(summaryData, title);
+        }
+      }, 150);
       return;
     } else {
       throw new Error('Structura răspunsului AI e incompletă. Încearcă din nou.');
@@ -1444,15 +1447,23 @@ var _originalOpenPresViewer = openPresentationViewer;
 openPresentationViewer = function(key, presIndex) {
   var allPres = getAllPresentations(key);
   var pres    = allPres ? allPres[presIndex] : null;
+  // Smart summaries → scrollable modal
+  if (pres && pres.isSmartSummary && pres.smartData) {
+    if (typeof openSmartSummaryModal === 'function') {
+      openSmartSummaryModal(pres.smartData, pres.title);
+    }
+    return;
+  }
+  // Old rich summaries → slide viewer
   if (pres && pres.isRich) {
     openRichSummaryViewer(key, presIndex);
-  } else {
-    var prev = document.getElementById('pvPrev');
-    var next = document.getElementById('pvNext');
-    if (prev) prev.style.display = '';
-    if (next) next.style.display = '';
-    _originalOpenPresViewer(key, presIndex);
+    return;
   }
+  var prev = document.getElementById('pvPrev');
+  var next = document.getElementById('pvNext');
+  if (prev) prev.style.display = '';
+  if (next) next.style.display = '';
+  _originalOpenPresViewer(key, presIndex);
 };
 
 
