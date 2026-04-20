@@ -3,7 +3,7 @@
 const router   = require('express').Router();
 const bcrypt   = require('bcryptjs');
 const { authenticate } = require('../middleware/authenticate');
-const { getAdminStats, getDb } = require('../db/client');
+const { getAdminStats, getDb, getSetting, setSetting } = require('../db/client');
 
 function requireAdmin(req, res, next) {
   if (req.userRole !== 'admin') return res.status(403).json({ error: 'Access denied.' });
@@ -12,6 +12,22 @@ function requireAdmin(req, res, next) {
 
 router.get('/stats', authenticate, requireAdmin, (req, res, next) => {
   try { res.json(getAdminStats()); } catch (e) { next(e); }
+});
+
+router.get('/settings', authenticate, requireAdmin, (req, res, next) => {
+  try {
+    res.json({ registration_open: getSetting('registration_open') ?? 'true' });
+  } catch (e) { next(e); }
+});
+
+router.post('/settings', authenticate, requireAdmin, (req, res, next) => {
+  try {
+    const allowed = ['registration_open'];
+    for (const [key, value] of Object.entries(req.body)) {
+      if (allowed.includes(key)) setSetting(key, value);
+    }
+    res.json({ ok: true });
+  } catch (e) { next(e); }
 });
 
 // ── Reset parolă proprie (admin logged in) ────────────────────────

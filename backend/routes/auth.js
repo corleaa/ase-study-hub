@@ -81,8 +81,10 @@ router.post('/register',
   validate('register'),
   async (req, res, next) => {
     try {
-      // Registration can be disabled via env var (closed beta)
-      if (process.env.REGISTRATION_OPEN === 'false') {
+      // Registration can be disabled via DB setting or env var
+      const { getSetting } = require('../db/client');
+      const regOpen = getSetting('registration_open') ?? (process.env.REGISTRATION_OPEN ?? 'true');
+      if (regOpen === 'false') {
         return res.status(403).json({ error: 'Înregistrările sunt momentan închise. Contactează administratorul pentru acces.' });
       }
 

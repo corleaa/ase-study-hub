@@ -272,6 +272,15 @@ function initDb() {
   try { db.exec('ALTER TABLE ai_calls ADD COLUMN tokens_output INTEGER NOT NULL DEFAULT 0'); } catch {}
   try { db.exec('ALTER TABLE ai_calls ADD COLUMN cost_usd REAL NOT NULL DEFAULT 0.0'); } catch {}
   try { db.exec('ALTER TABLE ai_calls ADD COLUMN subject TEXT'); } catch {}
+  // Settings table
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )`);
+    // Default: registration open
+    db.exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('registration_open', 'true')");
+  } catch {}
   // Smart summary columns
   try { db.exec('ALTER TABLE summaries ADD COLUMN doc_hash TEXT'); } catch {}
   try { db.exec('ALTER TABLE summaries ADD COLUMN intent TEXT DEFAULT \'understand\''); } catch {}
@@ -965,6 +974,16 @@ function updateConceptProgress(userId, conceptId, score) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────────────
+function getSetting(key) {
+  return getDb().prepare('SELECT value FROM settings WHERE key=?').get(key)?.value ?? null;
+}
+function setSetting(key, value) {
+  getDb().prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, String(value));
+}
+
+// ─────────────────────────────────────────────────────────────────
 // SMART SUMMARIES
 // ─────────────────────────────────────────────────────────────────
 function getSmartSummaryByHash(docHash, userId) {
@@ -1105,6 +1124,9 @@ module.exports = {
   // Stats
   getReadinessScore,
   getSubjectStats,
+  // Settings
+  getSetting,
+  setSetting,
   // Smart summaries
   getSmartSummaryByHash,
   createSmartSummary,
