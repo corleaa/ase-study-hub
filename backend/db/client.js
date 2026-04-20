@@ -272,6 +272,14 @@ function initDb() {
   try { db.exec('ALTER TABLE ai_calls ADD COLUMN tokens_output INTEGER NOT NULL DEFAULT 0'); } catch {}
   try { db.exec('ALTER TABLE ai_calls ADD COLUMN cost_usd REAL NOT NULL DEFAULT 0.0'); } catch {}
   try { db.exec('ALTER TABLE ai_calls ADD COLUMN subject TEXT'); } catch {}
+  // Smart summary columns
+  try { db.exec('ALTER TABLE summaries ADD COLUMN doc_hash TEXT'); } catch {}
+  try { db.exec('ALTER TABLE summaries ADD COLUMN intent TEXT DEFAULT \'understand\''); } catch {}
+  try { db.exec('ALTER TABLE summaries ADD COLUMN engine_version TEXT DEFAULT \'v1.0\''); } catch {}
+  try { db.exec('ALTER TABLE summaries ADD COLUMN output_json TEXT'); } catch {}
+  try { db.exec('ALTER TABLE summaries ADD COLUMN model TEXT'); } catch {}
+  try { db.exec('ALTER TABLE summaries ADD COLUMN cost_usd REAL DEFAULT 0'); } catch {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_summaries_hash ON summaries(doc_hash, user_id)'); } catch {}
 
   // Remove expired tokens on startup
   cleanExpiredTokens();
@@ -957,6 +965,24 @@ function updateConceptProgress(userId, conceptId, score) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// SMART SUMMARIES
+// ─────────────────────────────────────────────────────────────────
+function getSmartSummaryByHash(docHash, userId) {
+  return getDb()
+    .prepare('SELECT * FROM summaries WHERE doc_hash = ? AND user_id = ? LIMIT 1')
+    .get(docHash, userId);
+}
+
+function createSmartSummary(userId, subjectId, title, docHash, intent, engineVersion, outputJson, model, costUsd, documentId) {
+  const result = getDb()
+    .prepare(`INSERT INTO summaries
+      (user_id, subject_id, document_id, title, content, doc_hash, intent, engine_version, output_json, model, cost_usd)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(userId, subjectId, documentId || null, title, '', docHash, intent, engineVersion, outputJson, model, costUsd);
+  return getDb().prepare('SELECT * FROM summaries WHERE id = ?').get(result.lastInsertRowid);
+}
+
+// ─────────────────────────────────────────────────────────────────
 // ADMIN STATS
 // ─────────────────────────────────────────────────────────────────
 function getAdminStats() {
@@ -1079,6 +1105,9 @@ module.exports = {
   // Stats
   getReadinessScore,
   getSubjectStats,
+  // Smart summaries
+  getSmartSummaryByHash,
+  createSmartSummary,
   // Admin
   getAdminStats,
   // Adaptive recall engine

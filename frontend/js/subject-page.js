@@ -87,6 +87,24 @@ function renderSubjectPage(element, key, subject) {
   html += '<input class="todo-inp" id="presTitle" placeholder="Titlul rezumatului (ex: Curs 3 — Regresie Logistică)" style="width:100%;">';
   html += '</div>';
 
+  // ── Learning intent selector ───────────────────────────────────
+  html += '<div style="margin-top:12px;">';
+  html += '<div style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:8px;">Scopul tău pentru această fișă</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;" id="intentSelector">';
+  var intents = [
+    { id:'understand', label:'🧠 Vreau să înțeleg', desc:'Mecanism, analogii, logică internă' },
+    { id:'exam_prep',  label:'📝 Pregătesc examenul', desc:'Termeni exacți, formule, capcane' },
+    { id:'apply',      label:'⚡ Vreau să aplic',    desc:'Cazuri practice, exemple, protocoale' },
+  ];
+  intents.forEach(function(intent, i) {
+    var isActive = i === 0;
+    html += '<button class="intent-btn' + (isActive?' active':'') + '" data-intent="' + intent.id + '" onclick="selectIntent(this)" style="flex:1;min-width:130px;background:' + (isActive?'var(--accent-muted)':'var(--bg-surface)') + ';border:1px solid ' + (isActive?'var(--accent-border)':'var(--border)') + ';border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left;transition:all .15s;">';
+    html += '<div style="font-size:.82rem;font-weight:500;color:' + (isActive?'var(--accent)':'var(--text-secondary)') + ';">' + intent.label + '</div>';
+    html += '<div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">' + intent.desc + '</div>';
+    html += '</button>';
+  });
+  html += '</div></div>';
+
   html += '<div class="hero-gen-actions">';
   html += '<button class="hero-gen-btn" id="summaryBtn" data-subject-action="generate-presentation" data-subject-key="' + key + '">';
   html += icon('sparkle','sm') + ' Generează rezumatul</button>';
@@ -975,6 +993,20 @@ function repairTruncatedJSON(raw) {
   return null;
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Learning intent selector
+// ─────────────────────────────────────────────────────────────────
+var _selectedIntent = 'understand';
+function selectIntent(btn) {
+  _selectedIntent = btn.getAttribute('data-intent') || 'understand';
+  document.querySelectorAll('.intent-btn').forEach(function(b) {
+    var active = b === btn;
+    b.style.background = active ? 'var(--accent-muted)' : 'var(--bg-surface)';
+    b.style.borderColor = active ? 'var(--accent-border)' : 'var(--border)';
+    b.querySelector('div').style.color = active ? 'var(--accent)' : 'var(--text-secondary)';
+  });
+}
+
 // =============================================
 // RICH SUMMARY — prompt îmbunătățit + render vizual
 // =============================================
@@ -1073,9 +1105,9 @@ REGULI STRICTE:
 }
 
 async function generatePresentation(key) {
-  var inputEl   = document.getElementById('summaryInput');
-  var btnEl     = document.getElementById('summaryBtn');
-  var statusEl  = document.getElementById('summaryStatus');
+  var inputEl    = document.getElementById('summaryInput');
+  var btnEl      = document.getElementById('summaryBtn');
+  var statusEl   = document.getElementById('summaryStatus');
   var titleInput = document.getElementById('presTitle');
 
   var text = uploadedFileText || (inputEl ? inputEl.value.trim() : '');
@@ -1086,59 +1118,49 @@ async function generatePresentation(key) {
 
   var subjectObj  = getSubjects()[key];
   var subjectFull = subjectObj ? subjectObj.full : key;
-  var isFinance   = isFinanceTopic(subjectFull);
   var title = (titleInput && titleInput.value.trim()) || ('Rezumat ' + (new Date().toLocaleDateString('ro')));
+  var intent = _selectedIntent || 'understand';
 
   if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<span>⏳</span> Se generează fișa...'; }
-  if (statusEl) statusEl.textContent = 'Durează ~20-40 secunde...';
-
-  var inputText = text.substring(0, 8000);
+  if (statusEl) statusEl.textContent = 'Analizez documentul și construiesc scaffold-ul (~20-40s)...';
 
   try {
-    var res = await authFetch('/api/ai/chat', {
+    var res = await authFetch('/api/ai/smart-summary', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(window.__shAccessToken ? { 'Authorization': 'Bearer ' + window.__shAccessToken } : {})
-      },
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 6000,
-        system: buildSummarySystemPrompt(subjectFull, isFinance),
-        messages: [{ role: 'user', content: 'Creează fișa de învățare pentru:\n\n' + inputText }]
+        text:        text,
+        subjectName: subjectFull,
+        intent:      intent,
+        title:       title,
+        subjectId:   subjectObj && subjectObj.id ? subjectObj.id : null,
       })
     });
 
-    var resData = await res.json();
-    var rawText = (resData.content || '').trim();
-    var clean   = rawText.replace(/^```json?\s*/m, '').replace(/\s*```$/m, '').trim();
-
-    var summary = null;
-    try {
-      summary = JSON.parse(clean);
-    } catch(e) {
-      // Încearcă extragere JSON din mijlocul textului
-      var jsonMatch = clean.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try { summary = JSON.parse(jsonMatch[0]); } catch(e2) { summary = null; }
-      }
+    if (!res.ok) {
+      var errData = await res.json().catch(function() { return {}; });
+      throw new Error(errData.error || 'Eroare server ' + res.status);
     }
 
-    if (summary && summary.title) {
-      // Construiește un obiect compatibil cu sistemul existent de prezentări
-      // dar cu un slide special care conține rich summary HTML
-      var richHtml = buildRichSummaryHtml(summary, isFinance);
+    var resData = await res.json();
+    var summaryData = resData.summary;
+
+    if (summaryData && summaryData.output && summaryData.output.title) {
+      // Build slides using new smart engine
+      var slides = typeof buildSmartSummarySlides === 'function'
+        ? buildSmartSummarySlides(summaryData)
+        : [];
 
       var newPresentation = {
-        id:     'pres_' + Date.now(),
-        title:  title,
-        date:   new Date().toLocaleDateString('ro'),
-        isRich: true,  // marker pentru rich summary
-        richData: summary,
-        slides: [
-          { tag: 'Rezumat Vizual', title: summary.title, content: richHtml, isRich: true }
-        ]
+        id:            'pres_' + Date.now(),
+        title:         title,
+        date:          new Date().toLocaleDateString('ro'),
+        isSmartSummary: true,
+        smartData:     summaryData,
+        intent:        intent,
+        fromCache:     resData.fromCache || false,
+        slides:        slides.length ? slides : [{ tag: 'Rezumat', title: summaryData.output.title, content: '<div style="color:var(--text-secondary);padding:20px;">Rezumat generat.</div>' }],
       };
 
       if (!state.presentations[key]) state.presentations[key] = [];
@@ -1149,7 +1171,8 @@ async function generatePresentation(key) {
       uploadedFileText = '';
       if (inputEl) inputEl.value = '';
 
-      if (statusEl) statusEl.textContent = '[OK] Fișă generată!';
+      var cacheMsg = resData.fromCache ? ' (din cache)' : '';
+      if (statusEl) statusEl.textContent = '[OK] Fișă generată!' + cacheMsg;
 
       renderPage();
       renderSidebar();
@@ -1157,17 +1180,16 @@ async function generatePresentation(key) {
       setTimeout(function() { openRichSummaryViewer(key, newIdx); }, 200);
       return;
     } else {
-      if (statusEl) statusEl.textContent = '[!] Răspunsul AI nu a putut fi parsat. Încearcă din nou.';
-      console.warn('Rich summary parse failed. Raw:', clean.substring(0, 300));
+      throw new Error('Structura răspunsului AI e incompletă. Încearcă din nou.');
     }
   } catch(err) {
     if (statusEl) statusEl.textContent = '[!] Eroare: ' + err.message;
-    console.error(err);
+    console.error('generatePresentation error:', err);
   }
 
   if (btnEl) {
     btnEl.disabled = false;
-    btnEl.innerHTML = '<span>✨</span> Generează Rezumat';
+    btnEl.innerHTML = icon('sparkle','sm') + ' Generează rezumatul';
   }
 }
 

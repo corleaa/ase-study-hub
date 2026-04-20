@@ -35,6 +35,16 @@ const {
   examResponse,
   summaryResponse,
 } = require('../utils/apiContracts');
+const {
+  generateSmartSummary,
+  regenerateSection,
+  computeDocHash,
+  ENGINE_VERSION,
+} = require('../services/summaryEngine');
+const {
+  getSmartSummaryByHash,
+  createSmartSummary,
+} = require('../db/client');
 
 // ── Shared middleware stack for all AI routes ─────────────────────
 // Order: IP limit → optional auth (guest allowed) → per-tier limit
@@ -253,6 +263,112 @@ Creează un rezumat clar, structurat, cu titluri și bullet points. Folosește f
 
       logApiCall(req.user?.id ?? null, 'summarize', req.clientIpHash);
       res.json(summaryResponse(cachedSummary || setCached('summarize', cachePayload, summary)));
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
+// POST /api/ai/smart-summary
+// ─────────────────────────────────────────────────────────────────
+router.post('/smart-summary',
+  ...aiGuard('smart-summary'),
+  async (req, res, next) => {
+    try {
+      const { text, subjectName, intent = 'understand', subjectId, title, documentId } = req.body;
+
+      if (!text || typeof text !== 'string' || text.trim().length < 50) {
+        return res.status(400).json({ error: 'Textul documentului este prea scurt sau lipsă.' });
+      }
+      if (!subjectName || typeof subjectName !== 'string') {
+        return res.status(400).json({ error: 'subjectName este obligatoriu.' });
+      }
+      const validIntents = ['understand', 'exam_prep', 'apply'];
+      const safeIntent = validIntents.includes(intent) ? intent : 'understand';
+
+      const userId = req.user?.id ?? null;
+
+      // ── Cache check ─────────────────────────────────────────────
+      const docHash = computeDocHash(text, safeIntent);
+      if (userId) {
+        const cached = getSmartSummaryByHash(docHash, userId);
+        if (cached?.output_json) {
+          logger.info('Smart summary served from cache', { userId, docHash });
+          return res.json({ summary: JSON.parse(cached.output_json), fromCache: true, id: cached.id });
+        }
+      }
+
+      // ── Generate ─────────────────────────────────────────────────
+      const result = await generateSmartSummary({
+        text,
+        subjectName,
+        intent: safeIntent,
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
+
+      // ── Save to DB ───────────────────────────────────────────────
+      let savedId = null;
+      if (userId && subjectId) {
+        const summaryTitle = title || result.data.output.title || ('Rezumat ' + new Date().toLocaleDateString('ro'));
+        const saved = createSmartSummary(
+          userId, subjectId, summaryTitle,
+          docHash, safeIntent, ENGINE_VERSION,
+          JSON.stringify(result.data), result.model, result.costUsd,
+          documentId || null
+        );
+        savedId = saved?.id;
+      }
+
+      // ── Log API call ─────────────────────────────────────────────
+      logApiCall(
+        userId, 'smart-summary', req.clientIpHash,
+        result.inputTokens, result.outputTokens, result.costUsd,
+        subjectName.substring(0, 60)
+      );
+
+      logger.info('Smart summary generated', {
+        userId, model: result.model, cost: result.costUsd.toFixed(5),
+        intent: safeIntent, tokens: result.inputTokens + result.outputTokens,
+      });
+
+      res.json({ summary: result.data, fromCache: false, id: savedId });
+    } catch (e) {
+      logger.error('Smart summary error', { error: e.message });
+      next(e);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
+// POST /api/ai/smart-summary/regenerate-section
+// ─────────────────────────────────────────────────────────────────
+router.post('/smart-summary/regenerate-section',
+  ...aiGuard('smart-summary'),
+  async (req, res, next) => {
+    try {
+      const { sectionKind, currentSection, context, instruction, subjectName } = req.body;
+
+      if (!sectionKind || !currentSection || !instruction) {
+        return res.status(400).json({ error: 'sectionKind, currentSection și instruction sunt obligatorii.' });
+      }
+
+      const result = await regenerateSection({
+        sectionKind,
+        currentSection,
+        context: context || '',
+        instruction,
+        subjectName: subjectName || '',
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
+
+      logApiCall(
+        req.user?.id ?? null, 'smart-summary', req.clientIpHash,
+        result.inputTokens, result.outputTokens, result.costUsd,
+        subjectName?.substring(0, 60)
+      );
+
+      res.json({ section: result.section });
     } catch (e) {
       next(e);
     }

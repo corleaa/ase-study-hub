@@ -56,6 +56,12 @@ const FEATURE_LIMITS = {
     pro:   { windowMinutes: 5,  maxPerWindow: 5,  dailyMax: 30 },
     admin: null,
   },
+  'smart-summary': {
+    guest: { windowMinutes: 5,  maxPerWindow: 1,  dailyMax: 1  },
+    free:  { windowMinutes: 5,  maxPerWindow: 2,  dailyMax: 5  },
+    pro:   { windowMinutes: 5,  maxPerWindow: 5,  dailyMax: 30 },
+    admin: null,
+  },
 };
 
 // ── 1. IP-level limiter for auth routes ──────────────────────────
