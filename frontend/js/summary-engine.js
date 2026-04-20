@@ -236,140 +236,160 @@ function renderSmartSummaryPage(data) {
   var o = data.output;
   var a = data.analysis || {};
 
-  var h = '<div style="max-width:820px;margin:0 auto;padding:28px 24px 52px;font-family:var(--font-body);">';
+  var h = '<div style="max-width:740px;margin:0 auto;padding:36px 28px 60px;font-family:var(--font-body);">';
 
   // ── Header ────────────────────────────────────────────────────
-  h += '<div style="margin-bottom:28px;">';
-  h += '<div style="font-size:1.6rem;font-weight:800;color:var(--text-primary);line-height:1.25;margin-bottom:12px;letter-spacing:-.01em;">' + escapeHtml(o.title||'') + '</div>';
-  if (o.why_it_matters) h += '<div style="font-size:.92rem;color:var(--text-secondary);line-height:1.75;margin-bottom:14px;border-left:3px solid rgba(242,155,109,.35);padding-left:14px;">' + escapeHtml(o.why_it_matters) + '</div>';
+  h += '<div style="margin-bottom:8px;">';
 
-  // Tags
-  if (o.domain_tags && o.domain_tags.length) {
-    h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
-    o.domain_tags.forEach(function(t) {
-      h += '<span style="background:rgba(242,155,109,.1);color:var(--accent);border:1px solid rgba(242,155,109,.22);border-radius:20px;padding:3px 11px;font-size:.7rem;font-weight:600;">'+escapeHtml(t)+'</span>';
-    });
-    h += '</div>';
-  }
-
-  // Badges
-  var badges = [];
+  // Difficulty + tags inline, small
+  var meta = [];
   if (a.difficulty) {
     var dc = {introductory:'var(--green)',intermediate:'var(--amber)',advanced:'var(--red)'}[a.difficulty]||'var(--text-muted)';
-    badges.push('<span style="background:'+dc+'18;color:'+dc+';border:1px solid '+dc+'30;border-radius:7px;padding:3px 11px;font-size:.7rem;font-weight:600;">'+escapeHtml(a.difficulty)+'</span>');
+    meta.push('<span style="color:'+dc+';font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">'+escapeHtml(a.difficulty)+'</span>');
   }
-  if (a.confidence) badges.push('<span style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:7px;padding:3px 11px;font-size:.7rem;color:var(--text-muted);">confidence '+Math.round(a.confidence*100)+'%</span>');
-  if (badges.length) h += '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + badges.join('') + '</div>';
+  if (o.domain_tags && o.domain_tags.length) {
+    o.domain_tags.slice(0,3).forEach(function(t) {
+      meta.push('<span style="color:var(--text-muted);font-size:.72rem;">'+escapeHtml(t)+'</span>');
+    });
+  }
+  if (meta.length) h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px;">' + meta.join('<span style="color:var(--border);font-size:.7rem;">·</span>') + '</div>';
+
+  // Title — big and breathing
+  h += '<div style="font-size:1.85rem;font-weight:800;color:var(--text-primary);line-height:1.2;letter-spacing:-.02em;margin-bottom:18px;">' + escapeHtml(o.title||'') + '</div>';
+
+  // Why it matters — pull quote style
+  if (o.why_it_matters) {
+    h += '<div style="font-size:1rem;color:var(--text-secondary);line-height:1.8;margin-bottom:0;font-weight:400;">' + escapeHtml(o.why_it_matters) + '</div>';
+  }
   h += '</div>';
+
+  // Divider
+  h += '<div style="height:1px;background:linear-gradient(to right,var(--accent)40,transparent);margin:28px 0;"></div>';
 
   // ── Prerequisites ───────────────────────────────────────────────
   if (a.prerequisites && a.prerequisites.length) {
-    h += '<div style="background:rgba(138,184,216,.07);border:1px solid rgba(138,184,216,.18);border-radius:10px;padding:12px 15px;margin-bottom:20px;">';
-    h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);margin-bottom:8px;">Înainte să citești, trebuie să știi</div>';
-    h += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
-    a.prerequisites.forEach(function(p) { h += '<span style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:7px;padding:3px 10px;font-size:.77rem;color:var(--text-secondary);">'+escapeHtml(p)+'</span>'; });
+    h += '<div style="margin-bottom:32px;">';
+    h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);margin-bottom:10px;">Înainte să citești, trebuie să știi</div>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:7px;">';
+    a.prerequisites.forEach(function(p) {
+      h += '<span style="background:rgba(138,184,216,.08);border:1px solid rgba(138,184,216,.2);border-radius:20px;padding:4px 12px;font-size:.78rem;color:var(--text-secondary);">'+escapeHtml(p)+'</span>';
+    });
     h += '</div></div>';
   }
 
   // ── Layers ────────────────────────────────────────────────────
   if (o.layers && o.layers.length) {
-    h += '<div style="margin-bottom:28px;">';
-    h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:12px;">Trei niveluri de înțelegere</div>';
+    h += '<div style="margin-bottom:36px;">';
+    h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:14px;">Trei niveluri de înțelegere</div>';
     var lc = {'Intuitiv':'var(--green)','Conceptual':'var(--blue)','Tehnic':'var(--purple)'};
     o.layers.forEach(function(layer, idx) {
       var c = layer.color || lc[layer.level] || 'var(--accent)';
-      h += '<details '+(idx===0?'open':'')+' style="background:'+c+'0a;border:1px solid '+c+'22;border-radius:13px;padding:13px 16px;margin-bottom:8px;transition:background .2s;">';
-      h += '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none;">';
-      h += '<span style="background:'+c+'1a;color:'+c+';border:1px solid '+c+'38;border-radius:20px;padding:3px 12px;font-size:.69rem;font-weight:700;letter-spacing:.02em;">'+escapeHtml(layer.level||'')+'</span>';
-      h += '<span style="font-size:.69rem;color:var(--text-muted);margin-left:auto;font-family:var(--font-mono);">'+(idx===0?'▲ deschis':'▼ deschide')+'</span>';
+      h += '<details '+(idx===0?'open':'')+' style="margin-bottom:6px;">';
+      h += '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 14px;background:'+c+'09;border-radius:10px;user-select:none;border:1px solid '+c+'1e;">';
+      h += '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:'+c+'20;color:'+c+';border-radius:6px;font-size:.65rem;font-weight:800;flex-shrink:0;">'+(idx+1)+'</span>';
+      h += '<span style="font-size:.82rem;font-weight:600;color:'+c+';">'+escapeHtml(layer.level||'')+'</span>';
+      h += '<span style="font-size:.7rem;color:var(--text-muted);margin-left:auto;">'+(idx===0?'▲':'▼')+'</span>';
       h += '</summary>';
-      h += '<div style="font-size:.85rem;color:var(--text-secondary);line-height:1.75;margin-top:12px;padding-top:10px;border-top:1px solid '+c+'18;">'+escapeHtml(layer.text||'')+'</div>';
+      h += '<div style="font-size:.87rem;color:var(--text-secondary);line-height:1.78;padding:14px 14px 6px 46px;">'+escapeHtml(layer.text||'')+'</div>';
       h += '</details>';
     });
     h += '</div>';
   }
 
-  // ── Sections ──────────────────────────────────────────────────
+  // ── Sections — editorial style ────────────────────────────────
   var sections = (o.sections||[]).filter(function(s){ return (s.relevance||1)>0.45; });
   sections.sort(function(a,b){ return (b.relevance||0)-(a.relevance||0); });
 
-  if (sections.length) {
-    // 2-column grid for sections where content is compact
-    var singleKinds = ['caz','articol','derivare','cod'];
-    var i = 0;
-    while (i < sections.length) {
-      var sec = sections[i];
-      var isSingle = singleKinds.indexOf(sec.kind) >= 0 || !sections[i+1];
-      if (isSingle) {
-        h += renderSectionBlock(sec);
-        i++;
-      } else {
-        // pair side-by-side
-        h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">';
-        h += renderSectionBlock(sections[i], true);
-        h += renderSectionBlock(sections[i+1], true);
-        h += '</div>';
-        i += 2;
-      }
-    }
-  }
+  var boxKinds = ['formule','derivare','cod','caz','articol','protocol','complexitate'];
+  sections.forEach(function(sec) {
+    var c = SECTION_COLOR[sec.kind] || 'var(--text-muted)';
+    var renderer = SR[sec.kind] || SR._generic;
+    var needsBox = boxKinds.indexOf(sec.kind) >= 0;
 
-  // ── Key insight ───────────────────────────────────────────────
-  if (o.key_insight) {
-    h += '<div style="background:rgba(115,201,166,.07);border:1px solid rgba(115,201,166,.17);border-radius:10px;padding:14px 17px;margin-bottom:20px;text-align:center;">';
-    h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:6px;">Ideea centrală</div>';
-    h += '<div style="font-size:.87rem;color:var(--text-secondary);line-height:1.65;font-style:italic;">'+escapeHtml(o.key_insight)+'</div>';
+    h += '<div style="margin-bottom:32px;">';
+    // Section header — editorial chapter marker
+    h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
+    h += '<div style="width:24px;height:2px;background:'+c+';border-radius:2px;flex-shrink:0;"></div>';
+    h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:'+c+';">'+escapeHtml(sec.title||sec.kind)+'</div>';
     h += '</div>';
+
+    if (needsBox) {
+      // Sections that naturally need a contained block
+      h += renderer(sec);
+    } else {
+      // Open sections — content flows directly
+      h += renderer(sec);
+    }
+    h += '</div>';
+  });
+
+  // Divider
+  if (sections.length) h += '<div style="height:1px;background:var(--border);margin:8px 0 32px;"></div>';
+
+  // ── Key insight — large pull quote ────────────────────────────
+  if (o.key_insight) {
+    h += '<div style="margin-bottom:32px;padding:0 16px;">';
+    h += '<div style="font-size:1.05rem;color:var(--text-secondary);line-height:1.75;font-style:italic;text-align:center;position:relative;">';
+    h += '<span style="color:rgba(242,155,109,.3);font-size:3rem;line-height:1;position:absolute;top:-10px;left:-16px;font-family:Georgia,serif;">"</span>';
+    h += escapeHtml(o.key_insight);
+    h += '<span style="color:rgba(242,155,109,.3);font-size:3rem;line-height:1;font-family:Georgia,serif;">"</span>';
+    h += '</div></div>';
   }
 
   // ── Pathway ───────────────────────────────────────────────────
   if (o.pathway && o.pathway.length) {
-    h += '<div style="margin-bottom:20px;">';
-    h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:10px;">Traseu conceptual</div>';
-    h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:0;">';
+    h += '<div style="margin-bottom:24px;">';
+    h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:12px;">Traseu conceptual</div>';
+    h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">';
     o.pathway.forEach(function(step, i) {
-      h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:.78rem;color:var(--text-secondary);white-space:nowrap;">'+escapeHtml(step)+'</div>';
-      if (i < o.pathway.length-1) h += '<div style="color:var(--accent);padding:0 5px;font-size:.85rem;">→</div>';
+      var isActive = i === Math.floor(o.pathway.length / 2);
+      h += '<div style="padding:5px 12px;border-radius:20px;font-size:.78rem;'+(isActive?'background:rgba(242,155,109,.12);color:var(--accent);border:1px solid rgba(242,155,109,.25);font-weight:600;':'color:var(--text-muted);')+'white-space:nowrap;">'+escapeHtml(step)+'</div>';
+      if (i < o.pathway.length-1) h += '<div style="color:var(--border);font-size:.8rem;padding:0 2px;">→</div>';
     });
     h += '</div></div>';
   }
 
-  // ── Learning position ─────────────────────────────────────────
-  if (a.learning_position && ((a.learning_position.requires||[]).length || (a.learning_position.leads_to||[]).length)) {
+  // ── Learning position — inline, minimal ──────────────────────
+  if (a.learning_position) {
     var lp = a.learning_position;
-    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">';
-    if ((lp.requires||[]).length) {
-      h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:9px;padding:12px 14px;"><div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:7px;">← Vine după</div>';
-      lp.requires.forEach(function(r){ h += '<div style="font-size:.78rem;color:var(--text-secondary);padding:2px 0;">'+escapeHtml(r)+'</div>'; });
+    var has = (lp.requires||[]).length || (lp.leads_to||[]).length;
+    if (has) {
+      h += '<div style="display:flex;gap:32px;margin-bottom:28px;flex-wrap:wrap;">';
+      if ((lp.requires||[]).length) {
+        h += '<div><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">← Vine după</div>';
+        h += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+        lp.requires.forEach(function(r){ h += '<span style="font-size:.76rem;color:var(--text-muted);">'+escapeHtml(r)+'</span>'; });
+        h += '</div></div>';
+      }
+      if ((lp.leads_to||[]).length) {
+        h += '<div><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">→ Duce spre</div>';
+        h += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+        lp.leads_to.forEach(function(l){ h += '<span style="font-size:.76rem;color:var(--text-muted);">'+escapeHtml(l)+'</span>'; });
+        h += '</div></div>';
+      }
       h += '</div>';
     }
-    if ((lp.leads_to||[]).length) {
-      h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:9px;padding:12px 14px;"><div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:7px;">→ Duce spre</div>';
-      lp.leads_to.forEach(function(l){ h += '<div style="font-size:.78rem;color:var(--text-secondary);padding:2px 0;">'+escapeHtml(l)+'</div>'; });
-      h += '</div>';
-    }
-    h += '</div>';
   }
 
-  // ── Ce urmează ────────────────────────────────────────────────
+  // ── Ce urmează — single important callout ────────────────────
   if (o.ce_urmeaza) {
-    h += '<div style="background:rgba(242,155,109,.07);border:1px solid rgba(242,155,109,.2);border-radius:11px;padding:15px 17px;">';
-    h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:7px;">Ce vei găsi în documentul complet</div>';
-    h += '<div style="font-size:.84rem;color:var(--text-secondary);line-height:1.7;">'+escapeHtml(o.ce_urmeaza)+'</div>';
+    h += '<div style="background:rgba(242,155,109,.06);border-left:3px solid var(--accent);padding:16px 20px;border-radius:0 10px 10px 0;">';
+    h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);margin-bottom:8px;">Ce vei găsi în documentul complet</div>';
+    h += '<div style="font-size:.86rem;color:var(--text-secondary);line-height:1.75;">'+escapeHtml(o.ce_urmeaza)+'</div>';
     h += '</div>';
   }
 
-  h += '</div>'; // end page wrapper
+  h += '</div>';
   return h;
 }
 
-function renderSectionBlock(sec, noMargin) {
+function renderSectionBlock(sec) {
   var c = SECTION_COLOR[sec.kind] || 'var(--text-muted)';
   var renderer = SR[sec.kind] || SR._generic;
-  var mb = noMargin ? '' : 'margin-bottom:14px;';
-  var h = '<div style="background:var(--bg-raised);border:1px solid var(--border);border-top:2px solid '+c+'40;border-radius:12px;padding:15px 17px;'+mb+'">';
-  h += '<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;">';
-  h += '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:'+c+';">'+escapeHtml(sec.title||sec.kind)+'</div>';
+  var h = '<div style="margin-bottom:32px;">';
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
+  h += '<div style="width:24px;height:2px;background:'+c+';border-radius:2px;flex-shrink:0;"></div>';
+  h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:'+c+';">'+escapeHtml(sec.title||sec.kind)+'</div>';
   h += '</div>';
   h += renderer(sec);
   h += '</div>';
