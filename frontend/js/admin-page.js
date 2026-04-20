@@ -61,7 +61,7 @@ async function renderAdminPage(container) {
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">';
   html += '<div><div style="font-size:1.4rem;font-weight:700;color:var(--text-primary);">Admin Dashboard</div>';
   html += '<div style="font-size:.8rem;color:var(--text-muted);margin-top:3px;">Study Hub · Date în timp real · ' + new Date().toLocaleDateString('ro', {day:'numeric',month:'long',year:'numeric'}) + '</div></div>';
-  html += '<button onclick="renderAdminPage(document.getElementById(\'pageContent\'))" style="background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);border-radius:var(--radius-xs);padding:7px 16px;font-size:.82rem;cursor:pointer;">↺ Reîncarcă</button>';
+  html += '<button id="adminReloadBtn" style="background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);border-radius:var(--radius-xs);padding:7px 16px;font-size:.82rem;cursor:pointer;">↺ Reîncarcă</button>';
   html += '</div>';
 
   // ── Setări platformă ────────────────────────────────────────────
@@ -73,7 +73,7 @@ async function renderAdminPage(container) {
   // Registration toggle
   html += '<div style="display:flex;align-items:center;gap:10px;">';
   html += '<span style="font-size:.8rem;color:var(--text-secondary);">Înregistrări noi</span>';
-  html += '<button id="adminRegToggle" onclick="adminToggleRegistration()" style="background:' + (regOpen ? 'var(--green)' : 'var(--bg-overlay)') + ';border:1px solid ' + (regOpen ? 'var(--green)' : 'var(--border)') + ';color:' + (regOpen ? '#0d0b10' : 'var(--text-muted)') + ';border-radius:20px;padding:5px 16px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;">' + (regOpen ? '✓ Deschise' : '✗ Închise') + '</button>';
+  html += '<button id="adminRegToggle" data-admin-action="toggle-registration" data-reg-open="' + (regOpen ? 'true' : 'false') + '" style="background:' + (regOpen ? 'var(--green)' : 'var(--bg-overlay)') + ';border:1px solid ' + (regOpen ? 'var(--green)' : 'var(--border)') + ';color:' + (regOpen ? '#0d0b10' : 'var(--text-muted)') + ';border-radius:20px;padding:5px 16px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;">' + (regOpen ? '✓ Deschise' : '✗ Închise') + '</button>';
   html += '</div>';
   html += '</div></div>';
 
@@ -216,29 +216,37 @@ async function renderAdminPage(container) {
   html += '</div>';
 
   container.innerHTML = html;
-}
 
-async function adminToggleRegistration() {
-  const btn = document.getElementById('adminRegToggle');
-  if (!btn) return;
-  const isOpen = btn.textContent.includes('Deschise');
-  const newVal = isOpen ? 'false' : 'true';
-  btn.textContent = '...';
-  btn.disabled = true;
-  try {
-    const res = await authFetch('/api/admin/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ registration_open: newVal }),
+  // Event listeners (fără onclick inline — CSP blochează unsafe-inline)
+  var reloadBtn = document.getElementById('adminReloadBtn');
+  if (reloadBtn) reloadBtn.addEventListener('click', function() { renderAdminPage(container); });
+
+  // Event listener pentru toggle înregistrări
+  var regBtn = document.getElementById('adminRegToggle');
+  if (regBtn) {
+    regBtn.addEventListener('click', async function() {
+      var btn = this;
+      var isOpen = btn.getAttribute('data-reg-open') === 'true';
+      var newVal = isOpen ? 'false' : 'true';
+      btn.textContent = '...';
+      btn.disabled = true;
+      try {
+        var res = await authFetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ registration_open: newVal }),
+        });
+        if (!res.ok) throw new Error('Eroare');
+        btn.setAttribute('data-reg-open', newVal);
+        btn.textContent = newVal === 'true' ? '✓ Deschise' : '✗ Închise';
+        btn.style.background = newVal === 'true' ? 'var(--green)' : 'var(--bg-overlay)';
+        btn.style.borderColor = newVal === 'true' ? 'var(--green)' : 'var(--border)';
+        btn.style.color = newVal === 'true' ? '#0d0b10' : 'var(--text-muted)';
+      } catch {
+        btn.textContent = '! Eroare — reîncarcă';
+      }
+      btn.disabled = false;
     });
-    if (!res.ok) throw new Error('Eroare');
-    btn.textContent = newVal === 'true' ? '✓ Deschise' : '✗ Închise';
-    btn.style.background = newVal === 'true' ? 'var(--green)' : 'var(--bg-overlay)';
-    btn.style.borderColor = newVal === 'true' ? 'var(--green)' : 'var(--border)';
-    btn.style.color = newVal === 'true' ? '#0d0b10' : 'var(--text-muted)';
-  } catch {
-    btn.textContent = '! Eroare';
   }
-  btn.disabled = false;
 }
