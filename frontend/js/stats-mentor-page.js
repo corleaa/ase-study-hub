@@ -1080,10 +1080,28 @@ function renderMentorPage(element) {
   html += renderMentorSnapshot();
   html += '</div>';
 
+  // Fișa activă — banner dacă există context
+  if (window.__activeSummaryContext) {
+    const sc = window.__activeSummaryContext;
+    html += '<div style="background:rgba(242,155,109,.08);border:1px solid rgba(242,155,109,.22);border-radius:11px;padding:12px 14px;margin-bottom:12px;">';
+    html += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:6px;">📄 Fișă activă</div>';
+    html += '<div style="font-size:.82rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;">' + escapeHtml(sc.title||'') + '</div>';
+    if (sc.subject) html += '<div style="font-size:.74rem;color:var(--text-muted);">' + escapeHtml(sc.subject) + '</div>';
+    html += '<button onclick="window.__activeSummaryContext=null;renderMentorPage(document.getElementById(\'pageContent\'))" style="margin-top:8px;font-size:.7rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">Șterge contextul</button>';
+    html += '</div>';
+  }
+
   // Quick prompts
   html += '<div class="mentor-context-card">';
   html += '<div class="mcc-title">Întrebări Rapide</div>';
-  const quickPrompts = [
+  const summaryPrompts = window.__activeSummaryContext ? [
+    { icon: '🔍', text: 'Explică-mi mai simplu conceptul principal din fișa asta' },
+    { icon: '❓', text: 'Ce ar putea fi la examen din această fișă?' },
+    { icon: '🔗', text: 'Cum se leagă conceptele din această fișă între ele?' },
+    { icon: '⚠️', text: 'Ce greșeli fac studenții la această temă?' },
+    { icon: '💡', text: 'Dă-mi un exemplu practic pentru ideea centrală' },
+    { icon: '📚', text: 'Ce trebuie să știu înainte să studiez mai departe?' },
+  ] : [
     { icon: 'chart', text: 'Analizează-mi progresul complet' },
     { icon: '⚠️', text: 'Unde sunt cel mai slab?' },
     { icon: 'calendar', text: 'Cum să mă pregătesc pentru examene?' },
@@ -1091,8 +1109,8 @@ function renderMentorPage(element) {
     { icon: 'flame', text: 'Cum îmi mențin streak-ul?' },
     { icon: 'brain', text: 'Strategii pentru quiz-uri mai bune' },
   ];
-  quickPrompts.forEach(p => {
-    html += '<button class="mentor-quick-prompt" data-stats-action="mentor-quick-prompt" data-mentor-prompt="' + escapeHtml(p.text) + '">' + p.icon + ' ' + p.text + '</button>';
+  summaryPrompts.forEach(p => {
+    html += '<button class="mentor-quick-prompt" data-stats-action="mentor-quick-prompt" data-mentor-prompt="' + escapeHtml(p.text) + '">' + (typeof p.icon === 'string' && p.icon.length <= 2 ? p.icon : '') + ' ' + p.text + '</button>';
   });
   html += '</div>';
 
@@ -1426,6 +1444,21 @@ function buildMentorContext() {
     const best = Math.round(Math.max(...results.map(r => (r.score/r.total)*100)));
     ctx += '- ' + (subj ? subj.name : key) + ': ' + results.length + ' quiz-uri, avg ' + avg + '%, best ' + best + '%\n';
   });
+
+  // Fișa activă — injectată când userul vine din smart summary
+  if (window.__activeSummaryContext) {
+    const sc = window.__activeSummaryContext;
+    ctx += '\n=== FIȘA CURENTĂ DE STUDIU ===\n';
+    ctx += 'Studentul tocmai a studiat fișa: "' + sc.title + '"\n';
+    if (sc.subject) ctx += 'Materie: ' + sc.subject + '\n';
+    if (sc.why) ctx += 'De ce contează: ' + sc.why + '\n';
+    if (sc.insight) ctx += 'Ideea centrală: ' + sc.insight + '\n';
+    if (sc.prerequisites && sc.prerequisites.length) ctx += 'Prerechiziți identificați: ' + sc.prerequisites.join(', ') + '\n';
+    if (sc.sections && sc.sections.length) ctx += 'Secțiuni studiate: ' + sc.sections.join(', ') + '\n';
+    if (sc.difficulty) ctx += 'Nivel: ' + sc.difficulty + '\n';
+    if (sc.intent) ctx += 'Scopul studentului pentru această fișă: ' + sc.intent + '\n';
+    ctx += '\nMENTOR: Răspunde în contextul acestei fișe. Ajută studentul să aprofundeze conceptele identificate mai sus. Dacă pune o întrebare fără context, presupune că se referă la fișa curentă.\n';
+  }
 
   return ctx;
 }

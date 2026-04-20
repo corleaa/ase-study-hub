@@ -1178,7 +1178,7 @@ async function generatePresentation(key) {
       renderSidebar();
       setTimeout(function() {
         if (typeof openSmartSummaryModal === 'function') {
-          openSmartSummaryModal(summaryData, title);
+          openSmartSummaryModal(summaryData, title, subjectFull, intent);
         }
       }, 150);
       return;
@@ -1450,7 +1450,8 @@ openPresentationViewer = function(key, presIndex) {
   // Smart summaries → scrollable modal
   if (pres && pres.isSmartSummary && pres.smartData) {
     if (typeof openSmartSummaryModal === 'function') {
-      openSmartSummaryModal(pres.smartData, pres.title);
+      var subj = key && getSubjects ? (getSubjects()[key]||{}).full || key : '';
+      openSmartSummaryModal(pres.smartData, pres.title, subj, pres.intent);
     }
     return;
   }

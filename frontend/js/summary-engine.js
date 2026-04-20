@@ -236,12 +236,12 @@ function renderSmartSummaryPage(data) {
   var o = data.output;
   var a = data.analysis || {};
 
-  var h = '<div style="max-width:820px;margin:0 auto;padding:24px 20px 48px;font-family:var(--font-body);">';
+  var h = '<div style="max-width:820px;margin:0 auto;padding:28px 24px 52px;font-family:var(--font-body);">';
 
   // ── Header ────────────────────────────────────────────────────
-  h += '<div style="margin-bottom:24px;">';
-  h += '<div style="font-size:1.55rem;font-weight:800;color:var(--text-primary);line-height:1.25;margin-bottom:10px;">' + escapeHtml(o.title||'') + '</div>';
-  if (o.why_it_matters) h += '<div style="font-size:.9rem;color:var(--text-secondary);line-height:1.7;margin-bottom:12px;">' + escapeHtml(o.why_it_matters) + '</div>';
+  h += '<div style="margin-bottom:28px;">';
+  h += '<div style="font-size:1.6rem;font-weight:800;color:var(--text-primary);line-height:1.25;margin-bottom:12px;letter-spacing:-.01em;">' + escapeHtml(o.title||'') + '</div>';
+  if (o.why_it_matters) h += '<div style="font-size:.92rem;color:var(--text-secondary);line-height:1.75;margin-bottom:14px;border-left:3px solid rgba(242,155,109,.35);padding-left:14px;">' + escapeHtml(o.why_it_matters) + '</div>';
 
   // Tags
   if (o.domain_tags && o.domain_tags.length) {
@@ -273,17 +273,17 @@ function renderSmartSummaryPage(data) {
 
   // ── Layers ────────────────────────────────────────────────────
   if (o.layers && o.layers.length) {
-    h += '<div style="margin-bottom:24px;">';
-    h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:10px;">Trei niveluri de înțelegere</div>';
+    h += '<div style="margin-bottom:28px;">';
+    h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:12px;">Trei niveluri de înțelegere</div>';
     var lc = {'Intuitiv':'var(--green)','Conceptual':'var(--blue)','Tehnic':'var(--purple)'};
     o.layers.forEach(function(layer, idx) {
       var c = layer.color || lc[layer.level] || 'var(--accent)';
-      h += '<details '+(idx===0?'open':'')+' style="background:'+c+'0c;border:1px solid '+c+'25;border-radius:12px;padding:12px 15px;margin-bottom:8px;">';
-      h += '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;">';
-      h += '<span style="background:'+c+'1e;color:'+c+';border:1px solid '+c+'40;border-radius:20px;padding:2px 10px;font-size:.68rem;font-weight:700;">'+escapeHtml(layer.level||'')+'</span>';
-      h += '<span style="font-size:.7rem;color:var(--text-muted);margin-left:auto;">'+(idx===0?'▲':'▼')+'</span>';
+      h += '<details '+(idx===0?'open':'')+' style="background:'+c+'0a;border:1px solid '+c+'22;border-radius:13px;padding:13px 16px;margin-bottom:8px;transition:background .2s;">';
+      h += '<summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none;">';
+      h += '<span style="background:'+c+'1a;color:'+c+';border:1px solid '+c+'38;border-radius:20px;padding:3px 12px;font-size:.69rem;font-weight:700;letter-spacing:.02em;">'+escapeHtml(layer.level||'')+'</span>';
+      h += '<span style="font-size:.69rem;color:var(--text-muted);margin-left:auto;font-family:var(--font-mono);">'+(idx===0?'▲ deschis':'▼ deschide')+'</span>';
       h += '</summary>';
-      h += '<div style="font-size:.84rem;color:var(--text-secondary);line-height:1.72;margin-top:10px;">'+escapeHtml(layer.text||'')+'</div>';
+      h += '<div style="font-size:.85rem;color:var(--text-secondary);line-height:1.75;margin-top:12px;padding-top:10px;border-top:1px solid '+c+'18;">'+escapeHtml(layer.text||'')+'</div>';
       h += '</details>';
     });
     h += '</div>';
@@ -367,10 +367,9 @@ function renderSectionBlock(sec, noMargin) {
   var c = SECTION_COLOR[sec.kind] || 'var(--text-muted)';
   var renderer = SR[sec.kind] || SR._generic;
   var mb = noMargin ? '' : 'margin-bottom:14px;';
-  var h = '<div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:11px;padding:14px 16px;'+mb+'">';
-  h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">';
-  h += '<div style="width:3px;height:15px;background:'+c+';border-radius:2px;flex-shrink:0;"></div>';
-  h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:'+c+';">'+escapeHtml(sec.title||sec.kind)+'</div>';
+  var h = '<div style="background:var(--bg-raised);border:1px solid var(--border);border-top:2px solid '+c+'40;border-radius:12px;padding:15px 17px;'+mb+'">';
+  h += '<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;">';
+  h += '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:'+c+';">'+escapeHtml(sec.title||sec.kind)+'</div>';
   h += '</div>';
   h += renderer(sec);
   h += '</div>';
@@ -380,31 +379,65 @@ function renderSectionBlock(sec, noMargin) {
 // ─────────────────────────────────────────────────────────────────
 // openSmartSummaryModal — opens full-screen scrollable modal
 // ─────────────────────────────────────────────────────────────────
-function openSmartSummaryModal(data, title) {
+function openSmartSummaryModal(data, title, subjectName, intent) {
   // Remove any existing modal
   var existing = document.getElementById('smartSummaryModal');
   if (existing) existing.remove();
 
+  // Set active summary context for Mentor
+  if (data && data.output) {
+    var o = data.output;
+    var a = data.analysis || {};
+    window.__activeSummaryContext = {
+      title:       o.title || title || '',
+      subject:     subjectName || '',
+      why:         o.why_it_matters || '',
+      insight:     o.key_insight || '',
+      prerequisites: a.prerequisites || [],
+      sections:    (o.sections||[]).map(function(s){ return s.title||s.kind; }),
+      difficulty:  a.difficulty || '',
+      intent:      intent || '',
+    };
+  }
+
   var modal = document.createElement('div');
   modal.id = 'smartSummaryModal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.84);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;';
 
   var inner = document.createElement('div');
-  inner.style.cssText = 'background:var(--bg-base);border:1px solid var(--border);border-radius:16px;width:100%;max-width:860px;overflow:hidden;flex-shrink:0;';
+  inner.style.cssText = 'background:var(--bg-base);border:1px solid var(--border);border-radius:16px;width:100%;max-width:860px;overflow:hidden;flex-shrink:0;margin-bottom:20px;';
 
   // Header bar
   var header = document.createElement('div');
-  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg-raised);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;';
-  header.innerHTML = '<div style="font-size:.82rem;font-weight:600;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:600px;">'+escapeHtml(title||'Fișă de învățare')+'</div>'
-    + '<button onclick="document.getElementById(\'smartSummaryModal\').remove()" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.8rem;flex-shrink:0;">✕ Închide</button>';
+  header.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--bg-raised);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;';
+  header.innerHTML = '<div style="font-size:.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">'+escapeHtml(title||'Fișă de învățare')+'</div>'
+    + '<button id="ssm-mentor-btn" style="background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.25);color:var(--accent);border-radius:8px;padding:6px 13px;cursor:pointer;font-size:.78rem;font-weight:600;flex-shrink:0;white-space:nowrap;">💬 Discută cu AI Mentorul</button>'
+    + '<button onclick="document.getElementById(\'smartSummaryModal\').remove()" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.78rem;flex-shrink:0;">✕</button>';
 
   var content = document.createElement('div');
   content.innerHTML = renderSmartSummaryPage(data);
 
+  // Footer with chat button
+  var footer = document.createElement('div');
+  footer.style.cssText = 'padding:14px 20px;background:var(--bg-raised);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;';
+  footer.innerHTML = '<div style="font-size:.76rem;color:var(--text-muted);">Ai întrebări despre această fișă? AI Mentorul știe deja ce ai studiat.</div>'
+    + '<button id="ssm-mentor-btn2" style="background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.25);color:var(--accent);border-radius:9px;padding:8px 16px;cursor:pointer;font-size:.82rem;font-weight:600;white-space:nowrap;">💬 Aprofundează cu AI Mentorul →</button>';
+
   inner.appendChild(header);
   inner.appendChild(content);
+  inner.appendChild(footer);
   modal.appendChild(inner);
   document.body.appendChild(modal);
+
+  // Mentor button handler
+  function goToMentor() {
+    modal.remove();
+    if (typeof navigateTo === 'function') navigateTo('mentor');
+  }
+  var btn1 = document.getElementById('ssm-mentor-btn');
+  var btn2 = document.getElementById('ssm-mentor-btn2');
+  if (btn1) btn1.addEventListener('click', goToMentor);
+  if (btn2) btn2.addEventListener('click', goToMentor);
 
   // Close on backdrop click
   modal.addEventListener('click', function(e) {
