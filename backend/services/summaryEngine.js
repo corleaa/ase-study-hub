@@ -65,6 +65,10 @@ studii       → {"kind":"studii","title":"...","relevance":0.0,"items":[{"t":"A
 autori       → {"kind":"autori","title":"...","relevance":0.0,"cards":[{"name":"...","year":"...","contribution":"..."}]}
 critici      → {"kind":"critici","title":"...","relevance":0.0,"items":["critică 1","critică 2"]}
 
+VIZUALE:
+distributie  → {"kind":"distributie","title":"...","relevance":0.0,"dist_type":"normal","description":"ce ilustrează distribuția în context","annotation":"Ce reprezintă aria colorată — ex: P[pierdere > prag] = 0.05%"}
+             → Folosește DOAR când documentul discută explicit distribuții de probabilitate, variabile aleatoare continue, curbe normale, VaR, sau pierderi stochastice.
+
 APLICATE:
 caz          → {"kind":"caz","title":"...","relevance":0.0,"body":"descriere caz real sau rezolvat"}
 ddx          → {"kind":"ddx","title":"...","relevance":0.0,"rows":[{"name":"alternativa","cue":"cum o distingi"}]}
@@ -77,6 +81,7 @@ REGULI DE SELECȚIE
 ────────────────────────────────────────────
 - Alege secțiunile cu relevance > 0.5, maximum 5
 - quantitative > 0.35 → include formule sau derivare
+- document menționează distribuții/probabilitate/VaR/pierderi stochastice → include distributie (max 1 per rezumat)
 - normative > 0.25 → include articol și conditii
 - empirical > 0.3 → include studii sau autori
 - procedural > 0.3 → include protocol sau cod

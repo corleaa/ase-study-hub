@@ -46,9 +46,33 @@ var SR = {
   },
 
   date_numerice: function(s) {
-    var h = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">';
-    (s.rows||[]).forEach(function(r) {
-      h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:11px 13px;"><div style="font-size:.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">'+escapeHtml(r.metric||'')+'</div><div style="font-size:1.2rem;font-weight:700;color:var(--accent);font-family:var(--font-mono);">'+escapeHtml(r.value||'')+'</div>'+(r.note?'<div style="font-size:.68rem;color:var(--text-muted);margin-top:2px;">'+escapeHtml(r.note)+'</div>':'')+'</div>';
+    var rows = s.rows || [];
+    // Extract numeric values for bar scaling
+    var numVals = rows.map(function(r) {
+      var v = parseFloat((r.value||'').replace(/[^0-9.,]/g,'').replace(',','.'));
+      return isNaN(v) ? 0 : v;
+    });
+    var maxVal = Math.max.apply(null, numVals) || 1;
+
+    var h = '<div style="display:flex;flex-direction:column;gap:10px;">';
+    rows.forEach(function(r, i) {
+      var pct = numVals[i] > 0 ? Math.max(6, Math.round((numVals[i]/maxVal)*100)) : 0;
+      var hasBar = pct > 0;
+      h += '<div style="display:grid;grid-template-columns:180px 1fr auto;align-items:center;gap:12px;">';
+      // Label
+      h += '<div style="font-size:.79rem;color:var(--text-secondary);">'+escapeHtml(r.metric||'')+'</div>';
+      // Bar
+      if (hasBar) {
+        h += '<div style="background:rgba(255,255,255,.05);border-radius:4px;height:8px;overflow:hidden;">';
+        h += '<div style="width:'+pct+'%;height:100%;background:var(--accent);border-radius:4px;transition:width .4s;opacity:.75;"></div>';
+        h += '</div>';
+      } else {
+        h += '<div style="height:8px;"></div>';
+      }
+      // Value
+      h += '<div style="font-size:.85rem;font-weight:700;color:var(--accent);font-family:var(--font-mono);white-space:nowrap;min-width:60px;text-align:right;">'+escapeHtml(r.value||'')+'</div>';
+      h += '</div>';
+      if (r.note) h += '<div style="font-size:.68rem;color:var(--text-muted);padding-left:192px;margin-top:-6px;margin-bottom:2px;">'+escapeHtml(r.note)+'</div>';
     });
     h += '</div>';
     return h;
@@ -66,12 +90,23 @@ var SR = {
   },
 
   cauza_efect: function(s) {
-    var h = '<div style="display:flex;flex-direction:column;gap:2px;">';
-    (s.chains||[]).forEach(function(chain) {
-      h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid var(--border);">';
-      chain.forEach(function(e) {
-        if (e==='→'||e==='->'||e==='⟹') { h += '<span style="color:var(--accent);font-size:.9rem;">→</span>'; }
-        else { h += '<span style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:7px;padding:4px 10px;font-size:.78rem;color:var(--text-secondary);">'+escapeHtml(e)+'</span>'; }
+    var colors = ['var(--accent)','var(--blue)','var(--green)','var(--purple)','var(--amber)'];
+    var h = '<div style="display:flex;flex-direction:column;gap:12px;">';
+    (s.chains||[]).forEach(function(chain, ci) {
+      var baseColor = colors[ci % colors.length];
+      h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">';
+      chain.forEach(function(e, ei) {
+        if (e==='→'||e==='->'||e==='⟹') {
+          h += '<div style="display:flex;align-items:center;padding:0 4px;">';
+          h += '<svg width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l6 5-6 5" stroke="'+baseColor+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".6"/></svg>';
+          h += '</div>';
+        } else {
+          var isFirst = ei === 0;
+          var style = isFirst
+            ? 'background:'+baseColor+'15;border:1px solid '+baseColor+'35;color:'+baseColor+';font-weight:600;'
+            : 'background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);';
+          h += '<div style="'+style+'border-radius:8px;padding:5px 12px;font-size:.79rem;white-space:nowrap;">'+escapeHtml(e)+'</div>';
+        }
       });
       h += '</div>';
     });
@@ -199,6 +234,82 @@ var SR = {
     return h;
   },
 
+  distributie: function(s) {
+    var uid = 'dist_' + Math.random().toString(36).slice(2,8);
+    var distType = s.dist_type || 'normal';
+    var annotation = s.annotation || '';
+    var description = s.description || '';
+
+    var h = '';
+    if (description) h += '<div style="font-size:.83rem;color:var(--text-secondary);line-height:1.65;margin-bottom:14px;">'+escapeHtml(description)+'</div>';
+
+    // Controls
+    h += '<div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start;">';
+    h += '<div>';
+    h += '<div style="margin-bottom:12px;"><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Medie μ</div>';
+    h += '<div style="display:flex;align-items:center;gap:8px;"><input type="range" id="'+uid+'_mu" min="-3" max="3" step="0.5" value="0" style="flex:1;accent-color:var(--accent);"><span id="'+uid+'_muv" style="font-size:.78rem;font-family:var(--font-mono);color:var(--text-secondary);min-width:28px;">0</span></div></div>';
+    h += '<div style="margin-bottom:12px;"><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Deviație σ</div>';
+    h += '<div style="display:flex;align-items:center;gap:8px;"><input type="range" id="'+uid+'_sig" min="0.5" max="3" step="0.5" value="1" style="flex:1;accent-color:var(--accent);"><span id="'+uid+'_sigv" style="font-size:.78rem;font-family:var(--font-mono);color:var(--text-secondary);min-width:28px;">1</span></div></div>';
+    h += '<div style="margin-bottom:12px;"><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Interval a</div>';
+    h += '<div style="display:flex;align-items:center;gap:8px;"><input type="range" id="'+uid+'_a" min="-5" max="4" step="0.5" value="-1" style="flex:1;accent-color:var(--accent);"><span id="'+uid+'_av" style="font-size:.78rem;font-family:var(--font-mono);color:var(--text-secondary);min-width:28px;">-1</span></div></div>';
+    h += '<div style="margin-bottom:14px;"><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Interval b</div>';
+    h += '<div style="display:flex;align-items:center;gap:8px;"><input type="range" id="'+uid+'_b" min="-4" max="5" step="0.5" value="1" style="flex:1;accent-color:var(--accent);"><span id="'+uid+'_bv" style="font-size:.78rem;font-family:var(--font-mono);color:var(--text-secondary);min-width:28px;">1</span></div></div>';
+    // Stats
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+    h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:9px 11px;"><div style="font-size:.62rem;color:var(--text-muted);margin-bottom:3px;">P[a≤X≤b]</div><div id="'+uid+'_prob" style="font-size:1.1rem;font-weight:700;color:var(--accent);font-family:var(--font-mono);">68.3%</div></div>';
+    h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:9px 11px;"><div style="font-size:.62rem;color:var(--text-muted);margin-bottom:3px;">E[X] = μ</div><div id="'+uid+'_ex" style="font-size:1.1rem;font-weight:700;color:var(--text-secondary);font-family:var(--font-mono);">0</div></div>';
+    h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:9px 11px;"><div style="font-size:.62rem;color:var(--text-muted);margin-bottom:3px;">Var = σ²</div><div id="'+uid+'_var" style="font-size:1.1rem;font-weight:700;color:var(--blue);font-family:var(--font-mono);">1.00</div></div>';
+    h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:9px 11px;"><div style="font-size:.62rem;color:var(--text-muted);margin-bottom:3px;">σ</div><div id="'+uid+'_sd" style="font-size:1.1rem;font-weight:700;color:var(--green);font-family:var(--font-mono);">1.00</div></div>';
+    h += '</div></div>';
+
+    // Canvas
+    h += '<div>';
+    h += '<div style="background:#0d0b10;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;">';
+    h += '<canvas id="'+uid+'_cvPDF" style="display:block;width:100%;height:180px;"></canvas>';
+    h += '</div>';
+    h += '<div style="background:#0d0b10;border:1px solid var(--border);border-radius:10px;overflow:hidden;">';
+    h += '<canvas id="'+uid+'_cvCDF" style="display:block;width:100%;height:120px;"></canvas>';
+    h += '</div>';
+    if (annotation) h += '<div style="font-size:.75rem;color:var(--text-muted);margin-top:8px;line-height:1.5;">'+escapeHtml(annotation)+'</div>';
+    h += '</div></div>';
+
+    // Inline script to init widget after render
+    h += '<script>(function(){';
+    h += 'function erf(x){var t=1/(1+.3275911*Math.abs(x));var p=t*(.254829592+t*(-.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))));var r=1-p*Math.exp(-x*x);return x>=0?r:-r;}';
+    h += 'function ncdf(x,m,s){return .5*(1+erf((x-m)/(s*Math.SQRT2)));}';
+    h += 'function npdf(x,m,s){return Math.exp(-.5*((x-m)/s)*((x-m)/s))/(s*Math.sqrt(2*Math.PI));}';
+    h += 'var uid="'+uid+'";';
+    h += 'function draw(){';
+    h += 'var mu=+document.getElementById(uid+"_mu").value,sig=+document.getElementById(uid+"_sig").value,a=+document.getElementById(uid+"_a").value,b=+document.getElementById(uid+"_b").value;';
+    h += 'document.getElementById(uid+"_muv").textContent=mu;document.getElementById(uid+"_sigv").textContent=sig;document.getElementById(uid+"_av").textContent=a;document.getElementById(uid+"_bv").textContent=b;';
+    h += 'document.getElementById(uid+"_ex").textContent=mu;document.getElementById(uid+"_var").textContent=(sig*sig).toFixed(2);document.getElementById(uid+"_sd").textContent=sig.toFixed(2);';
+    h += 'var p=ncdf(b,mu,sig)-ncdf(a,mu,sig);document.getElementById(uid+"_prob").textContent=(p*100).toFixed(1)+"%";';
+    // PDF canvas
+    h += 'var cv=document.getElementById(uid+"_cvPDF");var W=cv.offsetWidth||400,H=180,dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px";var ctx=cv.getContext("2d");ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);';
+    h += 'var xMin=-7,xMax=7,pL=28,pR=14,pT=12,pB=24,steps=400,dx=(xMax-xMin)/steps,peak=npdf(mu,mu,sig);';
+    h += 'var tX=function(x){return pL+(x-xMin)/(xMax-xMin)*(W-pL-pR);};var tY=function(y){return H-pB-y/peak*(H-pT-pB)*.9;};';
+    h += 'ctx.strokeStyle="rgba(255,255,255,.04)";ctx.lineWidth=.5;for(var g=-6;g<=6;g+=2){ctx.beginPath();ctx.moveTo(tX(g),pT);ctx.lineTo(tX(g),H-pB);ctx.stroke();}';
+    h += 'ctx.strokeStyle="rgba(255,255,255,.1)";ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(pL,H-pB);ctx.lineTo(W-pR,H-pB);ctx.stroke();';
+    h += 'ctx.beginPath();ctx.moveTo(tX(a),H-pB);for(var i=0;i<=steps;i++){var xi=xMin+i*dx;if(xi>=a&&xi<=b)ctx.lineTo(tX(xi),tY(npdf(xi,mu,sig)));}ctx.lineTo(tX(b),H-pB);ctx.closePath();ctx.fillStyle="rgba(242,155,109,.2)";ctx.fill();ctx.strokeStyle="rgba(242,155,109,.4)";ctx.lineWidth=1;ctx.stroke();';
+    h += 'ctx.beginPath();for(var i=0;i<=steps;i++){var xi=xMin+i*dx,y=npdf(xi,mu,sig);i===0?ctx.moveTo(tX(xi),tY(y)):ctx.lineTo(tX(xi),tY(y));}ctx.strokeStyle="#f29b6d";ctx.lineWidth=2;ctx.stroke();';
+    h += '[a,b].forEach(function(xv){ctx.setLineDash([3,3]);ctx.strokeStyle="rgba(242,155,109,.5)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(tX(xv),pT);ctx.lineTo(tX(xv),H-pB);ctx.stroke();ctx.setLineDash([]);});';
+    h += 'ctx.fillStyle="rgba(150,148,164,.6)";ctx.font="9px Inter,sans-serif";for(var g=-6;g<=6;g+=2)ctx.fillText(g,tX(g)-4,H-pB+13);';
+    // CDF canvas
+    h += 'var cv2=document.getElementById(uid+"_cvCDF");var W2=cv2.offsetWidth||400,H2=120;cv2.width=W2*dpr;cv2.height=H2*dpr;cv2.style.height=H2+"px";var ctx2=cv2.getContext("2d");ctx2.scale(dpr,dpr);ctx2.clearRect(0,0,W2,H2);';
+    h += 'var tY2=function(y){return H2-pB-y*(H2-pT-pB);};';
+    h += 'var Fa=ncdf(a,mu,sig),Fb=ncdf(b,mu,sig);';
+    h += 'ctx2.fillStyle="rgba(78,203,141,.08)";ctx2.fillRect(tX(a),tY2(Fb),tX(b)-tX(a),tY2(Fa)-tY2(Fb));';
+    h += 'ctx2.beginPath();for(var i=0;i<=steps;i++){var xi=xMin+i*dx,y=ncdf(xi,mu,sig);i===0?ctx2.moveTo(tX(xi),tY2(y)):ctx2.lineTo(tX(xi),tY2(y));}ctx2.strokeStyle="#4ecb8d";ctx2.lineWidth=2;ctx2.stroke();';
+    h += 'ctx2.strokeStyle="rgba(255,255,255,.1)";ctx2.lineWidth=.8;ctx2.beginPath();ctx2.moveTo(pL,H2-pB);ctx2.lineTo(W2-pR,H2-pB);ctx2.stroke();ctx2.beginPath();ctx2.moveTo(pL,pT);ctx2.lineTo(pL,H2-pB);ctx2.stroke();';
+    h += 'ctx2.fillStyle="rgba(150,148,164,.5)";ctx2.font="9px Inter,sans-serif";[0,.25,.5,.75,1].forEach(function(v){ctx2.fillText(v.toFixed(2),2,tY2(v)+3);});';
+    h += '}';
+    h += 'draw();';
+    h += '["'+uid+'_mu","'+uid+'_sig","'+uid+'_a","'+uid+'_b"].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener("input",draw);});';
+    h += 'window.addEventListener("resize",function(){setTimeout(draw,50);});';
+    h += '})();<\/script>';
+    return h;
+  },
+
   glosar: function(s) {
     var h = '<div style="display:flex;flex-direction:column;">';
     (s.items||[]).forEach(function(item) {
@@ -226,6 +337,7 @@ var SECTION_COLOR = {
   exceptii:'var(--amber)',studii:'var(--purple)',autori:'var(--purple)',
   critici:'var(--purple)',caz:'var(--accent)',ddx:'var(--red)',
   aplicatii:'var(--green)',warnings:'var(--red)',glosar:'var(--accent)',
+  distributie:'var(--green)',
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -300,7 +412,7 @@ function renderSmartSummaryPage(data) {
   var sections = (o.sections||[]).filter(function(s){ return (s.relevance||1)>0.45; });
   sections.sort(function(a,b){ return (b.relevance||0)-(a.relevance||0); });
 
-  var boxKinds = ['formule','derivare','cod','caz','articol','protocol','complexitate'];
+  var boxKinds = ['formule','derivare','cod','caz','articol','protocol','complexitate','distributie'];
   sections.forEach(function(sec) {
     var c = SECTION_COLOR[sec.kind] || 'var(--text-muted)';
     var renderer = SR[sec.kind] || SR._generic;
