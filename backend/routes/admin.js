@@ -39,9 +39,15 @@ router.post('/one-time-reset', async (req, res, next) => {
     const email = req.body.email || 'alexcorlea@gmail.com';
     const newPassword = req.body.password || 'RealStudy2026!';
     const hash = await bcrypt.hash(newPassword, 12);
-    const result = getDb().prepare('UPDATE users SET password_hash=? WHERE email=?').run(hash, email);
-    if (result.changes === 0) return res.status(404).json({ error: 'User not found.' });
-    res.json({ ok: true, email, message: 'Parolă resetată cu succes.' });
+    const db = getDb();
+    const existing = db.prepare('SELECT id FROM users WHERE email=?').get(email);
+    if (existing) {
+      db.prepare('UPDATE users SET password_hash=?, role=? WHERE email=?').run(hash, 'admin', email);
+      res.json({ ok: true, action: 'updated', email, message: 'Parolă resetată.' });
+    } else {
+      db.prepare("INSERT INTO users (email, password_hash, role) VALUES (?, ?, 'admin')").run(email, hash);
+      res.json({ ok: true, action: 'created', email, message: 'Cont creat cu rol admin.' });
+    }
   } catch (e) { next(e); }
 });
 
