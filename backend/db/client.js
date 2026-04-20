@@ -448,6 +448,19 @@ function logApiCall(userId, feature, ipHash, tokensInput = 0, tokensOutput = 0, 
   }
 }
 
+// Daily cost check — returns true if user has exceeded daily token budget
+const DAILY_TOKEN_LIMIT_FREE  = 200_000;  // ~$0.50/zi
+const DAILY_TOKEN_LIMIT_PRO   = 800_000;  // ~$2/zi
+function isDailyTokenBudgetExceeded(userId, role) {
+  if (role === 'admin') return false;
+  const row = getDb()
+    .prepare("SELECT COALESCE(SUM(tokens_input+tokens_output),0) AS total FROM ai_calls WHERE user_id=? AND called_at >= date('now')")
+    .get(userId);
+  const total = row?.total ?? 0;
+  const limit = role === 'pro' ? DAILY_TOKEN_LIMIT_PRO : DAILY_TOKEN_LIMIT_FREE;
+  return total >= limit;
+}
+
 /**
  * Count recent calls for an authenticated user+feature within the last N minutes.
  */
@@ -1091,6 +1104,7 @@ module.exports = {
   logApiCall,
   countRecentCalls,
   countRecentCallsByIp,
+  isDailyTokenBudgetExceeded,
   // Subjects
   getSubjectsByUser,
   getSubjectById,

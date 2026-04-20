@@ -43,29 +43,7 @@ router.post('/reset-my-password', authenticate, requireAdmin, async (req, res, n
   } catch (e) { next(e); }
 });
 
-// ── One-time password reset (fără autentificare, protejat prin secret) ──
-// TEMPORAR — va fi șters după folosire
-router.post('/one-time-reset', async (req, res, next) => {
-  try {
-    const secret = req.body.secret || req.query.secret;
-    const RESET_SECRET = process.env.RESET_SECRET;
-    if (!RESET_SECRET || secret !== RESET_SECRET) {
-      return res.status(403).json({ error: 'Invalid secret.' });
-    }
-    const email = req.body.email || 'alexcorlea@gmail.com';
-    const newPassword = req.body.password || 'RealStudy2026!';
-    const hash = await bcrypt.hash(newPassword, 12);
-    const db = getDb();
-    const existing = db.prepare('SELECT id FROM users WHERE email=?').get(email);
-    if (existing) {
-      db.prepare('UPDATE users SET password_hash=?, role=? WHERE email=?').run(hash, 'admin', email);
-      res.json({ ok: true, action: 'updated', email, message: 'Parolă resetată.' });
-    } else {
-      db.prepare("INSERT INTO users (email, password_hash, role) VALUES (?, ?, 'admin')").run(email, hash);
-      res.json({ ok: true, action: 'created', email, message: 'Cont creat cu rol admin.' });
-    }
-  } catch (e) { next(e); }
-});
+// one-time-reset removed — security risk in production
 
 // ── Cleanup documente dintr-un subiect (pentru testing) ──────────
 router.delete('/cleanup-subject/:subjectId', authenticate, requireAdmin, (req, res, next) => {

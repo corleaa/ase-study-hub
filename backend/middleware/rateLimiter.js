@@ -18,7 +18,7 @@
 'use strict';
 
 const rateLimit = require('express-rate-limit');
-const { countRecentCalls, countRecentCallsByIp } = require('../db/client');
+const { countRecentCalls, countRecentCallsByIp, isDailyTokenBudgetExceeded } = require('../db/client');
 const { logger } = require('../utils/logger');
 
 // ── Budgets per feature per tier ──────────────────────────────────
@@ -108,6 +108,15 @@ function perUserLimiter(feature) {
 
     // Admin — no limits at all
     if (limits === null) return next();
+
+    // Global daily token budget check (authenticated users only)
+    if (req.user?.id && isDailyTokenBudgetExceeded(req.user.id, role)) {
+      logger.warn('Daily token budget exceeded', { userId: req.user.id, role, feature });
+      return res.status(429).json({
+        error: 'Ai atins limita zilnică de utilizare AI. Revino mâine sau upgradează la Pro.',
+        dailyLimitExceeded: true,
+      });
+    }
 
     // Feature completely blocked for this tier (dailyMax === 0)
     if (!limits || limits.dailyMax === 0) {
