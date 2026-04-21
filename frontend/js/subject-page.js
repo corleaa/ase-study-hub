@@ -489,6 +489,10 @@ function setupSubjectPageInteractions(element, key, subject) {
     fileUpload.addEventListener('change', handleFileUpload);
   }
 
+  // Guard against accumulating duplicate listeners on every renderPage() call
+  if (element.dataset.interactionsBound) return;
+  element.dataset.interactionsBound = 'true';
+
   element.addEventListener('click', function(event) {
     var actionEl = event.target.closest('[data-subject-action], [data-nav-tab], [data-pv-dot]');
     if (!actionEl || !element.contains(actionEl)) return;
@@ -599,16 +603,17 @@ function setupSubjectPageInteractions(element, key, subject) {
 
   element.addEventListener('keydown', function(event) {
     if (event.key !== 'Enter' || event.shiftKey) return;
+    var currentKey = state.tab;
 
     if (event.target.id === 'chatInput') {
       event.preventDefault();
-      sendChatMessage(key);
+      sendChatMessage(currentKey);
       return;
     }
 
     if (event.target.id === 'todoInput') {
       event.preventDefault();
-      addTodo(key);
+      addTodo(currentKey);
       return;
     }
 
