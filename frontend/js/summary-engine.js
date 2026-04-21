@@ -522,84 +522,9 @@ function renderSectionBlock(sec) {
   return h;
 }
 
-// ─────────────────────────────────────────────────────────────────
-// openSmartSummaryModal — opens full-screen scrollable modal
-// ─────────────────────────────────────────────────────────────────
+// openSmartSummaryModal redirects to full-page flow
 function openSmartSummaryModal(data, title, subjectName, intent) {
-  // Remove any existing modal
-  var existing = document.getElementById('smartSummaryModal');
-  if (existing) existing.remove();
-
-  // Set active summary context for Mentor
-  if (data && data.output) {
-    var o = data.output;
-    var a = data.analysis || {};
-    window.__activeSummaryContext = {
-      title:       o.title || title || '',
-      subject:     subjectName || '',
-      why:         o.why_it_matters || '',
-      insight:     o.key_insight || '',
-      prerequisites: a.prerequisites || [],
-      sections:    (o.sections||[]).map(function(s){ return s.title||s.kind; }),
-      difficulty:  a.difficulty || '',
-      intent:      intent || '',
-    };
-  }
-
-  var modal = document.createElement('div');
-  modal.id = 'smartSummaryModal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.84);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;';
-
-  var inner = document.createElement('div');
-  inner.style.cssText = 'background:var(--bg-base);border:1px solid var(--border);border-radius:16px;width:100%;max-width:860px;overflow:hidden;flex-shrink:0;margin-bottom:20px;';
-
-  // Header bar
-  var header = document.createElement('div');
-  header.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--bg-raised);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;';
-  header.innerHTML = '<div style="font-size:.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">'+escapeHtml(title||'Fișă de învățare')+'</div>'
-    + '<button id="ssm-mentor-btn" style="background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.25);color:var(--accent);border-radius:8px;padding:6px 13px;cursor:pointer;font-size:.78rem;font-weight:600;flex-shrink:0;white-space:nowrap;">💬 Discută cu AI Mentorul</button>'
-    + '<button onclick="document.getElementById(\'smartSummaryModal\').remove()" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.78rem;flex-shrink:0;">✕</button>';
-
-  var content = document.createElement('div');
-  content.innerHTML = renderSmartSummaryPage(data);
-
-  // Init quiz + highlight after DOM is set
-  var filteredSections = (data.output.sections || [])
-    .filter(function(s) { return (s.relevance || 1) > 0.45; })
-    .sort(function(a, b) { return (b.relevance || 0) - (a.relevance || 0); });
-  var summaryHash = simpleHash((data.output.title || '') + '|' + (subjectName || ''));
-  initSectionQuiz(content, filteredSections, subjectName, data.output.domain_category, summaryHash);
-  initHighlightSystem(content, summaryHash);
-
-  // Footer with chat button
-  var footer = document.createElement('div');
-  footer.style.cssText = 'padding:14px 20px;background:var(--bg-raised);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;';
-  footer.innerHTML = '<div style="font-size:.76rem;color:var(--text-muted);">Ai întrebări despre această fișă? AI Mentorul știe deja ce ai studiat.</div>'
-    + '<button id="ssm-mentor-btn2" style="background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.25);color:var(--accent);border-radius:9px;padding:8px 16px;cursor:pointer;font-size:.82rem;font-weight:600;white-space:nowrap;">💬 Aprofundează cu AI Mentorul →</button>';
-
-  inner.appendChild(header);
-  inner.appendChild(content);
-  inner.appendChild(footer);
-  modal.appendChild(inner);
-  document.body.appendChild(modal);
-
-  // Mentor button handler
-  function goToMentor() {
-    modal.remove();
-    if (typeof navigateTo === 'function') navigateTo('mentor');
-  }
-  var btn1 = document.getElementById('ssm-mentor-btn');
-  var btn2 = document.getElementById('ssm-mentor-btn2');
-  if (btn1) btn1.addEventListener('click', goToMentor);
-  if (btn2) btn2.addEventListener('click', goToMentor);
-
-  // Close on backdrop click
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) modal.remove();
-  });
-  // Close on Escape
-  var escHandler = function(e) { if (e.key==='Escape') { modal.remove(); document.removeEventListener('keydown', escHandler); } };
-  document.addEventListener('keydown', escHandler);
+  openSummaryPage(data, title, subjectName, intent, '');
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -865,64 +790,195 @@ function openSummaryPage(data, title, subjectName, intent, subjectKey) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// renderSummaryPage — full-page summary renderer (called by renderPage)
+// INLINE MENTOR PANEL — helpers
+// ─────────────────────────────────────────────────────────────────
+function buildSummaryMentorSystem(ctx) {
+  if (!ctx) return 'Ești un asistent de studiu. Răspunde în română.';
+  return 'Ești AI Mentorul pentru fișa de studiu: "' + ctx.title + '"\n'
+    + 'Materie: ' + ctx.subject + '\n'
+    + (ctx.why ? 'Relevanță: ' + ctx.why + '\n' : '')
+    + (ctx.sections && ctx.sections.length ? 'Secțiuni din fișă: ' + ctx.sections.join(', ') + '\n' : '')
+    + (ctx.insight ? 'Insight cheie: ' + ctx.insight + '\n' : '')
+    + 'Ajuți studentul să înțeleagă profund conținutul fișei. Faci referință la conceptele specifice. Răspunzi în română.';
+}
+
+function getSummaryQuickPrompts(ctx, domainCategory) {
+  var base = ctx && ctx.title ? 'Explică-mi "' + ctx.title + '" cu un exemplu concret.' : 'Dă-mi un exemplu concret.';
+  var domain = {
+    exact_sciences: ['Rezolvă un exercițiu similar.', 'Unde apare asta în realitate?', base],
+    social_sciences: ['Dă-mi un caz real din practică.', 'Care sunt criticile principale?', base],
+    law:            ['Dă-mi o speță juridică.', 'Care sunt excepțiile?', base],
+    medicine:       ['Dă-mi un caz clinic.', 'Care e mecanismul fiziopatologic?', base],
+    cs:             ['Scrie cod care ilustrează asta.', 'Care e complexitatea?', base],
+    humanities:     ['Care e contextul istoric?', 'Cum se compară cu alte teorii?', base],
+  };
+  return (domain[domainCategory] || [base, 'De ce contează asta?', 'Explică mai simplu.']).slice(0, 3);
+}
+
+function initMentorPanel(ctx, domainCategory) {
+  var chatEl     = document.getElementById('smChat');
+  var inputEl    = document.getElementById('smInput');
+  var sendBtn    = document.getElementById('smSend');
+  var promptsEl  = document.getElementById('smQuickPrompts');
+  if (!chatEl || !inputEl || !sendBtn) return;
+
+  var messages = [];
+  var busy = false;
+  var systemPrompt = buildSummaryMentorSystem(ctx);
+
+  function appendMsg(role, text) {
+    messages.push({ role: role, content: text });
+    var div = document.createElement('div');
+    div.style.cssText = role === 'user'
+      ? 'font-size:.82rem;color:var(--text-primary);background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.15);border-radius:10px 10px 4px 10px;padding:9px 13px;margin-left:24px;line-height:1.6;'
+      : 'font-size:.82rem;color:var(--text-secondary);line-height:1.7;background:var(--bg-overlay);border:1px solid var(--border);border-radius:10px 10px 10px 4px;padding:10px 13px;white-space:pre-wrap;';
+    div.textContent = text;
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  async function send(text) {
+    text = text.trim();
+    if (!text || busy) return;
+    busy = true;
+    if (promptsEl) promptsEl.style.display = 'none';
+    inputEl.value = '';
+    appendMsg('user', text);
+
+    var loadDiv = document.createElement('div');
+    loadDiv.style.cssText = 'font-size:.75rem;color:var(--text-muted);padding:6px 4px;display:flex;align-items:center;gap:6px;';
+    loadDiv.innerHTML = '<span style="animation:spin 1s linear infinite;display:inline-block;">⟳</span> Generez răspuns...';
+    chatEl.appendChild(loadDiv);
+    chatEl.scrollTop = chatEl.scrollHeight;
+
+    var headers = { 'Content-Type': 'application/json' };
+    if (window.__shAccessToken) headers['Authorization'] = 'Bearer ' + window.__shAccessToken;
+
+    try {
+      var res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ system: systemPrompt, messages: messages.slice(), max_tokens: 1200 }),
+      });
+      var data = await res.json();
+      chatEl.removeChild(loadDiv);
+      if (data.error) throw new Error(data.error);
+      appendMsg('assistant', data.content || data.response || '');
+    } catch(e) {
+      chatEl.removeChild(loadDiv);
+      appendMsg('assistant', 'Eroare: ' + e.message);
+    }
+    busy = false;
+    sendBtn.disabled = false;
+  }
+
+  sendBtn.addEventListener('click', function() { send(inputEl.value); });
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(inputEl.value); }
+  });
+  if (promptsEl) {
+    promptsEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-qp]');
+      if (btn) send(btn.dataset.qp);
+    });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// renderSummaryPage — split layout: summary left, mentor right
 // ─────────────────────────────────────────────────────────────────
 function renderSummaryPage(element) {
   var sd = window.__summaryPageData;
   var activeInfo = (typeof state !== 'undefined') ? state.activeSummary : null;
 
   if (!sd || !sd.data) {
-    var fallback = activeInfo && activeInfo.subjectKey;
-    if (typeof navigateTo === 'function') navigateTo(fallback || 'dashboard');
+    if (typeof navigateTo === 'function') navigateTo((activeInfo && activeInfo.subjectKey) || 'dashboard');
     return;
   }
 
-  var data       = sd.data;
-  var title      = sd.title || (data.output && data.output.title) || 'Rezumat';
+  var data        = sd.data;
+  var title       = sd.title || (data.output && data.output.title) || 'Rezumat';
   var subjectName = sd.subjectName || '';
-  var subjectKey = activeInfo && activeInfo.subjectKey;
+  var subjectKey  = activeInfo && activeInfo.subjectKey;
+  var domCat      = (data.output && data.output.domain_category) || 'other';
+  var ctx         = window.__activeSummaryContext || null;
+  var prompts     = getSummaryQuickPrompts(ctx, domCat);
 
-  var h = '<div style="max-width:860px;margin:0 auto;padding:0 0 60px;">';
+  // ── Outer shell — fills #pageContent ─────────────────────────────
+  var h = '<div style="display:flex;flex-direction:column;height:calc(100vh - 62px);">';
 
-  // ── Sticky header bar ────────────────────────────────────────────
-  h += '<div id="summaryPageHeader" style="position:sticky;top:0;z-index:100;background:var(--bg-base);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;margin-bottom:4px;">';
-  h += '<button id="summaryBackBtn" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.78rem;display:flex;align-items:center;gap:5px;flex-shrink:0;white-space:nowrap;">← ' + escapeHtml(subjectName || 'Înapoi') + '</button>';
+  // ── Header bar ────────────────────────────────────────────────────
+  h += '<div style="flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 20px;height:48px;background:var(--bg-base);border-bottom:1px solid var(--border);">';
+  h += '<button id="summaryBackBtn" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.78rem;white-space:nowrap;flex-shrink:0;">← ' + escapeHtml(subjectName || 'Înapoi') + '</button>';
   h += '<div style="flex:1;font-size:.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(title) + '</div>';
-  h += '<button id="summaryMentorBtn" style="background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.25);color:var(--accent);border-radius:8px;padding:6px 13px;cursor:pointer;font-size:.78rem;font-weight:600;flex-shrink:0;white-space:nowrap;">💬 AI Mentor</button>';
   h += '</div>';
 
-  // ── Content ───────────────────────────────────────────────────────
-  h += '<div id="summaryPageContent">' + renderSmartSummaryPage(data) + '</div>';
+  // ── Split body ────────────────────────────────────────────────────
+  h += '<div style="display:flex;flex:1;min-height:0;overflow:hidden;">';
+
+  // Left: scrollable summary
+  h += '<div id="summaryPageContent" style="flex:1;overflow-y:auto;min-width:0;">';
+  h += renderSmartSummaryPage(data);
   h += '</div>';
+
+  // Divider
+  h += '<div style="width:1px;background:var(--border);flex-shrink:0;"></div>';
+
+  // Right: AI Mentor panel
+  h += '<div style="width:360px;flex-shrink:0;display:flex;flex-direction:column;min-height:0;background:var(--bg-raised);">';
+
+  // Panel header
+  h += '<div style="flex-shrink:0;padding:12px 16px;border-bottom:1px solid var(--border);">';
+  h += '<div style="font-size:.85rem;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:7px;">💬 AI Mentor</div>';
+  if (ctx && ctx.title) {
+    h += '<div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Context: ' + escapeHtml(ctx.title) + '</div>';
+  }
+  h += '</div>';
+
+  // Messages area
+  h += '<div id="smChat" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">';
+  h += '<div style="font-size:.82rem;color:var(--text-secondary);line-height:1.7;background:var(--bg-overlay);border:1px solid var(--border);border-radius:10px 10px 10px 4px;padding:10px 13px;">';
+  h += 'Bună! Am citit fișa despre <strong>' + escapeHtml(ctx && ctx.title || title) + '</strong>. Pune-mi orice întrebare.';
+  h += '</div></div>';
+
+  // Quick prompts
+  h += '<div id="smQuickPrompts" style="flex-shrink:0;padding:8px 14px;display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--border);">';
+  prompts.forEach(function(p) {
+    h += '<button data-qp="'+escapeHtml(p)+'" style="text-align:left;background:var(--bg-overlay);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;font-size:.74rem;color:var(--text-secondary);line-height:1.4;">'+escapeHtml(p)+'</button>';
+  });
+  h += '</div>';
+
+  // Input area
+  h += '<div style="flex-shrink:0;padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;">';
+  h += '<textarea id="smInput" placeholder="Întreabă ceva despre fișă... (Enter = trimite)" rows="2" style="flex:1;background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.8rem;color:var(--text-primary);resize:none;font-family:inherit;outline:none;min-height:0;"></textarea>';
+  h += '<button id="smSend" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 13px;cursor:pointer;font-size:1rem;line-height:1;flex-shrink:0;align-self:flex-end;">↑</button>';
+  h += '</div>';
+
+  h += '</div>'; // end mentor panel
+  h += '</div>'; // end split body
+  h += '</div>'; // end outer shell
 
   element.innerHTML = h;
 
   // Back button
   var backBtn = document.getElementById('summaryBackBtn');
-  if (backBtn) {
-    backBtn.addEventListener('click', function() {
-      if (typeof navigateTo === 'function') navigateTo(subjectKey || 'dashboard');
-    });
-  }
+  if (backBtn) backBtn.addEventListener('click', function() {
+    if (typeof navigateTo === 'function') navigateTo(subjectKey || 'dashboard');
+  });
 
-  // Mentor button
-  var mentorBtn = document.getElementById('summaryMentorBtn');
-  if (mentorBtn) {
-    mentorBtn.addEventListener('click', function() {
-      if (typeof navigateTo === 'function') navigateTo('mentor');
-    });
-  }
-
-  // Quiz + highlight
+  // Quiz + highlight on left panel
   var contentEl = document.getElementById('summaryPageContent');
   if (contentEl && data.output) {
     var filteredSections = (data.output.sections || [])
       .filter(function(s) { return (s.relevance || 1) > 0.45; })
       .sort(function(a, b) { return (b.relevance || 0) - (a.relevance || 0); });
     var summaryHash = simpleHash((data.output.title || '') + '|' + (subjectName || ''));
-    initSectionQuiz(contentEl, filteredSections, subjectName, data.output.domain_category, summaryHash);
+    initSectionQuiz(contentEl, filteredSections, subjectName, domCat, summaryHash);
     initHighlightSystem(contentEl, summaryHash);
   }
+
+  // Init inline mentor chat
+  initMentorPanel(ctx, domCat);
 }
 
 // ─────────────────────────────────────────────────────────────────
