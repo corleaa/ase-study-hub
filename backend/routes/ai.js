@@ -341,6 +341,61 @@ router.post('/smart-summary',
 );
 
 // ─────────────────────────────────────────────────────────────────
+// POST /api/ai/summary-integrate
+// Haiku decides if a Q&A fits an existing scaffold section
+// ─────────────────────────────────────────────────────────────────
+router.post('/summary-integrate',
+  ...aiGuard('quiz'),
+  async (req, res, next) => {
+    try {
+      const { question, answer, sections, subjectName } = req.body;
+      if (!question || !answer || !Array.isArray(sections)) {
+        return res.status(400).json({ match: false });
+      }
+
+      const sectionsDesc = sections
+        .slice(0, 8)
+        .map(s => `- ${s.kind}: "${s.title || s.kind}"`)
+        .join('\n');
+
+      const userContent = `Materie: ${(subjectName || '').substring(0, 60)}
+
+Secțiunile existente în scaffold:
+${sectionsDesc}
+
+Conversație:
+Q: ${question.substring(0, 400)}
+A: ${answer.substring(0, 800)}
+
+Dacă răspunsul extinde sau clarifică una din secțiunile de mai sus, returnează:
+{"match":true,"sectionKind":"...","sectionTitle":"...","addition":"text de adăugat, max 2 propoziții, în stilul scaffoldului cognitiv, în română"}
+
+Dacă nu se potrivește cu nicio secțiune existentă, returnează:
+{"match":false}
+
+EXCLUSIV JSON valid.`;
+
+      let result;
+      try {
+        result = await askStructuredJson({
+          system: 'Ești un arhitect pedagogic. Analizezi dacă un Q&A se integrează într-un scaffold cognitiv. Returnează EXCLUSIV JSON valid.',
+          userContent,
+          maxTokens: 300,
+        });
+      } catch {
+        return res.json({ match: false });
+      }
+
+      if (typeof result?.match !== 'boolean') return res.json({ match: false });
+      logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash, 0, 0, 0, subjectName?.substring(0, 60));
+      res.json(result.match ? result : { match: false });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
 // POST /api/ai/section-quiz
 // Generates 2 quiz questions for a single summary section (Haiku)
 // ─────────────────────────────────────────────────────────────────

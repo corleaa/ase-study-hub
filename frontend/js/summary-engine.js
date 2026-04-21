@@ -428,7 +428,7 @@ function renderSmartSummaryPage(data) {
     var c = SECTION_COLOR[sec.kind] || 'var(--text-muted)';
     var renderer = SR[sec.kind] || SR._generic;
 
-    h += '<div style="margin-bottom:32px;" data-sec-idx="'+secIdx+'">';
+    h += '<div style="margin-bottom:32px;" data-sec-idx="'+secIdx+'" data-sec-kind="'+sec.kind+'">';
     h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
     h += '<div style="width:24px;height:2px;background:'+c+';border-radius:2px;flex-shrink:0;"></div>';
     h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:'+c+';">'+escapeHtml(sec.title||sec.kind)+'</div>';
@@ -841,9 +841,18 @@ function initRightPanel(ctx, domCat, data, subjectName, summaryHash) {
   });
 
   // ── Init each panel ───────────────────────────────────────────────
-  initMentorPanel(ctx, domCat);
-  initQuizPanel(extractSummaryContext(data), subjectName, summaryHash);
-  initFlashcardsPanel(extractSummaryContext(data), subjectName, summaryHash);
+  var filteredSections = (data.output.sections || [])
+    .filter(function(s) { return (s.relevance || 1) > 0.45; })
+    .sort(function(a, b) { return (b.relevance || 0) - (a.relevance || 0); });
+
+  var summaryCtx = extractSummaryContext(data);
+  initMentorPanel(ctx, domCat, summaryHash, filteredSections, subjectName);
+  initQuizPanel(summaryCtx, subjectName, summaryHash);
+  initFlashcardsPanel(summaryCtx, subjectName, summaryHash);
+
+  // Restore stored integrations + notes from previous sessions
+  applyStoredIntegrations(summaryHash);
+  renderNotesSection(summaryHash);
 }
 
 function initQuizPanel(context, subjectName, summaryHash) {
@@ -1007,6 +1016,124 @@ function initFlashcardsPanel(context, subjectName, summaryHash) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// CONVERSAȚIE → REZUMAT — notes + integration system
+// ─────────────────────────────────────────────────────────────────
+function renderNotesSection(summaryHash) {
+  var container = document.getElementById('summaryPageContent');
+  if (!container) return;
+  var existing = document.getElementById('smNotesSection');
+  if (existing) existing.remove();
+
+  var notes = [];
+  try { notes = JSON.parse(localStorage.getItem('sumnotes_' + summaryHash) || '[]'); } catch {}
+  if (!notes.length) return;
+
+  var section = document.createElement('div');
+  section.id = 'smNotesSection';
+  section.style.cssText = 'padding:0 28px 32px;';
+
+  var h = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
+  h += '<div style="width:24px;height:2px;background:var(--blue);border-radius:2px;flex-shrink:0;"></div>';
+  h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);">Notele mele din conversație</div>';
+  h += '</div>';
+  notes.forEach(function(note) {
+    h += '<div style="background:rgba(138,184,216,.06);border:1px solid rgba(138,184,216,.15);border-radius:10px;padding:12px 14px;margin-bottom:10px;">';
+    h += '<div style="font-size:.72rem;font-weight:600;color:var(--blue);margin-bottom:5px;">Q: ' + escapeHtml((note.question||'').substring(0,120)) + ((note.question||'').length>120?'…':'') + '</div>';
+    h += '<div style="font-size:.79rem;color:var(--text-secondary);line-height:1.65;">' + escapeHtml(note.answer||'') + '</div>';
+    h += '</div>';
+  });
+  section.innerHTML = h;
+  container.appendChild(section);
+}
+
+function applyStoredIntegrations(summaryHash) {
+  var integrations = [];
+  try { integrations = JSON.parse(localStorage.getItem('smintegrations_' + summaryHash) || '[]'); } catch {}
+  integrations.forEach(function(intg) {
+    var sectionEl = document.querySelector('[data-sec-kind="' + intg.sectionKind + '"]');
+    if (sectionEl && !sectionEl.querySelector('[data-integration]')) {
+      var div = document.createElement('div');
+      div.setAttribute('data-integration', '1');
+      div.style.cssText = 'margin-top:10px;padding:8px 12px;background:rgba(242,155,109,.06);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;font-size:.79rem;color:var(--text-secondary);line-height:1.65;';
+      div.innerHTML = '<span style="font-size:.62rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Din conversația ta</span>' + escapeHtml(intg.addition);
+      sectionEl.appendChild(div);
+    }
+  });
+}
+
+function showIntegrationBanner(sectionKind, sectionTitle, addition, noteId, summaryHash) {
+  var container = document.getElementById('summaryPageContent');
+  if (!container) return;
+  var existing = document.getElementById('smIntegrateBanner');
+  if (existing) existing.remove();
+
+  var banner = document.createElement('div');
+  banner.id = 'smIntegrateBanner';
+  banner.style.cssText = 'position:sticky;top:0;z-index:50;background:var(--bg-raised);border:1px solid rgba(242,155,109,.3);border-radius:10px;padding:10px 14px;margin:8px 28px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,.2);';
+  banner.innerHTML = '<div style="flex:1;font-size:.78rem;color:var(--text-secondary);line-height:1.45;">💡 Se leagă de secțiunea <strong style="color:var(--text-primary);">' + escapeHtml(sectionTitle) + '</strong>. Integrezi în scaffold?</div>'
+    + '<button id="smBannerOk" style="background:rgba(242,155,109,.15);border:1px solid rgba(242,155,109,.3);color:var(--accent);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:.74rem;font-weight:600;white-space:nowrap;flex-shrink:0;">Integrează</button>'
+    + '<button id="smBannerNo" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:.74rem;padding:5px 8px;white-space:nowrap;">Lasă în Note</button>';
+
+  container.insertBefore(banner, container.firstChild);
+
+  var timeout = setTimeout(function() { if (banner.parentNode) banner.remove(); }, 30000);
+
+  document.getElementById('smBannerOk').addEventListener('click', function() {
+    clearTimeout(timeout); banner.remove();
+    // Append to section in DOM
+    var sectionEl = document.querySelector('[data-sec-kind="' + sectionKind + '"]');
+    if (sectionEl) {
+      var div = document.createElement('div');
+      div.setAttribute('data-integration', '1');
+      div.style.cssText = 'margin-top:10px;padding:8px 12px;background:rgba(242,155,109,.06);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;font-size:.79rem;color:var(--text-secondary);line-height:1.65;';
+      div.innerHTML = '<span style="font-size:.62rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Din conversația ta</span>' + escapeHtml(addition);
+      sectionEl.appendChild(div);
+    }
+    // Save integration
+    var integrations = [];
+    try { integrations = JSON.parse(localStorage.getItem('smintegrations_' + summaryHash) || '[]'); } catch {}
+    integrations.push({ sectionKind: sectionKind, sectionTitle: sectionTitle, addition: addition, timestamp: Date.now() });
+    try { localStorage.setItem('smintegrations_' + summaryHash, JSON.stringify(integrations)); } catch {}
+    // Remove note
+    var notes = [];
+    try { notes = JSON.parse(localStorage.getItem('sumnotes_' + summaryHash) || '[]'); } catch {}
+    notes = notes.filter(function(n) { return n.id !== noteId; });
+    try { localStorage.setItem('sumnotes_' + summaryHash, JSON.stringify(notes)); } catch {}
+    renderNotesSection(summaryHash);
+  });
+
+  document.getElementById('smBannerNo').addEventListener('click', function() {
+    clearTimeout(timeout); banner.remove();
+  });
+}
+
+function addToSummaryNotes(question, answer, summaryHash, sections, subjectName) {
+  var notes = [];
+  try { notes = JSON.parse(localStorage.getItem('sumnotes_' + summaryHash) || '[]'); } catch {}
+  var note = { id: 'n_' + Date.now(), question: question, answer: answer, timestamp: Date.now() };
+  notes.push(note);
+  try { localStorage.setItem('sumnotes_' + summaryHash, JSON.stringify(notes)); } catch {}
+  renderNotesSection(summaryHash);
+
+  // Background: propose integration
+  var headers = { 'Content-Type': 'application/json' };
+  if (window.__shAccessToken) headers['Authorization'] = 'Bearer ' + window.__shAccessToken;
+  var sectionData = (sections || []).map(function(s) { return { kind: s.kind, title: s.title || s.kind }; });
+
+  fetch('/api/ai/summary-integrate', {
+    method: 'POST', headers: headers,
+    body: JSON.stringify({ question: question, answer: answer, sections: sectionData, subjectName: subjectName || '' }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.match && d.sectionKind && d.addition) {
+      showIntegrationBanner(d.sectionKind, d.sectionTitle || d.sectionKind, d.addition, note.id, summaryHash);
+    }
+  })
+  .catch(function() {});
+}
+
+// ─────────────────────────────────────────────────────────────────
 // INLINE MENTOR PANEL — helpers
 // ─────────────────────────────────────────────────────────────────
 function buildSummaryMentorSystem(ctx) {
@@ -1032,7 +1159,7 @@ function getSummaryQuickPrompts(ctx, domainCategory) {
   return (domain[domainCategory] || [base, 'De ce contează asta?', 'Explică mai simplu.']).slice(0, 3);
 }
 
-function initMentorPanel(ctx, domainCategory) {
+function initMentorPanel(ctx, domainCategory, summaryHash, sections, subjectName) {
   var chatEl     = document.getElementById('smChat');
   var inputEl    = document.getElementById('smInput');
   var sendBtn    = document.getElementById('smSend');
@@ -1041,16 +1168,37 @@ function initMentorPanel(ctx, domainCategory) {
 
   var messages = [];
   var busy = false;
+  var lastUserMsg = '';
   var systemPrompt = buildSummaryMentorSystem(ctx);
 
   function appendMsg(role, text) {
     messages.push({ role: role, content: text });
+    var wrapper = document.createElement('div');
+
     var div = document.createElement('div');
     div.style.cssText = role === 'user'
       ? 'font-size:.82rem;color:var(--text-primary);background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.15);border-radius:10px 10px 4px 10px;padding:9px 13px;margin-left:24px;line-height:1.6;'
       : 'font-size:.82rem;color:var(--text-secondary);line-height:1.7;background:var(--bg-overlay);border:1px solid var(--border);border-radius:10px 10px 10px 4px;padding:10px 13px;white-space:pre-wrap;';
     div.textContent = text;
-    chatEl.appendChild(div);
+    wrapper.appendChild(div);
+
+    if (role === 'assistant' && summaryHash && lastUserMsg) {
+      var addBtn = document.createElement('button');
+      addBtn.textContent = '+ Adaugă la fișă';
+      addBtn.style.cssText = 'display:block;margin-top:5px;margin-left:2px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:.69rem;transition:color .15s,border-color .15s;';
+      var capturedQ = lastUserMsg;
+      var capturedA = text;
+      addBtn.addEventListener('click', function() {
+        addBtn.textContent = '✓ Adăugat';
+        addBtn.disabled = true;
+        addBtn.style.color = 'var(--green)';
+        addBtn.style.borderColor = 'var(--green)';
+        addToSummaryNotes(capturedQ, capturedA, summaryHash, sections, subjectName);
+      });
+      wrapper.appendChild(addBtn);
+    }
+
+    chatEl.appendChild(wrapper);
     chatEl.scrollTop = chatEl.scrollHeight;
   }
 
@@ -1058,6 +1206,7 @@ function initMentorPanel(ctx, domainCategory) {
     text = text.trim();
     if (!text || busy) return;
     busy = true;
+    lastUserMsg = text;
     if (promptsEl) promptsEl.style.display = 'none';
     inputEl.value = '';
     appendMsg('user', text);
