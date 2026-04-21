@@ -822,7 +822,7 @@ function initRightPanel(ctx, domCat, data, subjectName, summaryHash) {
   if (!tabBar) return;
 
   function activateTab(name) {
-    ['mentor','quiz','cards','map'].forEach(function(t) {
+    ['mentor','quiz','cards','map','scen'].forEach(function(t) {
       var btn   = document.getElementById('smTab-' + t);
       var panel = document.getElementById('smPanel-' + t);
       var active = t === name;
@@ -852,6 +852,7 @@ function initRightPanel(ctx, domCat, data, subjectName, summaryHash) {
   initQuizPanel(summaryCtx, subjectName, summaryHash);
   initFlashcardsPanel(summaryCtx, subjectName, summaryHash);
   initConceptMap(data, summaryHash);
+  initScenariosPanel(summaryCtx, subjectName, domCat, summaryHash, ctx);
 
   // Restore stored integrations + notes from previous sessions
   applyStoredIntegrations(summaryHash);
@@ -1134,6 +1135,149 @@ function addToSummaryNotes(question, answer, summaryHash, sections, subjectName)
     }
   })
   .catch(function() {});
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SCENARIO-BASED LEARNING
+// ─────────────────────────────────────────────────────────────────
+function initScenariosPanel(context, subjectName, domCat, summaryHash, summaryCtx) {
+  var genBtn    = document.getElementById('smScenGen');
+  var container = document.getElementById('smScenContent');
+  if (!genBtn || !container) return;
+
+  var scenarios = [], current = 0;
+
+  function tryLoadCache() {
+    try {
+      var c = JSON.parse(localStorage.getItem('rpsc_' + summaryHash) || 'null');
+      if (c && c.length) { scenarios = c; current = 0; renderScenario(); genBtn.style.display = 'none'; return true; }
+    } catch {}
+    return false;
+  }
+
+  function renderScenario() {
+    var sc = scenarios[current];
+    if (!sc) return;
+    var h = '<div style="font-size:.68rem;color:var(--text-muted);text-align:right;margin-bottom:10px;">Scenariul ' + (current+1) + ' din ' + scenarios.length + '</div>';
+
+    // Situation card
+    h += '<div style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:10px;padding:13px 14px;margin-bottom:12px;">';
+    h += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--blue);margin-bottom:7px;">Situație</div>';
+    h += '<div style="font-size:.8rem;color:var(--text-secondary);line-height:1.7;">' + escapeHtml(sc.situation||'') + '</div>';
+    h += '</div>';
+
+    // Task
+    h += '<div style="font-size:.79rem;font-weight:600;color:var(--text-primary);margin-bottom:8px;line-height:1.5;">' + escapeHtml(sc.task||'') + '</div>';
+
+    // Hint
+    if (sc.hint) {
+      h += '<div style="font-size:.71rem;color:var(--accent);background:rgba(242,155,109,.07);border-radius:7px;padding:5px 10px;margin-bottom:10px;">💡 ' + escapeHtml(sc.hint) + '</div>';
+    }
+
+    // Answer textarea
+    h += '<textarea id="smScenAnswer" placeholder="Scrie răspunsul tău aici..." rows="5" style="width:100%;box-sizing:border-box;background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:.79rem;color:var(--text-primary);resize:vertical;font-family:inherit;outline:none;margin-bottom:10px;"></textarea>';
+    h += '<button id="smScenSubmit" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:8px 18px;cursor:pointer;font-size:.79rem;font-weight:600;width:100%;">Evaluează răspunsul</button>';
+    h += '<div id="smScenEval" style="display:none;margin-top:12px;"></div>';
+
+    container.innerHTML = h;
+
+    document.getElementById('smScenSubmit').addEventListener('click', function() {
+      var answer = (document.getElementById('smScenAnswer') || {}).value || '';
+      if (answer.trim().length < 5) return;
+      evaluateScenario(sc, answer.trim());
+    });
+  }
+
+  async function evaluateScenario(sc, answer) {
+    var evalEl  = document.getElementById('smScenEval');
+    var submitBtn = document.getElementById('smScenSubmit');
+    var answerEl  = document.getElementById('smScenAnswer');
+    if (!evalEl) return;
+
+    submitBtn.disabled = true; submitBtn.textContent = '⟳ Se evaluează...';
+    if (answerEl) answerEl.disabled = true;
+    evalEl.style.display = 'block';
+    evalEl.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);">Se generează evaluarea...</div>';
+
+    var sysPrompt = 'Ești un profesor evaluator pentru materia ' + (subjectName||'') + '.\n';
+    if (summaryCtx) {
+      if (summaryCtx.title)   sysPrompt += 'Fișa: "' + summaryCtx.title + '"\n';
+      if (summaryCtx.insight) sysPrompt += 'Ideea centrală: ' + summaryCtx.insight + '\n';
+    }
+    sysPrompt += '\nEvaluezi răspunsul unui student la un scenariu practic. Fii specific și constructiv în max 5 propoziții: ce a prins bine, ce lipsește, explicație scurtă. Răspunde în română.';
+
+    var headers = { 'Content-Type': 'application/json' };
+    if (window.__shAccessToken) headers['Authorization'] = 'Bearer ' + window.__shAccessToken;
+
+    try {
+      var res = await fetch('/api/ai/chat', {
+        method: 'POST', headers: headers,
+        body: JSON.stringify({
+          system: sysPrompt,
+          messages: [{ role: 'user', content: 'Scenariu: ' + sc.situation + '\nÎntrebare: ' + sc.task + '\n\nRăspunsul meu: ' + answer }],
+          max_tokens: 600,
+        }),
+      });
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      var evaluation = data.content || data.response || '';
+
+      var evalH = '<div style="background:rgba(115,201,166,.07);border:1px solid rgba(115,201,166,.2);border-radius:10px;padding:12px 14px;">';
+      evalH += '<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--green);margin-bottom:7px;">Evaluare</div>';
+      evalH += '<div style="font-size:.79rem;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap;">' + escapeHtml(evaluation) + '</div>';
+      evalH += '</div>';
+
+      if (current < scenarios.length - 1) {
+        evalH += '<button id="smScenNext" style="margin-top:12px;background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:.78rem;width:100%;">Scenariul următor →</button>';
+      } else {
+        evalH += '<div style="margin-top:12px;text-align:center;font-size:.78rem;color:var(--green);font-weight:600;">✓ Ai completat toate scenariile!</div>';
+        evalH += '<button id="smScenReset" style="margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:7px;padding:6px 14px;cursor:pointer;font-size:.74rem;width:100%;">Regenerează scenarii noi</button>';
+      }
+      evalEl.innerHTML = evalH;
+
+      var nextBtn = document.getElementById('smScenNext');
+      if (nextBtn) nextBtn.addEventListener('click', function() { current++; renderScenario(); });
+
+      var resetBtn = document.getElementById('smScenReset');
+      if (resetBtn) resetBtn.addEventListener('click', function() {
+        try { localStorage.removeItem('rpsc_' + summaryHash); } catch {}
+        scenarios = []; current = 0;
+        container.innerHTML = '';
+        genBtn.style.display = 'block';
+      });
+    } catch(e) {
+      evalEl.innerHTML = '<div style="font-size:.75rem;color:var(--red);">' + escapeHtml(e.message) + '</div>';
+      submitBtn.disabled = false; submitBtn.textContent = 'Evaluează răspunsul';
+      if (answerEl) answerEl.disabled = false;
+    }
+  }
+
+  genBtn.addEventListener('click', function() {
+    if (tryLoadCache()) return;
+    genBtn.disabled = true; genBtn.textContent = '⟳ Se generează...';
+    container.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:8px 0;">Se generează 3 scenarii...</div>';
+
+    var headers = { 'Content-Type': 'application/json' };
+    if (window.__shAccessToken) headers['Authorization'] = 'Bearer ' + window.__shAccessToken;
+
+    fetch('/api/ai/scenarios', {
+      method: 'POST', headers: headers,
+      body: JSON.stringify({ subjectName: subjectName||'', context: context||'', count: 3, domainCategory: domCat||'other' }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      scenarios = d.scenarios || [];
+      current = 0;
+      try { localStorage.setItem('rpsc_' + summaryHash, JSON.stringify(scenarios)); } catch {}
+      genBtn.style.display = 'none';
+      renderScenario();
+    })
+    .catch(function(e) {
+      container.innerHTML = '<div style="font-size:.75rem;color:var(--red);padding:8px 0;">' + escapeHtml(e.message) + '</div>';
+      genBtn.disabled = false; genBtn.textContent = 'Generează scenarii';
+    });
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1478,6 +1622,7 @@ function renderSummaryPage(element) {
   h += '<button id="smTab-quiz"   style="flex:1;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.68rem;">📝 Quiz</button>';
   h += '<button id="smTab-cards"  style="flex:1;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.68rem;">🎴 Cards</button>';
   h += '<button id="smTab-map"    style="flex:1;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.68rem;">🗺️ Hartă</button>';
+  h += '<button id="smTab-scen"   style="flex:1;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.68rem;">🎯 Scenarii</button>';
   h += '</div>';
 
   // ── Mentor panel ──────────────────────────────────────────────────
@@ -1524,6 +1669,13 @@ function renderSummaryPage(element) {
   // ── Concept map panel ─────────────────────────────────────────────
   h += '<div id="smPanel-map" style="flex:1;overflow-y:auto;display:none;padding:14px;">';
   h += '<div id="smMapContent"><div style="font-size:.78rem;color:var(--text-muted);line-height:1.6;">Conexiunile dintre conceptele din fișă, extrase din secțiunile structurale.</div></div>';
+  h += '</div>';
+
+  // ── Scenarios panel ───────────────────────────────────────────────
+  h += '<div id="smPanel-scen" style="flex:1;overflow-y:auto;display:none;padding:16px 14px;">';
+  h += '<div style="font-size:.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Aplică conceptele din fișă în situații reale. AI-ul îți evaluează răspunsul.</div>';
+  h += '<button id="smScenGen" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:8px 18px;cursor:pointer;font-size:.79rem;font-weight:600;margin-bottom:14px;">Generează scenarii</button>';
+  h += '<div id="smScenContent"></div>';
   h += '</div>';
 
   h += '</div>'; // end right panel

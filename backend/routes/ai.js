@@ -341,6 +341,57 @@ router.post('/smart-summary',
 );
 
 // ─────────────────────────────────────────────────────────────────
+// POST /api/ai/scenarios — generate 3 practice scenarios from summary
+// ─────────────────────────────────────────────────────────────────
+router.post('/scenarios',
+  ...aiGuard('quiz'),
+  async (req, res, next) => {
+    try {
+      const { subjectName, context, count = 3, domainCategory } = req.body;
+      if (!context) return res.status(400).json({ error: 'context este obligatoriu.' });
+
+      const typeMap = {
+        social_sciences: 'vignete de caz real (psihologic, social sau organizațional)',
+        law:             'spețe juridice cu situație de fapt și întrebare juridică precisă',
+        medicine:        'cazuri clinice cu pacient, simptome și întrebare de diagnostic/management',
+        cs:              'probleme de programare sau design de sistem cu cerință clară',
+        exact_sciences:  'probleme aplicative cu date numerice și calcul sau analiză cerută',
+        humanities:      'analize de text, contextualizări istorice sau interpretări teoretice',
+        other:           'scenarii practice care cer aplicarea conceptelor',
+      };
+      const instrType = typeMap[domainCategory] || typeMap.other;
+
+      const userContent = `Materie: ${(subjectName || '').substring(0, 60)}
+Generează exact ${count} ${instrType} bazate STRICT pe conceptele din materialul de mai jos.
+
+Format JSON obligatoriu — returnează EXCLUSIV acest JSON, fără text în afara lui:
+{"scenarios":[{"situation":"descriere scenariu realist 3-4 propoziții","task":"întrebarea specifică la care studentul trebuie să răspundă în 5-10 rânduri","hint":"un concept cheie din material care ajută la răspuns"}]}
+
+Material:
+${context.substring(0, 3500)}`;
+
+      let result;
+      try {
+        result = await askStructuredJson({
+          system: 'Ești un profesor care creează scenarii de practică aplicată. Returnează EXCLUSIV JSON valid.',
+          userContent,
+          maxTokens: 1500,
+        });
+      } catch {
+        return res.status(502).json({ error: 'Nu am putut genera scenariile. Încearcă din nou.' });
+      }
+
+      if (!Array.isArray(result?.scenarios) || !result.scenarios.length) {
+        return res.status(502).json({ error: 'Format invalid de la AI.' });
+      }
+
+      logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash, 0, 0, 0, subjectName?.substring(0, 60));
+      res.json({ scenarios: result.scenarios });
+    } catch (e) { next(e); }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
 // POST /api/ai/summary-integrate
 // Haiku decides if a Q&A fits an existing scaffold section
 // ─────────────────────────────────────────────────────────────────
