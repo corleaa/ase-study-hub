@@ -1027,6 +1027,72 @@ function categorizeActivity(type) {
 // =============================================
 // V8 — AI MENTOR
 // =============================================
+function buildSummaryQuickPrompts(sc) {
+  const dom = sc.domain_category || 'other';
+  const title = sc.title || '';
+  const secs = sc.sectionObjects || [];
+
+  // Domain-specific "Apply" prompts
+  const applyMap = {
+    exact_sciences: [
+      { icon: '🧮', text: 'Rezolvă un exercițiu similar cu ce e în fișa "' + title + '"' },
+      { icon: '🌍', text: 'Unde apare "' + title + '" în situații reale?' },
+    ],
+    social_sciences: [
+      { icon: '🧠', text: 'Dă-mi un caz real de aplicare a conceptelor din "' + title + '"' },
+      { icon: '💼', text: 'Cum aplic "' + title + '" la locul de muncă?' },
+    ],
+    law: [
+      { icon: '⚖️', text: 'Dă-mi o speță juridică legată de "' + title + '"' },
+      { icon: '📋', text: 'Care sunt condițiile și excepțiile din "' + title + '"?' },
+    ],
+    medicine: [
+      { icon: '🏥', text: 'Dă-mi un caz clinic bazat pe "' + title + '"' },
+      { icon: '🔬', text: 'Explică mecanismul fiziopatologic din "' + title + '"' },
+    ],
+    cs: [
+      { icon: '💻', text: 'Scrie cod care ilustrează conceptul din "' + title + '"' },
+      { icon: '⚡', text: 'Care e complexitatea și când îl folosesc în practică?' },
+    ],
+    humanities: [
+      { icon: '📖', text: 'Care e contextul istoric al "' + title + '"?' },
+      { icon: '🔄', text: 'Cum se compară cu alte teorii similare?' },
+    ],
+    other: [
+      { icon: '💡', text: 'Dă-mi un exemplu practic din "' + title + '"' },
+      { icon: '🌍', text: 'Unde apare "' + title + '" în viața reală?' },
+    ],
+  };
+
+  const prompts = (applyMap[dom] || applyMap.other).slice();
+
+  // Section-specific prompts (top 2 most relevant sections)
+  const sectionPromptMap = {
+    mechanism:    function(t) { return { icon: '⚙️', text: 'Explică mecanismul "' + t + '" cu un exemplu concret' }; },
+    cauza_efect:  function(t) { return { icon: '🔗', text: 'Urmărește lanțul cauzal din "' + t + '"' }; },
+    comparatie:   function(t) { return { icon: '⚖️', text: 'Când aleg prima față de a doua opțiune din "' + t + '"?' }; },
+    ddx:          function(t) { return { icon: '🔍', text: 'Cum diferențiez variantele din "' + t + '"?' }; },
+    protocol:     function(t) { return { icon: '📋', text: 'Parcurge cu mine protocolul din "' + t + '"' }; },
+    caz:          function(t) { return { icon: '📁', text: 'Analizează împreună cu mine cazul din "' + t + '"' }; },
+    warnings:     function(t) { return { icon: '⚠️', text: 'Ce greșeli frecvente trebuie să evit în "' + t + '"?' }; },
+    aplicatii:    function(t) { return { icon: '🚀', text: 'Dezvoltă aplicațiile practice din "' + t + '"' }; },
+    formule:      function(t) { return { icon: '🧮', text: 'Explică-mi formula din "' + t + '" pas cu pas' }; },
+    taxonomie:    function(t) { return { icon: '🗂️', text: 'Cum clasific corect elementele din "' + t + '"?' }; },
+    conditii:     function(t) { return { icon: '✅', text: 'Când se aplică și când nu se aplică "' + t + '"?' }; },
+    articol:      function(t) { return { icon: '📜', text: 'Dă-mi un caz practic pentru "' + t + '"' }; },
+  };
+
+  secs.slice(0, 3).forEach(function(s) {
+    var fn = sectionPromptMap[s.kind];
+    if (fn) prompts.push(fn(s.title));
+  });
+
+  // Always add exam prep
+  prompts.push({ icon: '📝', text: 'Ce ar putea fi la examen din "' + title + '"?' });
+
+  return prompts.slice(0, 6);
+}
+
 function renderMentorPage(element) {
   let html = '<div class="anim">';
   html += '<div class="mentor-layout">';
@@ -1094,14 +1160,7 @@ function renderMentorPage(element) {
   // Quick prompts
   html += '<div class="mentor-context-card">';
   html += '<div class="mcc-title">Întrebări Rapide</div>';
-  const summaryPrompts = window.__activeSummaryContext ? [
-    { icon: '🔍', text: 'Explică-mi mai simplu conceptul principal din fișa asta' },
-    { icon: '❓', text: 'Ce ar putea fi la examen din această fișă?' },
-    { icon: '🔗', text: 'Cum se leagă conceptele din această fișă între ele?' },
-    { icon: '⚠️', text: 'Ce greșeli fac studenții la această temă?' },
-    { icon: '💡', text: 'Dă-mi un exemplu practic pentru ideea centrală' },
-    { icon: '📚', text: 'Ce trebuie să știu înainte să studiez mai departe?' },
-  ] : [
+  const summaryPrompts = window.__activeSummaryContext ? buildSummaryQuickPrompts(window.__activeSummaryContext) : [
     { icon: 'chart', text: 'Analizează-mi progresul complet' },
     { icon: '⚠️', text: 'Unde sunt cel mai slab?' },
     { icon: 'calendar', text: 'Cum să mă pregătesc pentru examene?' },
@@ -1457,6 +1516,7 @@ function buildMentorContext() {
     if (sc.sections && sc.sections.length) ctx += 'Secțiuni studiate: ' + sc.sections.join(', ') + '\n';
     if (sc.difficulty) ctx += 'Nivel: ' + sc.difficulty + '\n';
     if (sc.intent) ctx += 'Scopul studentului pentru această fișă: ' + sc.intent + '\n';
+    if (sc.domain_category) ctx += 'Domeniu: ' + sc.domain_category + '\n';
     ctx += '\nMENTOR: Răspunde în contextul acestei fișe. Ajută studentul să aprofundeze conceptele identificate mai sus. Dacă pune o întrebare fără context, presupune că se referă la fișa curentă.\n';
   }
 

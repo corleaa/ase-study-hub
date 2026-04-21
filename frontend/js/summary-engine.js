@@ -775,14 +775,16 @@ function openSummaryPage(data, title, subjectName, intent, subjectKey) {
     var o = data.output;
     var a = data.analysis || {};
     window.__activeSummaryContext = {
-      title:        o.title || title || '',
-      subject:      subjectName || '',
-      why:          o.why_it_matters || '',
-      insight:      o.key_insight || '',
-      prerequisites: a.prerequisites || [],
-      sections:     (o.sections || []).map(function(s){ return s.title || s.kind; }),
-      difficulty:   a.difficulty || '',
-      intent:       intent || '',
+      title:          o.title || title || '',
+      subject:        subjectName || '',
+      why:            o.why_it_matters || '',
+      insight:        o.key_insight || '',
+      prerequisites:  a.prerequisites || [],
+      sections:       (o.sections || []).map(function(s){ return s.title || s.kind; }),
+      sectionObjects: (o.sections || []).map(function(s){ return { kind: s.kind, title: s.title || s.kind }; }),
+      difficulty:     a.difficulty || '',
+      intent:         intent || '',
+      domain_category: o.domain_category || 'other',
     };
   }
 
@@ -820,7 +822,7 @@ function initRightPanel(ctx, domCat, data, subjectName, summaryHash) {
   if (!tabBar) return;
 
   function activateTab(name) {
-    ['mentor','quiz','cards'].forEach(function(t) {
+    ['mentor','quiz','cards','map'].forEach(function(t) {
       var btn   = document.getElementById('smTab-' + t);
       var panel = document.getElementById('smPanel-' + t);
       var active = t === name;
@@ -849,6 +851,7 @@ function initRightPanel(ctx, domCat, data, subjectName, summaryHash) {
   initMentorPanel(ctx, domCat, summaryHash, filteredSections, subjectName);
   initQuizPanel(summaryCtx, subjectName, summaryHash);
   initFlashcardsPanel(summaryCtx, subjectName, summaryHash);
+  initConceptMap(data, summaryHash);
 
   // Restore stored integrations + notes from previous sessions
   applyStoredIntegrations(summaryHash);
@@ -1134,6 +1137,175 @@ function addToSummaryNotes(question, answer, summaryHash, sections, subjectName)
 }
 
 // ─────────────────────────────────────────────────────────────────
+// CONCEPT MAP — SVG graph from structural sections
+// ─────────────────────────────────────────────────────────────────
+function initConceptMap(data, summaryHash) {
+  var container = document.getElementById('smMapContent');
+  if (!container || !data || !data.output) return;
+
+  // Extract nodes + edges from structural sections
+  var nodes = [], edges = [];
+  var nodeIndex = {};
+  var o = data.output;
+
+  function addNode(label, kind) {
+    if (nodeIndex[label] !== undefined) return nodeIndex[label];
+    var id = nodes.length;
+    nodes.push({ id: id, label: label, kind: kind || 'default' });
+    nodeIndex[label] = id;
+    return id;
+  }
+
+  // Central node = summary title
+  var centerId = addNode(o.title || 'Concept central', 'center');
+
+  // Pathway nodes chained from center
+  (o.pathway || []).forEach(function(step, i) {
+    var nid = addNode(step, 'pathway');
+    if (i === 0) edges.push({ from: centerId, to: nid, label: '' });
+    else edges.push({ from: nodeIndex[o.pathway[i-1]], to: nid, label: '' });
+  });
+
+  // Sections: cauza_efect chains
+  (o.sections || []).forEach(function(s) {
+    if (s.kind === 'cauza_efect') {
+      (s.chains || []).forEach(function(chain) {
+        var prev = null;
+        chain.forEach(function(el) {
+          if (el === '→' || el === '->' || el === '⟹') return;
+          var nid = addNode(el.length > 30 ? el.substring(0,28)+'…' : el, 'cauza');
+          if (prev !== null) edges.push({ from: prev, to: nid, label: '→' });
+          prev = nid;
+        });
+      });
+    }
+    if (s.kind === 'comparatie') {
+      var aId = addNode(s.label_a || 'A', 'comp');
+      var bId = addNode(s.label_b || 'B', 'comp');
+      edges.push({ from: centerId, to: aId, label: 'vs' });
+      edges.push({ from: centerId, to: bId, label: 'vs' });
+    }
+    if (s.kind === 'taxonomie') {
+      (s.items || []).slice(0, 5).forEach(function(item) {
+        var nid = addNode(item.name || '', 'taxo');
+        edges.push({ from: centerId, to: nid, label: 'include' });
+      });
+    }
+    if (s.kind === 'mechanism') {
+      (s.items || []).forEach(function(item) {
+        var nid = addNode(item.level || '', 'mech');
+        edges.push({ from: centerId, to: nid, label: item.level || '' });
+      });
+    }
+  });
+
+  if (nodes.length <= 1) {
+    container.innerHTML = '<div style="font-size:.78rem;color:var(--text-muted);padding:8px 0;line-height:1.6;">Fișa nu conține secțiuni structurale suficiente pentru o hartă (cauza_efect, comparatie, taxonomie).</div>';
+    return;
+  }
+
+  // Simple force-directed layout (iterative)
+  var W = 330, H = 320;
+  var pos = nodes.map(function(n, i) {
+    var angle = (i / nodes.length) * 2 * Math.PI;
+    return n.id === 0
+      ? { x: W/2, y: H/2 }
+      : { x: W/2 + (W*0.35) * Math.cos(angle), y: H/2 + (H*0.35) * Math.sin(angle) };
+  });
+
+  // 80 iterations of simple spring layout
+  for (var iter = 0; iter < 80; iter++) {
+    var forces = pos.map(function() { return { fx: 0, fy: 0 }; });
+    // Repulsion
+    for (var i = 0; i < nodes.length; i++) {
+      for (var j = i+1; j < nodes.length; j++) {
+        var dx = pos[i].x - pos[j].x, dy = pos[i].y - pos[j].y;
+        var dist = Math.max(Math.sqrt(dx*dx+dy*dy), 1);
+        var rep = 2200 / (dist*dist);
+        forces[i].fx += rep*dx/dist; forces[i].fy += rep*dy/dist;
+        forces[j].fx -= rep*dx/dist; forces[j].fy -= rep*dy/dist;
+      }
+    }
+    // Attraction along edges
+    edges.forEach(function(e) {
+      var dx = pos[e.to].x - pos[e.from].x, dy = pos[e.to].y - pos[e.from].y;
+      var dist = Math.max(Math.sqrt(dx*dx+dy*dy), 1);
+      var att = (dist - 80) * 0.05;
+      forces[e.from].fx += att*dx/dist; forces[e.from].fy += att*dy/dist;
+      forces[e.to].fx   -= att*dx/dist; forces[e.to].fy   -= att*dy/dist;
+    });
+    // Apply + clamp
+    pos.forEach(function(p, i) {
+      if (i === 0) return; // center fixed
+      p.x = Math.max(40, Math.min(W-40, p.x + forces[i].fx * 0.3));
+      p.y = Math.max(24, Math.min(H-24, p.y + forces[i].fy * 0.3));
+    });
+  }
+
+  // Color per kind
+  var kindColor = {
+    center:'var(--accent)', pathway:'var(--blue)', cauza:'var(--green)',
+    comp:'var(--purple)', taxo:'var(--amber)', mech:'var(--teal)', default:'var(--text-muted)'
+  };
+
+  // Build SVG
+  var svg = '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;">';
+
+  // Edges
+  edges.forEach(function(e) {
+    var x1=pos[e.from].x, y1=pos[e.from].y, x2=pos[e.to].x, y2=pos[e.to].y;
+    svg += '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="rgba(255,255,255,.12)" stroke-width="1.5" marker-end="url(#arr)"/>';
+  });
+
+  // Arrow marker
+  svg += '<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,.2)"/></marker></defs>';
+
+  // Nodes
+  nodes.forEach(function(n, i) {
+    var x = pos[i].x, y = pos[i].y;
+    var col = kindColor[n.kind] || 'var(--text-muted)';
+    var isCenter = n.kind === 'center';
+    var r = isCenter ? 22 : 14;
+    var label = n.label.length > 18 ? n.label.substring(0,16)+'…' : n.label;
+    svg += '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'22" stroke="'+col+'" stroke-width="'+(isCenter?2:1.5)+'"/>';
+    svg += '<text x="'+x+'" y="'+(y-r-5)+'" text-anchor="middle" font-size="'+(isCenter?8:7)+'" fill="'+col+'" font-family="Inter,sans-serif">'+escapeHtml(label)+'</text>';
+  });
+
+  svg += '</svg>';
+
+  // Legend
+  var legend = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">';
+  var used = {};
+  nodes.forEach(function(n) { used[n.kind] = kindColor[n.kind]; });
+  var labels = {center:'Central',pathway:'Traseu',cauza:'Cauza-Efect',comp:'Comparație',taxo:'Taxonomie',mech:'Mecanism'};
+  Object.keys(used).forEach(function(k) {
+    if (k === 'default') return;
+    legend += '<span style="font-size:.62rem;color:'+used[k]+';display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:50%;background:'+used[k]+'22;border:1px solid '+used[k]+';display:inline-block;"></span>'+escapeHtml(labels[k]||k)+'</span>';
+  });
+  legend += '</div>';
+
+  // Click on node → scroll to section
+  container.innerHTML = svg + legend;
+
+  // Add click handlers to scroll left panel
+  container.querySelector('svg').addEventListener('click', function(e) {
+    var svgEl = e.currentTarget;
+    var rect = svgEl.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var cx = (e.clientX - rect.left) * scaleX;
+    var cy = (e.clientY - rect.top) * scaleX;
+    pos.forEach(function(p, i) {
+      var dx = cx-p.x, dy = cy-p.y;
+      if (Math.sqrt(dx*dx+dy*dy) < 22) {
+        var n = nodes[i];
+        var secEl = document.querySelector('[data-sec-kind="'+n.kind+'"]');
+        if (secEl) secEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
 // INLINE MENTOR PANEL — helpers
 // ─────────────────────────────────────────────────────────────────
 function buildSummaryMentorSystem(ctx) {
@@ -1302,9 +1474,10 @@ function renderSummaryPage(element) {
 
   // Tab bar
   h += '<div id="smTabBar" style="flex-shrink:0;display:flex;border-bottom:1px solid var(--border);">';
-  h += '<button id="smTab-mentor" style="flex:1;padding:9px 4px;background:transparent;border:none;border-bottom:2px solid var(--accent);color:var(--accent);cursor:pointer;font-size:.73rem;font-weight:600;">💬 Mentor</button>';
-  h += '<button id="smTab-quiz"   style="flex:1;padding:9px 4px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.73rem;">📝 Quiz</button>';
-  h += '<button id="smTab-cards"  style="flex:1;padding:9px 4px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.73rem;">🎴 Flashcards</button>';
+  h += '<button id="smTab-mentor" style="flex:1;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid var(--accent);color:var(--accent);cursor:pointer;font-size:.68rem;font-weight:600;">💬 Mentor</button>';
+  h += '<button id="smTab-quiz"   style="flex:1;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.68rem;">📝 Quiz</button>';
+  h += '<button id="smTab-cards"  style="flex:1;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.68rem;">🎴 Cards</button>';
+  h += '<button id="smTab-map"    style="flex:1;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.68rem;">🗺️ Hartă</button>';
   h += '</div>';
 
   // ── Mentor panel ──────────────────────────────────────────────────
@@ -1346,6 +1519,11 @@ function renderSummaryPage(element) {
   h += '<button id="smCardsGen" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;">Generează</button>';
   h += '</div>';
   h += '<div id="smCardsContent"></div>';
+  h += '</div>';
+
+  // ── Concept map panel ─────────────────────────────────────────────
+  h += '<div id="smPanel-map" style="flex:1;overflow-y:auto;display:none;padding:14px;">';
+  h += '<div id="smMapContent"><div style="font-size:.78rem;color:var(--text-muted);line-height:1.6;">Conexiunile dintre conceptele din fișă, extrase din secțiunile structurale.</div></div>';
   h += '</div>';
 
   h += '</div>'; // end right panel
