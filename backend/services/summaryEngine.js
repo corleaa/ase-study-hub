@@ -263,7 +263,7 @@ async function generateSmartSummary({ text, subjectName, intent = 'understand', 
 
   const response = await client.messages.create({
     model,
-    max_tokens: 4000,
+    max_tokens: model === MODEL_SONNET ? 8000 : 5000,
     system: [
       {
         type: 'text',
@@ -283,16 +283,26 @@ async function generateSmartSummary({ text, subjectName, intent = 'understand', 
   let parsed;
   try {
     parsed = JSON.parse(clean);
-  } catch {
-    // Try extracting JSON object from response
+  } catch (firstErr) {
+    // Try extracting the largest JSON object from response
     const match = clean.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('AI nu a returnat JSON valid');
-    parsed = JSON.parse(match[0]);
+    try {
+      parsed = JSON.parse(match[0]);
+    } catch {
+      // JSON truncated mid-response (output exceeded max_tokens)
+      const isTruncated = firstErr.message && firstErr.message.includes('position');
+      throw new Error(
+        isTruncated
+          ? 'Documentul este prea lung pentru o singură fișă. Încearcă cu primele 3-4 pagini sau un capitol specific.'
+          : 'AI nu a returnat JSON valid. Încearcă din nou.'
+      );
+    }
   }
 
   // Validate minimal structure
   if (!parsed.output || !parsed.output.title) {
-    throw new Error('Structura JSON incompletă');
+    throw new Error('Structura JSON incompletă — încearcă din nou.');
   }
 
   return {
