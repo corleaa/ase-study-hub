@@ -602,8 +602,6 @@ function renderSidebar() {
 
   html += '<div class="nav-section">Tools AI</div>';
   html += navBtn('finance', 'chart', 'Finance Lab');
-  html += navBtn('quiz', 'brain', 'Quiz Mode');
-  html += navBtn('flashcards', 'cards', 'Flashcards', getFlashcardDueBadge());
   html += navBtn('mindmap', 'map', 'Mind Map AI');
   html += navBtn('examsim', 'graduation', 'Exam Simulator');
   html += '<div class="nav-section">Analiză</div>';

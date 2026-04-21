@@ -790,6 +790,223 @@ function openSummaryPage(data, title, subjectName, intent, subjectKey) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// RIGHT PANEL — tab system + quiz + flashcards + mentor
+// ─────────────────────────────────────────────────────────────────
+function extractSummaryContext(data) {
+  if (!data || !data.output) return '';
+  var o = data.output;
+  var parts = [];
+  if (o.title) parts.push(o.title);
+  if (o.why_it_matters) parts.push(o.why_it_matters);
+  (o.layers || []).forEach(function(l) { if (l.text) parts.push(l.level + ': ' + l.text); });
+  (o.sections || []).forEach(function(s) {
+    var t = (s.title || s.kind) + ': ';
+    if (s.items) s.items.forEach(function(i) {
+      t += typeof i === 'string' ? i + '. ' : (i.text||i.description||i.definition||i.term||'') + '. ';
+    });
+    if (s.chains) s.chains.forEach(function(c) { t += c.join(' → ') + '. '; });
+    if (s.body) t += s.body + '. ';
+    if (s.steps) s.steps.forEach(function(st) { t += st + '. '; });
+    if (s.rows) s.rows.forEach(function(r) { t += Object.values(r).join(' | ') + '. '; });
+    parts.push(t);
+  });
+  if (o.key_insight) parts.push(o.key_insight);
+  return parts.join('\n').substring(0, 4000);
+}
+
+function initRightPanel(ctx, domCat, data, subjectName, summaryHash) {
+  // ── Tab switching ─────────────────────────────────────────────────
+  var tabBar = document.getElementById('smTabBar');
+  if (!tabBar) return;
+
+  function activateTab(name) {
+    ['mentor','quiz','cards'].forEach(function(t) {
+      var btn   = document.getElementById('smTab-' + t);
+      var panel = document.getElementById('smPanel-' + t);
+      var active = t === name;
+      if (btn) {
+        btn.style.borderBottom = active ? '2px solid var(--accent)' : '2px solid transparent';
+        btn.style.color = active ? 'var(--accent)' : 'var(--text-muted)';
+        btn.style.fontWeight = active ? '600' : '400';
+      }
+      if (panel) panel.style.display = active ? (t === 'mentor' ? 'flex' : 'block') : 'none';
+    });
+  }
+
+  tabBar.addEventListener('click', function(e) {
+    var btn = e.target.closest('[id^="smTab-"]');
+    if (!btn) return;
+    var name = btn.id.replace('smTab-', '');
+    activateTab(name);
+  });
+
+  // ── Init each panel ───────────────────────────────────────────────
+  initMentorPanel(ctx, domCat);
+  initQuizPanel(extractSummaryContext(data), subjectName, summaryHash);
+  initFlashcardsPanel(extractSummaryContext(data), subjectName, summaryHash);
+}
+
+function initQuizPanel(context, subjectName, summaryHash) {
+  var genBtn    = document.getElementById('smQuizGen');
+  var countSel  = document.getElementById('smQuizCount');
+  var contentEl = document.getElementById('smQuizContent');
+  if (!genBtn || !contentEl) return;
+
+  // Restore cached
+  function tryLoadCache(count) {
+    try {
+      var c = JSON.parse(localStorage.getItem('rpq_' + summaryHash + '_' + count) || 'null');
+      if (c && c.length) { renderQuizInPanel(c); return true; }
+    } catch {}
+    return false;
+  }
+
+  function renderQuizInPanel(questions) {
+    var answered = 0;
+    var h = '<div style="display:flex;flex-direction:column;gap:12px;">';
+    questions.forEach(function(q, qi) {
+      var qk = 'rpq_' + qi;
+      h += '<div data-rpq="'+qi+'" style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">';
+      h += '<div style="font-size:.8rem;color:var(--text-primary);font-weight:500;margin-bottom:10px;line-height:1.5;">'+escapeHtml(q.question||q.q||'')+'</div>';
+      var opts = q.options || q.opts || [];
+      h += '<div style="display:flex;flex-direction:column;gap:5px;">';
+      opts.forEach(function(opt, oi) {
+        var isCorrect = oi === (q.correct !== undefined ? q.correct : q.answer);
+        h += '<button data-rpq-opt="'+qi+'-'+oi+'" data-correct="'+(isCorrect?'1':'0')+'" style="text-align:left;background:var(--bg-raised);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.76rem;color:var(--text-secondary);">'+escapeHtml(typeof opt==='string'?opt:opt.text||'')+'</button>';
+      });
+      h += '</div>';
+      if (q.explanation) h += '<div id="rpqexp-'+qi+'" style="display:none;margin-top:8px;font-size:.73rem;color:var(--text-muted);line-height:1.55;padding-left:8px;border-left:2px solid var(--border);">'+escapeHtml(q.explanation)+'</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+    contentEl.innerHTML = h;
+
+    // Answer handler
+    contentEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-rpq-opt]');
+      if (!btn) return;
+      var parts = btn.dataset.rpqOpt.split('-');
+      var qi = parts[0];
+      var qBlock = contentEl.querySelector('[data-rpq="'+qi+'"]');
+      if (!qBlock || qBlock.dataset.done) return;
+      qBlock.dataset.done = '1';
+      qBlock.querySelectorAll('[data-rpq-opt]').forEach(function(b) {
+        b.disabled = true; b.style.cursor = 'default';
+        if (b.dataset.correct === '1') { b.style.borderColor='var(--green)'; b.style.color='var(--green)'; b.style.background='rgba(115,201,166,.1)'; }
+        else if (b === btn) { b.style.borderColor='var(--red)'; b.style.color='var(--red)'; }
+      });
+      var exp = document.getElementById('rpqexp-'+qi);
+      if (exp) { exp.style.display='block'; exp.style.borderColor = btn.dataset.correct==='1'?'var(--green)':'var(--red)'; }
+    });
+  }
+
+  genBtn.addEventListener('click', function() {
+    var count = parseInt(countSel.value, 10) || 10;
+    if (tryLoadCache(count)) return;
+
+    genBtn.disabled = true; genBtn.textContent = '⟳ ...';
+    contentEl.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:10px 0;">Se generează ' + count + ' întrebări...</div>';
+
+    var headers = {'Content-Type':'application/json'};
+    if (window.__shAccessToken) headers['Authorization'] = 'Bearer ' + window.__shAccessToken;
+
+    fetch('/api/ai/quiz', {
+      method:'POST', headers: headers,
+      body: JSON.stringify({ subjectName: subjectName||'', context: context, count: count, type: 'grile' }),
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (d.error) throw new Error(d.error);
+      var qs = d.questions || [];
+      try { localStorage.setItem('rpq_'+summaryHash+'_'+count, JSON.stringify(qs)); } catch {}
+      renderQuizInPanel(qs);
+    })
+    .catch(function(e){
+      contentEl.innerHTML = '<div style="font-size:.75rem;color:var(--red);padding:10px 0;">'+escapeHtml(e.message)+'</div>';
+    })
+    .finally(function(){ genBtn.disabled=false; genBtn.textContent='Generează'; });
+  });
+}
+
+function initFlashcardsPanel(context, subjectName, summaryHash) {
+  var genBtn    = document.getElementById('smCardsGen');
+  var countSel  = document.getElementById('smCardsCount');
+  var contentEl = document.getElementById('smCardsContent');
+  if (!genBtn || !contentEl) return;
+
+  var cards = [], current = 0, flipped = false;
+
+  function tryLoadCache(count) {
+    try {
+      var c = JSON.parse(localStorage.getItem('rpf_'+summaryHash+'_'+count)||'null');
+      if (c && c.length) { cards = c; current = 0; renderCard(); return true; }
+    } catch {}
+    return false;
+  }
+
+  function renderCard() {
+    if (!cards.length) return;
+    flipped = false;
+    var card = cards[current];
+    var h = '<div style="display:flex;flex-direction:column;gap:10px;">';
+    h += '<div style="font-size:.72rem;color:var(--text-muted);text-align:center;">' + (current+1) + ' / ' + cards.length + '</div>';
+    h += '<div id="rpfCard" style="background:var(--bg-overlay);border:1px solid var(--border);border-radius:12px;padding:20px 16px;min-height:120px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-align:center;">';
+    h += '<div style="font-size:.85rem;color:var(--text-primary);line-height:1.6;">'+escapeHtml(card.front||card.question||'')+'</div>';
+    h += '</div>';
+    h += '<div style="font-size:.72rem;color:var(--text-muted);text-align:center;">Click pe card pentru răspuns</div>';
+    h += '<div style="display:flex;gap:8px;justify-content:center;">';
+    h += '<button id="rpfPrev" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;padding:6px 14px;cursor:pointer;font-size:.78rem;"'+(current===0?' disabled':'')+'">← Anterior</button>';
+    h += '<button id="rpfNext" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;padding:6px 14px;cursor:pointer;font-size:.78rem;"'+(current===cards.length-1?' disabled':'')+'>Următor →</button>';
+    h += '</div></div>';
+    contentEl.innerHTML = h;
+
+    document.getElementById('rpfCard').addEventListener('click', function() {
+      flipped = !flipped;
+      var cardEl = document.getElementById('rpfCard');
+      if (!cardEl) return;
+      var content = flipped
+        ? '<div style="font-size:.85rem;color:var(--accent);line-height:1.6;">'+escapeHtml(cards[current].back||cards[current].answer||'')+'</div>'
+        : '<div style="font-size:.85rem;color:var(--text-primary);line-height:1.6;">'+escapeHtml(cards[current].front||cards[current].question||'')+'</div>';
+      cardEl.innerHTML = content;
+      cardEl.style.borderColor = flipped ? 'rgba(242,155,109,.4)' : 'var(--border)';
+    });
+
+    var prevBtn = document.getElementById('rpfPrev');
+    var nextBtn = document.getElementById('rpfNext');
+    if (prevBtn) prevBtn.addEventListener('click', function() { if (current>0){current--;renderCard();} });
+    if (nextBtn) nextBtn.addEventListener('click', function() { if (current<cards.length-1){current++;renderCard();} });
+  }
+
+  genBtn.addEventListener('click', function() {
+    var count = parseInt(countSel.value, 10) || 10;
+    if (tryLoadCache(count)) return;
+
+    genBtn.disabled = true; genBtn.textContent = '⟳ ...';
+    contentEl.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:10px 0;">Se generează ' + count + ' flashcard-uri...</div>';
+
+    var headers = {'Content-Type':'application/json'};
+    if (window.__shAccessToken) headers['Authorization'] = 'Bearer ' + window.__shAccessToken;
+
+    fetch('/api/ai/flashcards', {
+      method:'POST', headers:headers,
+      body: JSON.stringify({ subjectName: subjectName||'', context: context, count: count }),
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (d.error) throw new Error(d.error);
+      cards = d.flashcards || [];
+      current = 0;
+      try { localStorage.setItem('rpf_'+summaryHash+'_'+count, JSON.stringify(cards)); } catch {}
+      renderCard();
+    })
+    .catch(function(e){
+      contentEl.innerHTML = '<div style="font-size:.75rem;color:var(--red);padding:10px 0;">'+escapeHtml(e.message)+'</div>';
+    })
+    .finally(function(){ genBtn.disabled=false; genBtn.textContent='Generează'; });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
 // INLINE MENTOR PANEL — helpers
 // ─────────────────────────────────────────────────────────────────
 function buildSummaryMentorSystem(ctx) {
@@ -924,37 +1141,65 @@ function renderSummaryPage(element) {
   // Divider
   h += '<div style="width:1px;background:var(--border);flex-shrink:0;"></div>';
 
-  // Right: AI Mentor panel
+  // Right: tabbed panel (Mentor / Quiz / Flashcards)
   h += '<div style="width:360px;flex-shrink:0;display:flex;flex-direction:column;min-height:0;background:var(--bg-raised);">';
 
-  // Panel header
-  h += '<div style="flex-shrink:0;padding:12px 16px;border-bottom:1px solid var(--border);">';
-  h += '<div style="font-size:.85rem;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:7px;">💬 AI Mentor</div>';
+  // Context header
   if (ctx && ctx.title) {
-    h += '<div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Context: ' + escapeHtml(ctx.title) + '</div>';
+    h += '<div style="flex-shrink:0;padding:8px 14px;border-bottom:1px solid var(--border);">';
+    h += '<div style="font-size:.68rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📄 ' + escapeHtml(ctx.title) + '</div>';
+    h += '</div>';
   }
+
+  // Tab bar
+  h += '<div id="smTabBar" style="flex-shrink:0;display:flex;border-bottom:1px solid var(--border);">';
+  h += '<button id="smTab-mentor" style="flex:1;padding:9px 4px;background:transparent;border:none;border-bottom:2px solid var(--accent);color:var(--accent);cursor:pointer;font-size:.73rem;font-weight:600;">💬 Mentor</button>';
+  h += '<button id="smTab-quiz"   style="flex:1;padding:9px 4px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.73rem;">📝 Quiz</button>';
+  h += '<button id="smTab-cards"  style="flex:1;padding:9px 4px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;font-size:.73rem;">🎴 Flashcards</button>';
   h += '</div>';
 
-  // Messages area
+  // ── Mentor panel ──────────────────────────────────────────────────
+  h += '<div id="smPanel-mentor" style="flex:1;display:flex;flex-direction:column;min-height:0;">';
   h += '<div id="smChat" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">';
   h += '<div style="font-size:.82rem;color:var(--text-secondary);line-height:1.7;background:var(--bg-overlay);border:1px solid var(--border);border-radius:10px 10px 10px 4px;padding:10px 13px;">';
   h += 'Bună! Am citit fișa despre <strong>' + escapeHtml(ctx && ctx.title || title) + '</strong>. Pune-mi orice întrebare.';
   h += '</div></div>';
-
-  // Quick prompts
   h += '<div id="smQuickPrompts" style="flex-shrink:0;padding:8px 14px;display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--border);">';
   prompts.forEach(function(p) {
     h += '<button data-qp="'+escapeHtml(p)+'" style="text-align:left;background:var(--bg-overlay);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;font-size:.74rem;color:var(--text-secondary);line-height:1.4;">'+escapeHtml(p)+'</button>';
   });
   h += '</div>';
-
-  // Input area
   h += '<div style="flex-shrink:0;padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;">';
-  h += '<textarea id="smInput" placeholder="Întreabă ceva despre fișă... (Enter = trimite)" rows="2" style="flex:1;background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.8rem;color:var(--text-primary);resize:none;font-family:inherit;outline:none;min-height:0;"></textarea>';
-  h += '<button id="smSend" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 13px;cursor:pointer;font-size:1rem;line-height:1;flex-shrink:0;align-self:flex-end;">↑</button>';
+  h += '<textarea id="smInput" placeholder="Întreabă ceva... (Enter = trimite)" rows="2" style="flex:1;background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.8rem;color:var(--text-primary);resize:none;font-family:inherit;outline:none;"></textarea>';
+  h += '<button id="smSend" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 13px;cursor:pointer;font-size:1rem;flex-shrink:0;align-self:flex-end;">↑</button>';
+  h += '</div>';
   h += '</div>';
 
-  h += '</div>'; // end mentor panel
+  // ── Quiz panel ────────────────────────────────────────────────────
+  h += '<div id="smPanel-quiz" style="flex:1;overflow-y:auto;display:none;padding:16px 14px;display:none;">';
+  h += '<div style="font-size:.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Întrebări generate din conținutul fișei active.</div>';
+  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">';
+  h += '<select id="smQuizCount" style="flex:1;background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;padding:6px 10px;font-size:.78rem;">';
+  h += '<option value="5">5 întrebări</option><option value="10" selected>10 întrebări</option><option value="15">15 întrebări</option>';
+  h += '</select>';
+  h += '<button id="smQuizGen" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;">Generează</button>';
+  h += '</div>';
+  h += '<div id="smQuizContent"></div>';
+  h += '</div>';
+
+  // ── Flashcards panel ──────────────────────────────────────────────
+  h += '<div id="smPanel-cards" style="flex:1;overflow-y:auto;display:none;padding:16px 14px;">';
+  h += '<div style="font-size:.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Flashcard-uri generate din conținutul fișei active.</div>';
+  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">';
+  h += '<select id="smCardsCount" style="flex:1;background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;padding:6px 10px;font-size:.78rem;">';
+  h += '<option value="10" selected>10 carduri</option><option value="20">20 carduri</option><option value="30">30 carduri</option>';
+  h += '</select>';
+  h += '<button id="smCardsGen" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;">Generează</button>';
+  h += '</div>';
+  h += '<div id="smCardsContent"></div>';
+  h += '</div>';
+
+  h += '</div>'; // end right panel
   h += '</div>'; // end split body
   h += '</div>'; // end outer shell
 
@@ -966,19 +1211,19 @@ function renderSummaryPage(element) {
     if (typeof navigateTo === 'function') navigateTo(subjectKey || 'dashboard');
   });
 
-  // Quiz + highlight on left panel
+  // Hashes and sections for left panel
+  var summaryHash = simpleHash((data.output.title || '') + '|' + (subjectName || ''));
   var contentEl = document.getElementById('summaryPageContent');
   if (contentEl && data.output) {
     var filteredSections = (data.output.sections || [])
       .filter(function(s) { return (s.relevance || 1) > 0.45; })
       .sort(function(a, b) { return (b.relevance || 0) - (a.relevance || 0); });
-    var summaryHash = simpleHash((data.output.title || '') + '|' + (subjectName || ''));
     initSectionQuiz(contentEl, filteredSections, subjectName, domCat, summaryHash);
     initHighlightSystem(contentEl, summaryHash);
   }
 
-  // Init inline mentor chat
-  initMentorPanel(ctx, domCat);
+  // Init right panel (tabs + mentor + quiz + flashcards)
+  initRightPanel(ctx, domCat, data, subjectName, summaryHash);
 }
 
 // ─────────────────────────────────────────────────────────────────
