@@ -97,6 +97,17 @@ exam_prep   → accent pe formule, warnings, conditii, pathway cu termeni exact
 apply       → accent pe caz, aplicatii, protocol, exemple concrete
 
 ────────────────────────────────────────────
+DETECTARE DOMENIU (domain_category)
+────────────────────────────────────────────
+exact_sciences: matematică, fizică, chimie, statistică, inginerie
+social_sciences: psihologie, sociologie, economie, management, marketing
+law: drept, legislație, constituție, articole de lege, reglementări
+medicine: medicină, anatomie, farmacologie, fiziologie, patologie, biologie
+humanities: filozofie, istorie, literatură, lingvistică, artă, pedagogie
+cs: programare, algoritmi, sisteme, rețele, baze de date, securitate IT
+other: orice alt domeniu
+
+────────────────────────────────────────────
 PRINCIPIU SCAFFOLD
 ────────────────────────────────────────────
 Fiecare secțiune trebuie să:
@@ -123,6 +134,7 @@ Niciun text, niciun markdown, niciun backtick în afara JSON-ului.
     "title": "Titlu concis al temei",
     "why_it_matters": "1-2 propoziții de ce contează",
     "domain_tags": ["tag1","tag2","tag3"],
+    "domain_category": "exact_sciences|social_sciences|law|medicine|humanities|cs|other",
     "layers": [
       {"level":"Intuitiv","text":"explicație simplă, analogie din viața reală"},
       {"level":"Conceptual","text":"explicație academică, termeni cheie, logica internă"},

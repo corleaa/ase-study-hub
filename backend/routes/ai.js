@@ -341,6 +341,64 @@ router.post('/smart-summary',
 );
 
 // ─────────────────────────────────────────────────────────────────
+// POST /api/ai/section-quiz
+// Generates 2 quiz questions for a single summary section (Haiku)
+// ─────────────────────────────────────────────────────────────────
+router.post('/section-quiz',
+  ...aiGuard('quiz'),
+  async (req, res, next) => {
+    try {
+      const { sectionKind, sectionTitle, sectionContent, subjectName, domainCategory } = req.body;
+
+      if (!sectionKind || !sectionContent) {
+        return res.status(400).json({ error: 'sectionKind și sectionContent sunt obligatorii.' });
+      }
+
+      const domainHints = {
+        exact_sciences: 'Pune întrebări de calcul, aplicare formule sau interpretare numerică.',
+        social_sciences: 'Pune întrebări despre mecanisme, cauze, efecte, exemple concrete.',
+        law: 'Pune întrebări despre condiții de aplicare, excepții, articole.',
+        medicine: 'Pune întrebări despre diagnostic, mecanism fiziopatologic, protocol.',
+        cs: 'Pune întrebări despre algoritmi, complexitate, pattern-uri.',
+        humanities: 'Pune întrebări despre autori, teorii, contexte, interpretări.',
+      };
+      const hint = domainHints[domainCategory] || '';
+
+      const userContent = `Materie: ${subjectName || 'necunoscută'}
+Secțiune "${sectionTitle || sectionKind}" (tip: ${sectionKind})
+${hint}
+
+Conținut:
+${JSON.stringify(sectionContent).substring(0, 2000)}
+
+Generează EXACT 2 întrebări grilă. Returnează EXCLUSIV JSON valid:
+{"questions":[{"q":"...","opts":["a","b","c","d"],"answer":0,"explain":"1 propoziție explicație"}]}`;
+
+      let result;
+      try {
+        result = await askStructuredJson({
+          system: 'Ești un profesor care generează întrebări de verificare. Returnează EXCLUSIV JSON valid fără text în afara lui.',
+          userContent,
+          maxTokens: 600,
+        });
+      } catch {
+        logger.warn('Section quiz: AI returned invalid JSON', { userId: req.user?.id, sectionKind });
+        return res.status(502).json({ error: 'Nu am putut genera întrebările. Încearcă din nou.' });
+      }
+
+      if (!Array.isArray(result?.questions) || result.questions.length === 0) {
+        return res.status(502).json({ error: 'Format invalid de la AI.' });
+      }
+
+      logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash, 0, 0, 0, subjectName?.substring(0, 60));
+      res.json({ questions: result.questions });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
 // POST /api/ai/smart-summary/regenerate-section
 // ─────────────────────────────────────────────────────────────────
 router.post('/smart-summary/regenerate-section',

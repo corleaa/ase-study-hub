@@ -329,6 +329,16 @@ var SR = {
   },
 };
 
+var QUIZ_SKIP_KINDS = {formule:1,derivare:1,distributie:1,cod:1,glosar:1,autori:1};
+
+function simpleHash(str) {
+  var h = 0;
+  for (var i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h).toString(36);
+}
+
 var SECTION_COLOR = {
   formule:'var(--accent)',derivare:'var(--accent)',complexitate:'var(--red)',
   date_numerice:'var(--amber)',mechanism:'var(--green)',cauza_efect:'var(--blue)',
@@ -413,26 +423,28 @@ function renderSmartSummaryPage(data) {
   sections.sort(function(a,b){ return (b.relevance||0)-(a.relevance||0); });
 
   var boxKinds = ['formule','derivare','cod','caz','articol','protocol','complexitate','distributie'];
+  var secIdx = 0;
   sections.forEach(function(sec) {
     var c = SECTION_COLOR[sec.kind] || 'var(--text-muted)';
     var renderer = SR[sec.kind] || SR._generic;
-    var needsBox = boxKinds.indexOf(sec.kind) >= 0;
 
-    h += '<div style="margin-bottom:32px;">';
-    // Section header — editorial chapter marker
+    h += '<div style="margin-bottom:32px;" data-sec-idx="'+secIdx+'">';
     h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
     h += '<div style="width:24px;height:2px;background:'+c+';border-radius:2px;flex-shrink:0;"></div>';
     h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:'+c+';">'+escapeHtml(sec.title||sec.kind)+'</div>';
     h += '</div>';
+    h += renderer(sec);
 
-    if (needsBox) {
-      // Sections that naturally need a contained block
-      h += renderer(sec);
-    } else {
-      // Open sections — content flows directly
-      h += renderer(sec);
+    if (!QUIZ_SKIP_KINDS[sec.kind]) {
+      h += '<div style="margin-top:14px;">';
+      h += '<button data-quiz-trigger="'+secIdx+'" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:7px;padding:5px 13px;cursor:pointer;font-size:.72rem;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:border-color .15s;">';
+      h += '<span style="color:var(--accent);font-weight:700;font-size:.8rem;">?</span> Testează-te</button>';
+      h += '<div data-quiz-container="'+secIdx+'" style="display:none;"></div>';
+      h += '</div>';
     }
+
     h += '</div>';
+    secIdx++;
   });
 
   // Divider
@@ -549,6 +561,14 @@ function openSmartSummaryModal(data, title, subjectName, intent) {
   var content = document.createElement('div');
   content.innerHTML = renderSmartSummaryPage(data);
 
+  // Init quiz + highlight after DOM is set
+  var filteredSections = (data.output.sections || [])
+    .filter(function(s) { return (s.relevance || 1) > 0.45; })
+    .sort(function(a, b) { return (b.relevance || 0) - (a.relevance || 0); });
+  var summaryHash = simpleHash((data.output.title || '') + '|' + (subjectName || ''));
+  initSectionQuiz(content, filteredSections, subjectName, data.output.domain_category, summaryHash);
+  initHighlightSystem(content, summaryHash);
+
   // Footer with chat button
   var footer = document.createElement('div');
   footer.style.cssText = 'padding:14px 20px;background:var(--bg-raised);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;';
@@ -578,6 +598,234 @@ function openSmartSummaryModal(data, title, subjectName, intent) {
   // Close on Escape
   var escHandler = function(e) { if (e.key==='Escape') { modal.remove(); document.removeEventListener('keydown', escHandler); } };
   document.addEventListener('keydown', escHandler);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SECTION QUIZ — on-demand quiz generation per section
+// ─────────────────────────────────────────────────────────────────
+function renderQuizQuestions(questions, areaIdx) {
+  var h = '<div style="border-top:1px solid var(--border);padding-top:14px;display:flex;flex-direction:column;gap:14px;">';
+  questions.forEach(function(q, qi) {
+    var qKey = areaIdx + '-' + qi;
+    h += '<div data-quiz-q="'+qKey+'" style="background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">';
+    h += '<div style="font-size:.82rem;color:var(--text-primary);font-weight:500;margin-bottom:12px;">'+escapeHtml(q.q||'')+'</div>';
+    h += '<div style="display:flex;flex-direction:column;gap:6px;">';
+    (q.opts||[]).forEach(function(opt, oi) {
+      h += '<button data-quiz-opt="'+qKey+'-'+oi+'" data-correct="'+(oi===q.answer?'1':'0')+'" style="text-align:left;background:var(--bg-overlay);border:1px solid var(--border);border-radius:7px;padding:7px 12px;cursor:pointer;font-size:.79rem;color:var(--text-secondary);">';
+      h += '<span style="color:var(--text-muted);font-family:var(--font-mono);margin-right:8px;">'+'abcd'[oi]+')</span>';
+      h += escapeHtml(opt);
+      h += '</button>';
+    });
+    h += '</div>';
+    h += '<div id="quiz-explain-'+qKey+'" style="display:none;margin-top:10px;font-size:.76rem;color:var(--text-muted);line-height:1.6;padding-left:10px;border-left:2px solid var(--border);">'+escapeHtml(q.explain||'')+'</div>';
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function initQuizAnswers(container) {
+  container.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-quiz-opt]');
+    if (!btn) return;
+
+    var parts = btn.dataset.quizOpt.split('-');
+    var qKey = parts[0] + '-' + parts[1];
+    var qBlock = container.querySelector('[data-quiz-q="'+qKey+'"]');
+    if (!qBlock || qBlock.dataset.answered) return;
+    qBlock.dataset.answered = '1';
+
+    var isCorrect = btn.dataset.correct === '1';
+    qBlock.querySelectorAll('[data-quiz-opt]').forEach(function(optBtn) {
+      optBtn.style.cursor = 'default';
+      optBtn.disabled = true;
+      if (optBtn.dataset.correct === '1') {
+        optBtn.style.borderColor = 'var(--green)';
+        optBtn.style.background = 'rgba(115,201,166,.1)';
+        optBtn.style.color = 'var(--green)';
+      } else if (optBtn === btn && !isCorrect) {
+        optBtn.style.borderColor = 'var(--red)';
+        optBtn.style.background = 'rgba(255,100,100,.08)';
+        optBtn.style.color = 'var(--red)';
+      }
+    });
+
+    var explainEl = document.getElementById('quiz-explain-'+qKey);
+    if (explainEl) {
+      explainEl.style.display = 'block';
+      explainEl.style.borderColor = isCorrect ? 'var(--green)' : 'var(--red)';
+    }
+  });
+}
+
+function initSectionQuiz(contentEl, sections, subjectName, domainCategory, summaryHash) {
+  contentEl.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-quiz-trigger]');
+    if (!btn) return;
+
+    var idx = parseInt(btn.dataset.quizTrigger, 10);
+    var sec = sections[idx];
+    if (!sec) return;
+
+    var container = contentEl.querySelector('[data-quiz-container="'+idx+'"]');
+    if (!container) return;
+
+    if (container.style.display !== 'none') {
+      container.style.display = 'none';
+      btn.style.display = 'inline-flex';
+      return;
+    }
+
+    var cacheKey = 'sq_' + summaryHash + '_' + idx;
+    var cached = null;
+    try { cached = JSON.parse(localStorage.getItem(cacheKey)); } catch {}
+    if (cached && Array.isArray(cached)) {
+      container.innerHTML = renderQuizQuestions(cached, idx);
+      container.style.display = 'block';
+      initQuizAnswers(container);
+      btn.style.display = 'none';
+      return;
+    }
+
+    var origHtml = btn.innerHTML;
+    btn.innerHTML = '<span style="color:var(--accent);">⟳</span> Se generează...';
+    btn.disabled = true;
+    container.innerHTML = '';
+    container.style.display = 'block';
+
+    var headers = {'Content-Type':'application/json'};
+    if (window.__shAccessToken) headers['Authorization'] = 'Bearer ' + window.__shAccessToken;
+
+    fetch('/api/ai/section-quiz', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        sectionKind: sec.kind,
+        sectionTitle: sec.title || sec.kind,
+        sectionContent: sec,
+        subjectName: subjectName || '',
+        domainCategory: domainCategory || 'other',
+      }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) throw new Error(data.error);
+      try { localStorage.setItem(cacheKey, JSON.stringify(data.questions)); } catch {}
+      container.innerHTML = renderQuizQuestions(data.questions, idx);
+      container.style.display = 'block';
+      initQuizAnswers(container);
+      btn.style.display = 'none';
+    })
+    .catch(function() {
+      container.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:10px 0;">Nu am putut genera întrebările. Încearcă din nou.</div>';
+      btn.innerHTML = origHtml;
+      btn.disabled = false;
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// HIGHLIGHT SYSTEM — text selection + color + localStorage persist
+// ─────────────────────────────────────────────────────────────────
+function highlightTextInEl(el, text, bg, borderColor) {
+  var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  var node;
+  while ((node = walker.nextNode())) {
+    var idx = node.textContent.indexOf(text);
+    if (idx >= 0) {
+      var before = node.textContent.substring(0, idx);
+      var after  = node.textContent.substring(idx + text.length);
+      var mark   = document.createElement('mark');
+      mark.style.cssText = 'background:'+bg+';border-radius:3px;padding:0 2px;color:inherit;border-bottom:1.5px solid '+(borderColor||bg)+';';
+      mark.textContent = text;
+      var frag = document.createDocumentFragment();
+      if (before) frag.appendChild(document.createTextNode(before));
+      frag.appendChild(mark);
+      if (after)  frag.appendChild(document.createTextNode(after));
+      node.parentNode.replaceChild(frag, node);
+      return true;
+    }
+  }
+  return false;
+}
+
+function initHighlightSystem(contentEl, storageKey) {
+  var saved = [];
+  try { saved = JSON.parse(localStorage.getItem('hl_' + storageKey) || '[]'); } catch {}
+  saved.forEach(function(hl) {
+    try { highlightTextInEl(contentEl, hl.text, hl.bg, hl.border); } catch {}
+  });
+
+  var toolbar = null;
+
+  function removeToolbar() {
+    if (toolbar) { toolbar.remove(); toolbar = null; }
+  }
+
+  function showToolbar(text, rect, range) {
+    removeToolbar();
+    toolbar = document.createElement('div');
+    toolbar.style.cssText = 'position:fixed;z-index:99999;background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:5px 8px;display:flex;align-items:center;gap:5px;box-shadow:0 4px 16px rgba(0,0,0,.5);';
+    var top = rect.top - 44;
+    if (top < 8) top = rect.bottom + 8;
+    toolbar.style.top = top + 'px';
+    toolbar.style.left = Math.max(8, rect.left + rect.width/2 - 90) + 'px';
+
+    var colors = [
+      {bg:'rgba(255,220,0,.38)', border:'rgba(255,200,0,.7)',  label:'Galben'},
+      {bg:'rgba(100,200,150,.35)',border:'rgba(80,190,130,.7)', label:'Verde'},
+      {bg:'rgba(255,90,90,.32)', border:'rgba(240,60,60,.65)', label:'Roșu'},
+      {bg:'rgba(100,160,230,.32)',border:'rgba(80,140,220,.65)',label:'Albastru'},
+    ];
+
+    colors.forEach(function(c) {
+      var cBtn = document.createElement('button');
+      cBtn.title = c.label;
+      cBtn.style.cssText = 'width:20px;height:20px;border-radius:50%;background:'+c.bg+';border:1.5px solid '+c.border+';cursor:pointer;flex-shrink:0;';
+      cBtn.addEventListener('mousedown', function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        try {
+          var mark = document.createElement('mark');
+          mark.style.cssText = 'background:'+c.bg+';border-radius:3px;padding:0 2px;color:inherit;border-bottom:1.5px solid '+c.border+';';
+          range.surroundContents(mark);
+        } catch {
+          highlightTextInEl(contentEl, text, c.bg, c.border);
+        }
+        saved.push({text: text, bg: c.bg, border: c.border});
+        try { localStorage.setItem('hl_' + storageKey, JSON.stringify(saved)); } catch {}
+        window.getSelection().removeAllRanges();
+        removeToolbar();
+      });
+      toolbar.appendChild(cBtn);
+    });
+
+    var xBtn = document.createElement('button');
+    xBtn.textContent = '✕';
+    xBtn.style.cssText = 'background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:.7rem;padding:0 3px;';
+    xBtn.addEventListener('mousedown', function(ev) { ev.preventDefault(); removeToolbar(); });
+    toolbar.appendChild(xBtn);
+    document.body.appendChild(toolbar);
+  }
+
+  contentEl.addEventListener('mouseup', function() {
+    setTimeout(function() {
+      var sel = window.getSelection();
+      if (!sel || sel.isCollapsed) { removeToolbar(); return; }
+      var text = sel.toString().trim();
+      if (text.length < 3 || text.length > 400) { removeToolbar(); return; }
+      if (!contentEl.contains(sel.anchorNode)) { removeToolbar(); return; }
+      try {
+        var range = sel.getRangeAt(0);
+        var rect  = range.getBoundingClientRect();
+        showToolbar(text, rect, range);
+      } catch { removeToolbar(); }
+    }, 20);
+  });
+
+  document.addEventListener('mousedown', function(e) {
+    if (toolbar && !toolbar.contains(e.target)) removeToolbar();
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────
