@@ -313,7 +313,9 @@ let state = {
     faculty: '',
     year: '',
     bio: ''
-  }
+  },
+  // === v10 features ===
+  activeSummary: null,   // {subjectKey, title, subjectName, intent} — nav state for summary page
 };
 
 let presSlidePositions = {};
@@ -585,7 +587,9 @@ function renderSidebar() {
       const presCount = getAllPresentations(key).length;
       const theme = getSubjectTheme(subject);
       const isDemoSubj = subject.isDemo;
-      html += '<button class="nav-item ' + (state.tab === key ? 'active' : '') + '" data-nav-tab="' + key + '" style="' + (state.tab === key ? '--accent:' + theme.accent + ';--accent-muted:' + theme.muted + ';--accent-border:' + theme.border : '') + '">';
+      const isSummaryOfThis = state.tab === 'summary' && state.activeSummary && state.activeSummary.subjectKey === key;
+      const isSubjActive = state.tab === key || isSummaryOfThis;
+      html += '<button class="nav-item ' + (isSubjActive ? 'active' : '') + '" data-nav-tab="' + key + '" style="' + (isSubjActive ? '--accent:' + theme.accent + ';--accent-muted:' + theme.muted + ';--accent-border:' + theme.border : '') + '">';
       html += '<span class="ni-icon">' + subjectIcon(subject, 'sm') + '</span> ' + subject.name;
       if (isDemoSubj) html += '<span class="ni-badge" style="background:var(--amber-muted);color:var(--amber);font-size:.6rem;">demo</span>';
       if (todoCount) html += '<span class="ni-badge">' + todoCount + '</span>';
@@ -921,6 +925,11 @@ function renderPage() {
   } else if (state.tab === 'admin') {
     title.textContent = 'Admin Dashboard';
     if (typeof renderAdminPage === 'function') renderAdminPage(page);
+    else page.innerHTML = '<div class="empty-state">Se încarcă...</div>';
+  } else if (state.tab === 'summary') {
+    const sd = state.activeSummary;
+    title.textContent = (sd && sd.title) ? sd.title : 'Rezumat';
+    if (typeof renderSummaryPage === 'function') renderSummaryPage(page);
     else page.innerHTML = '<div class="empty-state">Se încarcă...</div>';
   } else if (state.tab === 'study-tools') {
     // Redirect: if subjects exist go to first one (with upload trigger), else open subject manager

@@ -1182,8 +1182,8 @@ async function generatePresentation(key) {
       renderPage();
       renderSidebar();
       setTimeout(function() {
-        if (typeof openSmartSummaryModal === 'function') {
-          openSmartSummaryModal(summaryData, title, subjectFull, intent);
+        if (typeof openSummaryPage === 'function') {
+          openSummaryPage(summaryData, title, subjectFull, intent, key);
         }
       }, 150);
       return;
@@ -1452,11 +1452,11 @@ var _originalOpenPresViewer = openPresentationViewer;
 openPresentationViewer = function(key, presIndex) {
   var allPres = getAllPresentations(key);
   var pres    = allPres ? allPres[presIndex] : null;
-  // Smart summaries → scrollable modal
+  // Smart summaries → full summary page
   if (pres && pres.isSmartSummary && pres.smartData) {
-    if (typeof openSmartSummaryModal === 'function') {
+    if (typeof openSummaryPage === 'function') {
       var subj = key && getSubjects ? (getSubjects()[key]||{}).full || key : '';
-      openSmartSummaryModal(pres.smartData, pres.title, subj, pres.intent);
+      openSummaryPage(pres.smartData, pres.title, subj, pres.intent, key);
     }
     return;
   }

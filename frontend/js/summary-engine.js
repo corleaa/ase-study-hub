@@ -436,9 +436,11 @@ function renderSmartSummaryPage(data) {
     h += renderer(sec);
 
     if (!QUIZ_SKIP_KINDS[sec.kind]) {
-      h += '<div style="margin-top:14px;">';
-      h += '<button data-quiz-trigger="'+secIdx+'" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:7px;padding:5px 13px;cursor:pointer;font-size:.72rem;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:border-color .15s;">';
-      h += '<span style="color:var(--accent);font-weight:700;font-size:.8rem;">?</span> Testează-te</button>';
+      h += '<div style="margin-top:16px;background:var(--bg-overlay);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">';
+      h += '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">';
+      h += '<span style="font-size:.75rem;color:var(--text-muted);">Verifică-ți înțelegerea acestei secțiuni</span>';
+      h += '<button data-quiz-trigger="'+secIdx+'" style="background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.25);color:var(--accent);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:.79rem;font-weight:600;white-space:nowrap;flex-shrink:0;">? Testează-te</button>';
+      h += '</div>';
       h += '<div data-quiz-container="'+secIdx+'" style="display:none;"></div>';
       h += '</div>';
     }
@@ -829,12 +831,113 @@ function initHighlightSystem(contentEl, storageKey) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// openSummaryPage — navigate to summary as a full app page
+// ─────────────────────────────────────────────────────────────────
+function openSummaryPage(data, title, subjectName, intent, subjectKey) {
+  window.__summaryPageData = { data: data, title: title, subjectName: subjectName, intent: intent };
+
+  if (typeof state !== 'undefined') {
+    state.activeSummary = {
+      subjectKey: subjectKey || '',
+      title:      title || '',
+      subjectName: subjectName || '',
+      intent:     intent || 'understand',
+    };
+    if (typeof saveState === 'function') saveState();
+  }
+
+  if (data && data.output) {
+    var o = data.output;
+    var a = data.analysis || {};
+    window.__activeSummaryContext = {
+      title:        o.title || title || '',
+      subject:      subjectName || '',
+      why:          o.why_it_matters || '',
+      insight:      o.key_insight || '',
+      prerequisites: a.prerequisites || [],
+      sections:     (o.sections || []).map(function(s){ return s.title || s.kind; }),
+      difficulty:   a.difficulty || '',
+      intent:       intent || '',
+    };
+  }
+
+  if (typeof navigateTo === 'function') navigateTo('summary');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// renderSummaryPage — full-page summary renderer (called by renderPage)
+// ─────────────────────────────────────────────────────────────────
+function renderSummaryPage(element) {
+  var sd = window.__summaryPageData;
+  var activeInfo = (typeof state !== 'undefined') ? state.activeSummary : null;
+
+  if (!sd || !sd.data) {
+    var fallback = activeInfo && activeInfo.subjectKey;
+    if (typeof navigateTo === 'function') navigateTo(fallback || 'dashboard');
+    return;
+  }
+
+  var data       = sd.data;
+  var title      = sd.title || (data.output && data.output.title) || 'Rezumat';
+  var subjectName = sd.subjectName || '';
+  var subjectKey = activeInfo && activeInfo.subjectKey;
+
+  var h = '<div style="max-width:860px;margin:0 auto;padding:0 0 60px;">';
+
+  // ── Sticky header bar ────────────────────────────────────────────
+  h += '<div id="summaryPageHeader" style="position:sticky;top:0;z-index:100;background:var(--bg-base);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;margin-bottom:4px;">';
+  h += '<button id="summaryBackBtn" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.78rem;display:flex;align-items:center;gap:5px;flex-shrink:0;white-space:nowrap;">← ' + escapeHtml(subjectName || 'Înapoi') + '</button>';
+  h += '<div style="flex:1;font-size:.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(title) + '</div>';
+  h += '<button id="summaryMentorBtn" style="background:rgba(242,155,109,.1);border:1px solid rgba(242,155,109,.25);color:var(--accent);border-radius:8px;padding:6px 13px;cursor:pointer;font-size:.78rem;font-weight:600;flex-shrink:0;white-space:nowrap;">💬 AI Mentor</button>';
+  h += '</div>';
+
+  // ── Content ───────────────────────────────────────────────────────
+  h += '<div id="summaryPageContent">' + renderSmartSummaryPage(data) + '</div>';
+  h += '</div>';
+
+  element.innerHTML = h;
+
+  // Back button
+  var backBtn = document.getElementById('summaryBackBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', function() {
+      if (typeof navigateTo === 'function') navigateTo(subjectKey || 'dashboard');
+    });
+  }
+
+  // Mentor button
+  var mentorBtn = document.getElementById('summaryMentorBtn');
+  if (mentorBtn) {
+    mentorBtn.addEventListener('click', function() {
+      if (typeof navigateTo === 'function') navigateTo('mentor');
+    });
+  }
+
+  // Quiz + highlight
+  var contentEl = document.getElementById('summaryPageContent');
+  if (contentEl && data.output) {
+    var filteredSections = (data.output.sections || [])
+      .filter(function(s) { return (s.relevance || 1) > 0.45; })
+      .sort(function(a, b) { return (b.relevance || 0) - (a.relevance || 0); });
+    var summaryHash = simpleHash((data.output.title || '') + '|' + (subjectName || ''));
+    initSectionQuiz(contentEl, filteredSections, subjectName, data.output.domain_category, summaryHash);
+    initHighlightSystem(contentEl, summaryHash);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// openSmartSummaryModal — kept for backward compat, delegates to page
+// ─────────────────────────────────────────────────────────────────
+function openSmartSummaryModalLegacy(data, title, subjectName, intent) {
+  openSummaryPage(data, title, subjectName, intent, '');
+}
+
+// ─────────────────────────────────────────────────────────────────
 // buildSmartSummarySlides — kept for backward compat with slide system
-// For smart summaries we use openSmartSummaryModal directly
+// For smart summaries we use openSummaryPage directly
 // ─────────────────────────────────────────────────────────────────
 function buildSmartSummarySlides(data) {
   if (!data || !data.output) return [];
-  // Return single "page" slide — content is full scrollable HTML
   return [{
     tag: 'Fișă',
     title: data.output.title || 'Rezumat',
