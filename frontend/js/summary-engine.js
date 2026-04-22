@@ -566,7 +566,6 @@ function downloadSummaryAsPrint() {
     '</div>' +
     summaryHTML +
     '</div>' +
-    '<script>window.onload=function(){window.print();}<\/script>' +
     '</body></html>';
 
   var win = window.open('', '_blank');
@@ -576,6 +575,7 @@ function downloadSummaryAsPrint() {
   }
   win.document.write(printPage);
   win.document.close();
+  setTimeout(function() { win.print(); }, 600);
 }
 
 function renderSectionBlock(sec) {
@@ -1662,7 +1662,7 @@ function renderSummaryPage(element) {
   h += '<div style="flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 20px;height:48px;background:var(--bg-base);border-bottom:1px solid var(--border);">';
   h += '<button id="summaryBackBtn" style="background:var(--bg-overlay);border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.78rem;white-space:nowrap;flex-shrink:0;">← ' + escapeHtml(subjectName || 'Înapoi') + '</button>';
   h += '<div style="flex:1;font-size:.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(title) + '</div>';
-  h += '<button onclick="downloadSummaryAsPrint()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.78rem;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descarcă</button>';
+  h += '<button id="summaryDownloadBtn" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:.78rem;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descarcă</button>';
   h += '</div>';
 
   // ── Split body ────────────────────────────────────────────────────
@@ -1759,6 +1759,10 @@ function renderSummaryPage(element) {
   if (backBtn) backBtn.addEventListener('click', function() {
     if (typeof navigateTo === 'function') navigateTo(subjectKey || 'dashboard');
   });
+
+  // Download button
+  var dlBtn = document.getElementById('summaryDownloadBtn');
+  if (dlBtn) dlBtn.addEventListener('click', downloadSummaryAsPrint);
 
   // Hashes and sections for left panel
   var summaryHash = simpleHash((data.output.title || '') + '|' + (subjectName || ''));
