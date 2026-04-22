@@ -564,6 +564,17 @@ function openSubjectManager() {
   html += '<input class="todo-inp" id="newSubjIcon" placeholder="Icon emoji (ex: ⚖️)" style="width:100%;">';
   html += '</div>';
   html += '<input class="todo-inp" id="newSubjFull" placeholder="Nume complet" style="width:100%;margin-bottom:10px;">';
+  html += '<select class="todo-inp" id="newSubjDomain" style="width:100%;margin-bottom:10px;">';
+  html += '<option value="">Domeniu (opțional)</option>';
+  html += '<option value="medicine">Medicină / Biologie</option>';
+  html += '<option value="law">Drept / Legislație</option>';
+  html += '<option value="exact_sciences">Matematică / Fizică / Chimie</option>';
+  html += '<option value="social_sciences">Economie / Psihologie / Management</option>';
+  html += '<option value="cs">Informatică / Programare</option>';
+  html += '<option value="humanities">Umanioare / Istorie / Filosofie</option>';
+  html += '<option value="other">Altele</option>';
+  html += '</select>';
+  html += '<textarea class="summary-textarea" id="newSubjProfile" placeholder="Notă despre tine la această materie (opțional) — ex: nu sunt tehnic, știu deja bazele, am background economic" style="min-height:48px;margin-bottom:10px;"></textarea>';
   html += '<textarea class="summary-textarea" id="newSubjDesc" placeholder="Descriere scurtă" style="min-height:50px;margin-bottom:10px;"></textarea>';
   html += '<textarea class="summary-textarea" id="newSubjPrompt" placeholder="System prompt AI Tutor (ex: Ești un profesor de drept...)" style="min-height:70px;margin-bottom:12px;"></textarea>';
   html += '<div style="font-size:.78rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Culoare temă</div>';
@@ -589,11 +600,13 @@ function addNewSubject() {
   const full = document.getElementById('newSubjFull').value.trim() || name;
   const desc = document.getElementById('newSubjDesc').value.trim() || '';
   const prompt = document.getElementById('newSubjPrompt').value.trim() || 'Ești un profesor expert în ' + full + '. Răspunde în română.';
+  const domain = document.getElementById('newSubjDomain').value || '';
+  const userProfileNote = document.getElementById('newSubjProfile').value.trim() || '';
   if (!name) { alert('Introdu un nume pentru materie!'); return; }
   const key = 'subj_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,15) + '_' + Date.now();
   if (!state.customSubjects) state.customSubjects = {};
   // NU copiem DEFAULT_SUBJECTS — incepem fresh cu materia userului
-  state.customSubjects[key] = { icon, name, full, desc, themeId: _newSubjThemeId, resources: [], systemPrompt: prompt };
+  state.customSubjects[key] = { icon, name, full, desc, themeId: _newSubjThemeId, resources: [], systemPrompt: prompt, domain, userProfileNote };
   SUBJECTS = getSubjects();
   saveState();
   closeModal();
@@ -630,6 +643,13 @@ function editSubject(key) {
   html += '<input class="todo-inp" id="editSubjIcon" value="' + escapeHtml(subj.icon) + '" style="width:100%;" placeholder="Icon">';
   html += '</div>';
   html += '<input class="todo-inp" id="editSubjFull" value="' + escapeHtml(subj.full||'') + '" style="width:100%;margin-bottom:10px;">';
+  html += '<select class="todo-inp" id="editSubjDomain" style="width:100%;margin-bottom:10px;">';
+  html += '<option value="">Domeniu (opțional)</option>';
+  [['medicine','Medicină / Biologie'],['law','Drept / Legislație'],['exact_sciences','Matematică / Fizică / Chimie'],['social_sciences','Economie / Psihologie / Management'],['cs','Informatică / Programare'],['humanities','Umanioare / Istorie / Filosofie'],['other','Altele']].forEach(function(opt) {
+    html += '<option value="' + opt[0] + '"' + (subj.domain===opt[0]?' selected':'') + '>' + opt[1] + '</option>';
+  });
+  html += '</select>';
+  html += '<textarea class="summary-textarea" id="editSubjProfile" placeholder="Notă despre tine la această materie (opțional)" style="min-height:48px;margin-bottom:10px;">' + escapeHtml(subj.userProfileNote||'') + '</textarea>';
   html += '<textarea class="summary-textarea" id="editSubjDesc" style="min-height:50px;margin-bottom:10px;">' + escapeHtml(subj.desc||'') + '</textarea>';
   html += '<textarea class="summary-textarea" id="editSubjPrompt" style="min-height:70px;margin-bottom:12px;">' + escapeHtml(subj.systemPrompt||'') + '</textarea>';
   html += '<div class="theme-swatches" id="editSubjThemeSwatches">';
@@ -652,7 +672,7 @@ function saveEditSubject(key) {
   if (!name) { alert('Numele nu poate fi gol!'); return; }
   if (!state.customSubjects) state.customSubjects = {};
   const existing = state.customSubjects[key] || {};
-  state.customSubjects[key] = { ...existing, name, icon: document.getElementById('editSubjIcon').value.trim()||existing.icon, full: document.getElementById('editSubjFull').value.trim()||name, desc: document.getElementById('editSubjDesc').value.trim(), systemPrompt: document.getElementById('editSubjPrompt').value.trim(), themeId: _editSubjThemeId };
+  state.customSubjects[key] = { ...existing, name, icon: document.getElementById('editSubjIcon').value.trim()||existing.icon, full: document.getElementById('editSubjFull').value.trim()||name, desc: document.getElementById('editSubjDesc').value.trim(), systemPrompt: document.getElementById('editSubjPrompt').value.trim(), themeId: _editSubjThemeId, domain: document.getElementById('editSubjDomain').value||'', userProfileNote: document.getElementById('editSubjProfile').value.trim()||'' };
   SUBJECTS = getSubjects();
   saveState();
   closeModal();

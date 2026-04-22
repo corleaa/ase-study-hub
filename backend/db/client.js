@@ -290,9 +290,52 @@ function initDb() {
   try { db.exec('ALTER TABLE summaries ADD COLUMN cost_usd REAL DEFAULT 0'); } catch {}
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_summaries_hash ON summaries(doc_hash, user_id)'); } catch {}
 
+  // Summary feedback — thumbs up/down after reading a summary
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS summary_feedback (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      summary_id INTEGER REFERENCES summaries(id) ON DELETE SET NULL,
+      user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      rating     INTEGER NOT NULL CHECK(rating IN (1, -1)),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+  } catch {}
+
+  // AI response cache — persistent 24h cache for quiz/flashcards/exam
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS ai_response_cache (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      feature      TEXT    NOT NULL,
+      payload_hash TEXT    NOT NULL,
+      response     TEXT    NOT NULL,
+      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at   DATETIME NOT NULL,
+      UNIQUE(feature, payload_hash)
+    )`);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_ai_cache_lookup ON ai_response_cache(feature, payload_hash, expires_at)');
+  } catch {}
+
+  // Document prescans — lightweight Haiku pre-analysis before summary generation
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS document_prescans (
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      doc_hash         TEXT    NOT NULL,
+      user_id          INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      detected_topics  TEXT,
+      detected_kinds   TEXT,
+      difficulty       TEXT,
+      language         TEXT,
+      domain_hint      TEXT,
+      tokens_used      INTEGER DEFAULT 0,
+      created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_prescans_hash ON document_prescans(doc_hash, user_id)');
+  } catch {}
+
   // Remove expired tokens on startup
   cleanExpiredTokens();
   cleanUsageLogs();
+  cleanExpiredAiCache();
 
   return db;
 }
@@ -1015,6 +1058,66 @@ function createSmartSummary(userId, subjectId, title, docHash, intent, engineVer
 }
 
 // ─────────────────────────────────────────────────────────────────
+// SUMMARY FEEDBACK
+// ─────────────────────────────────────────────────────────────────
+function createSummaryFeedback(summaryId, userId, rating) {
+  getDb()
+    .prepare('INSERT INTO summary_feedback (summary_id, user_id, rating) VALUES (?, ?, ?)')
+    .run(summaryId || null, userId || null, rating);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// AI RESPONSE CACHE (persistent, 24h TTL)
+// ─────────────────────────────────────────────────────────────────
+function getDbCached(feature, payloadHash) {
+  const row = getDb()
+    .prepare(`SELECT response FROM ai_response_cache WHERE feature = ? AND payload_hash = ? AND expires_at > datetime('now') LIMIT 1`)
+    .get(feature, payloadHash);
+  if (!row) return null;
+  try { return JSON.parse(row.response); } catch { return null; }
+}
+
+function setDbCached(feature, payloadHash, data, ttlSeconds = 86400) {
+  try {
+    getDb()
+      .prepare(`INSERT OR REPLACE INTO ai_response_cache (feature, payload_hash, response, expires_at) VALUES (?, ?, ?, datetime('now', '+${ttlSeconds} seconds'))`)
+      .run(feature, payloadHash, JSON.stringify(data));
+  } catch { /* non-critical — cache miss is acceptable */ }
+  return data;
+}
+
+function cleanExpiredAiCache() {
+  try { getDb().prepare("DELETE FROM ai_response_cache WHERE expires_at <= datetime('now')").run(); } catch {}
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DOCUMENT PRESCANS
+// ─────────────────────────────────────────────────────────────────
+function getPrescanByHash(docHash, userId) {
+  return getDb()
+    .prepare('SELECT * FROM document_prescans WHERE doc_hash = ? AND user_id = ? ORDER BY created_at DESC LIMIT 1')
+    .get(docHash, userId);
+}
+
+function createPrescan(docHash, userId, detected) {
+  const result = getDb()
+    .prepare(`INSERT INTO document_prescans
+      (doc_hash, user_id, detected_topics, detected_kinds, difficulty, language, domain_hint, tokens_used)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(
+      docHash,
+      userId || null,
+      JSON.stringify(detected.topics || []),
+      JSON.stringify(detected.kinds || []),
+      detected.difficulty || null,
+      detected.language || null,
+      detected.domain_hint || null,
+      detected.tokens_used || 0,
+    );
+  return getDb().prepare('SELECT * FROM document_prescans WHERE id = ?').get(result.lastInsertRowid);
+}
+
+// ─────────────────────────────────────────────────────────────────
 // ADMIN STATS
 // ─────────────────────────────────────────────────────────────────
 function getAdminStats() {
@@ -1144,6 +1247,11 @@ module.exports = {
   // Smart summaries
   getSmartSummaryByHash,
   createSmartSummary,
+  getPrescanByHash,
+  createPrescan,
+  getDbCached,
+  setDbCached,
+  createSummaryFeedback,
   // Admin
   getAdminStats,
   // Adaptive recall engine

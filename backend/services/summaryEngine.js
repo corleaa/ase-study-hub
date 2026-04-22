@@ -20,9 +20,13 @@ const MODEL_SONNET = process.env.ANTHROPIC_MODEL      || 'claude-sonnet-4-202505
 const MODEL_HAIKU  = process.env.ANTHROPIC_HAIKU_MODEL || 'claude-haiku-4-5-20251001';
 
 // ─────────────────────────────────────────────────────────────────
-// SYSTEM PROMPT — fixed, cacheable, ~3000 tokens
 // ─────────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Ești un arhitect pedagogic. Scopul tău NU este să rezumi — ci să construiești un SCAFFOLD COGNITIV: structura mentală minimă necesară ca studentul, după ce citește fișa ta, să intre în documentul original și fiecare paragraf nou să îi provoace reacția "aha, asta se leagă de ce am văzut".
+// SYSTEM PROMPT — domain-aware, cacheable per variant
+// Full prompt used as fallback when domain is unknown.
+// Domain-specific variants exclude irrelevant section kinds (~400 fewer tokens).
+// ─────────────────────────────────────────────────────────────────
+
+const PROMPT_PREAMBLE = `Ești un arhitect pedagogic. Scopul tău NU este să rezumi — ci să construiești un SCAFFOLD COGNITIV: structura mentală minimă necesară ca studentul, după ce citește fișa ta, să intre în documentul original și fiecare paragraf nou să îi provoace reacția "aha, asta se leagă de ce am văzut".
 
 ────────────────────────────────────────────
 ANALIZA DOCUMENTULUI
@@ -32,8 +36,10 @@ Distribuie 1.0 între aceste tipuri de cunoaștere (suma = 1.0):
 - conceptual: teorii, definiții, modele mentale, relații logice
 - empirical: studii, autori, experimente, dovezi
 - procedural: pași, protocoale, algoritmi, procese
-- normative: legi, articole, condiții juridice, reglementări
+- normative: legi, articole, condiții juridice, reglementări`;
 
+// All 21 section kind definitions (used in full/fallback prompt)
+const ALL_SECTION_KINDS = `
 ────────────────────────────────────────────
 BIBLIOTECA DE SECȚIUNI (21 tipuri)
 ────────────────────────────────────────────
@@ -74,28 +80,63 @@ caz          → {"kind":"caz","title":"...","relevance":0.0,"body":"descriere c
 ddx          → {"kind":"ddx","title":"...","relevance":0.0,"rows":[{"name":"alternativa","cue":"cum o distingi"}]}
 aplicatii    → {"kind":"aplicatii","title":"...","relevance":0.0,"items":["aplicație 1","aplicație 2"]}
 warnings     → {"kind":"warnings","title":"...","relevance":0.0,"items":["greșeală frecventă 1"]}
-glosar       → {"kind":"glosar","title":"...","relevance":0.0,"items":[{"term":"...","definition":"..."}]}
+glosar       → {"kind":"glosar","title":"...","relevance":0.0,"items":[{"term":"...","definition":"..."}]}`;
 
-────────────────────────────────────────────
-REGULI DE SELECȚIE
-────────────────────────────────────────────
-- Alege secțiunile cu relevance > 0.5, maximum 5
-- quantitative > 0.35 → include formule sau derivare
-- document menționează distribuții/probabilitate/VaR/pierderi stochastice → include distributie (max 1 per rezumat)
-- normative > 0.25 → include articol și conditii
-- empirical > 0.3 → include studii sau autori
-- procedural > 0.3 → include protocol sau cod
-- Dacă documentul are alternative clare → include ddx sau comparatie
-- Dacă documentul e bazat pe algoritmi → include cod și complexitate
-- Nu forța secțiuni fără conținut real
+// Section kind schemas — one per kind
+const KIND_SCHEMAS = {
+  formule:      'formule      → {"kind":"formule","title":"...","relevance":0.0,"items":[{"expression":"formula","label":"ce calculează"}]}',
+  derivare:     'derivare     → {"kind":"derivare","title":"...","relevance":0.0,"steps":["pas 1","pas 2"]}',
+  complexitate: 'complexitate → {"kind":"complexitate","title":"...","relevance":0.0,"rows":[{"case":"Best/Average/Worst","time":"O(...)","space":"O(...)","note":"..."}]}',
+  date_numerice:'date_numerice→ {"kind":"date_numerice","title":"...","relevance":0.0,"rows":[{"metric":"...","value":"...","note":"..."}]}',
+  mechanism:    'mechanism    → {"kind":"mechanism","title":"...","relevance":0.0,"items":[{"level":"Macro","text":"..."},{"level":"Mediu","text":"..."},{"level":"Micro","text":"..."}]}',
+  cauza_efect:  'cauza_efect  → {"kind":"cauza_efect","title":"...","relevance":0.0,"chains":[["elem1","→","elem2","→","elem3"]]}',
+  comparatie:   'comparatie   → {"kind":"comparatie","title":"...","relevance":0.0,"label_a":"A","label_b":"B","items":[{"aspect":"...","a":"...","b":"..."}]}',
+  taxonomie:    'taxonomie    → {"kind":"taxonomie","title":"...","relevance":0.0,"items":[{"name":"...","description":"..."}]}',
+  protocol:     'protocol     → {"kind":"protocol","title":"...","relevance":0.0,"items":["pas 1","pas 2"]}',
+  cod:          'cod          → {"kind":"cod","title":"...","relevance":0.0,"code":"pseudocod sau cod","language":"Python/JS/pseudocod"}',
+  conditii:     'conditii     → {"kind":"conditii","title":"...","relevance":0.0,"items":["condiție 1","condiție 2"]}',
+  articol:      'articol      → {"kind":"articol","title":"...","relevance":0.0,"cite":"Art. X din Legea Y","body":"textul exact sau parafraza precisă"}',
+  exceptii:     'exceptii     → {"kind":"exceptii","title":"...","relevance":0.0,"items":["excepție 1","excepție 2"]}',
+  studii:       'studii       → {"kind":"studii","title":"...","relevance":0.0,"items":[{"t":"Autor (an)","d":"rezultat/descriere"}]}',
+  autori:       'autori       → {"kind":"autori","title":"...","relevance":0.0,"cards":[{"name":"...","year":"...","contribution":"..."}]}',
+  critici:      'critici      → {"kind":"critici","title":"...","relevance":0.0,"items":["critică 1","critică 2"]}',
+  distributie:  'distributie  → {"kind":"distributie","title":"...","relevance":0.0,"dist_type":"normal","description":"ce ilustrează distribuția în context","annotation":"Ce reprezintă aria colorată — ex: P[pierdere > prag] = 0.05%"}\n             → Folosește DOAR când documentul discută explicit distribuții de probabilitate, variabile aleatoare continue, curbe normale, VaR, sau pierderi stochastice.',
+  caz:          'caz          → {"kind":"caz","title":"...","relevance":0.0,"body":"descriere caz real sau rezolvat"}',
+  ddx:          'ddx          → {"kind":"ddx","title":"...","relevance":0.0,"rows":[{"name":"alternativa","cue":"cum o distingi"}]}',
+  aplicatii:    'aplicatii    → {"kind":"aplicatii","title":"...","relevance":0.0,"items":["aplicație 1","aplicație 2"]}',
+  warnings:     'warnings     → {"kind":"warnings","title":"...","relevance":0.0,"items":["greșeală frecventă 1"]}',
+  glosar:       'glosar       → {"kind":"glosar","title":"...","relevance":0.0,"items":[{"term":"...","definition":"..."}]}',
+};
 
+// Section kinds relevant per domain — reduces library from 21 to 9-12
+const DOMAIN_KINDS = {
+  medicine:       ['mechanism','cauza_efect','protocol','ddx','warnings','caz','glosar','comparatie','taxonomie','studii','date_numerice'],
+  law:            ['articol','exceptii','conditii','protocol','glosar','comparatie','taxonomie','warnings','caz','cauza_efect'],
+  exact_sciences: ['formule','derivare','complexitate','date_numerice','mechanism','cauza_efect','comparatie','distributie','glosar','warnings'],
+  social_sciences:['mechanism','cauza_efect','comparatie','taxonomie','studii','autori','critici','aplicatii','warnings','glosar','caz','date_numerice'],
+  cs:             ['cod','complexitate','protocol','mechanism','comparatie','warnings','glosar','aplicatii','caz','cauza_efect'],
+  humanities:     ['autori','studii','critici','comparatie','taxonomie','glosar','cauza_efect','caz','aplicatii','warnings'],
+};
+
+// Selection rules per domain — shorter than generic ruleset
+const DOMAIN_RULES = {
+  medicine:        '- procedural > 0.3 → include protocol\n- empirical > 0.3 → include studii\n- Dacă alternative de diagnostic → ddx obligatoriu\n- Dacă pași clari → protocol',
+  law:             '- normative > 0.25 → articol și conditii obligatorii\n- exceptii dacă legea prevede excepții explicite\n- procedural → protocol pentru proceduri juridice',
+  exact_sciences:  '- quantitative > 0.35 → formule sau derivare obligatoriu\n- distributie DOAR dacă probabilitate/VaR/pierderi stochastice explicit menționate\n- complexitate dacă algoritmi prezenți',
+  social_sciences: '- empirical > 0.3 → studii sau autori\n- comparatie dacă două teorii/modele puse față în față\n- critici dacă document prezintă limite sau dezbateri',
+  cs:              '- cod obligatoriu dacă algoritmi sau pseudocod în document\n- complexitate dacă cod prezent\n- protocol pentru fluxuri de date sau arhitecturi',
+  humanities:      '- autori dacă contribuții individuale menționate\n- critici dacă dezbateri sau limite prezentate\n- caz dacă exemple istorice sau literare concrete',
+};
+
+const PROMPT_INTENT = `
 ────────────────────────────────────────────
 ADAPTARE DUPĂ LEARNING INTENT
 ────────────────────────────────────────────
 understand  → accent pe mechanism, cauza_efect, analogii intuitive
 exam_prep   → accent pe formule, warnings, conditii, pathway cu termeni exact
-apply       → accent pe caz, aplicatii, protocol, exemple concrete
+apply       → accent pe caz, aplicatii, protocol, exemple concrete`;
 
+const PROMPT_DOMAIN_DETECTION = `
 ────────────────────────────────────────────
 DETECTARE DOMENIU (domain_category)
 ────────────────────────────────────────────
@@ -105,8 +146,9 @@ law: drept, legislație, constituție, articole de lege, reglementări
 medicine: medicină, anatomie, farmacologie, fiziologie, patologie, biologie
 humanities: filozofie, istorie, literatură, lingvistică, artă, pedagogie
 cs: programare, algoritmi, sisteme, rețele, baze de date, securitate IT
-other: orice alt domeniu
+other: orice alt domeniu`;
 
+const PROMPT_SCAFFOLD_PRINCIPLES = `
 ────────────────────────────────────────────
 PRINCIPIU SCAFFOLD
 ────────────────────────────────────────────
@@ -114,8 +156,9 @@ Fiecare secțiune trebuie să:
 1. Folosească terminologia exactă din document (nu parafrazeze în alt limbaj)
 2. Creeze ancore mentale pe care studentul le va recunoaște în textul original
 3. Prioritizeze STRUCTURA față de completitudine
-4. Nu explice tot — deschidă calea spre document
+4. Nu explice tot — deschidă calea spre document`;
 
+const PROMPT_OUTPUT_FORMAT = (domainCategory) => `
 ────────────────────────────────────────────
 FORMAT OUTPUT — EXCLUSIV JSON VALID
 ────────────────────────────────────────────
@@ -134,7 +177,7 @@ Niciun text, niciun markdown, niciun backtick în afara JSON-ului.
     "title": "Titlu concis al temei",
     "why_it_matters": "1-2 propoziții de ce contează",
     "domain_tags": ["tag1","tag2","tag3"],
-    "domain_category": "exact_sciences|social_sciences|law|medicine|humanities|cs|other",
+    "domain_category": "${domainCategory || 'exact_sciences|social_sciences|law|medicine|humanities|cs|other'}",
     "layers": [
       {"level":"Intuitiv","text":"explicație simplă, analogie din viața reală"},
       {"level":"Conceptual","text":"explicație academică, termeni cheie, logica internă"},
@@ -146,6 +189,36 @@ Niciun text, niciun markdown, niciun backtick în afara JSON-ului.
     "key_insight": "O propoziție esențială care rezumă tot"
   }
 }`;
+
+function buildSystemPrompt(domain) {
+  if (!domain || !DOMAIN_KINDS[domain]) {
+    // Full prompt — fallback for unknown domain
+    return PROMPT_PREAMBLE
+      + ALL_SECTION_KINDS
+      + '\n\n────────────────────────────────────────────\nREGULI DE SELECȚIE\n────────────────────────────────────────────\n- Alege secțiunile cu relevance > 0.5, maximum 5\n- quantitative > 0.35 → include formule sau derivare\n- document menționează distribuții/probabilitate/VaR/pierderi stochastice → include distributie (max 1 per rezumat)\n- normative > 0.25 → include articol și conditii\n- empirical > 0.3 → include studii sau autori\n- procedural > 0.3 → include protocol sau cod\n- Dacă documentul are alternative clare → include ddx sau comparatie\n- Dacă documentul e bazat pe algoritmi → include cod și complexitate\n- Nu forța secțiuni fără conținut real'
+      + PROMPT_INTENT
+      + PROMPT_DOMAIN_DETECTION
+      + PROMPT_SCAFFOLD_PRINCIPLES
+      + PROMPT_OUTPUT_FORMAT(null);
+  }
+
+  // Domain-specific prompt — trimmed library + no domain detection section
+  const kinds = DOMAIN_KINDS[domain];
+  const sectionDefs = kinds.map(k => KIND_SCHEMAS[k]).filter(Boolean).join('\n');
+
+  return PROMPT_PREAMBLE
+    + `\n\n────────────────────────────────────────────\nSECȚIUNI DISPONIBILE PENTRU ${domain.toUpperCase()} (${kinds.length} tipuri)\n────────────────────────────────────────────\nAlege 3-5 secțiuni cu relevance > 0.5. Schema exactă:\n\n`
+    + sectionDefs
+    + `\n\n────────────────────────────────────────────\nREGULI DE SELECȚIE\n────────────────────────────────────────────\n- Alege secțiunile cu relevance > 0.5, maximum 5\n`
+    + DOMAIN_RULES[domain]
+    + '\n- Nu forța secțiuni fără conținut real'
+    + PROMPT_INTENT
+    + PROMPT_SCAFFOLD_PRINCIPLES
+    + PROMPT_OUTPUT_FORMAT(domain);
+}
+
+// Backwards-compatible constant for the full prompt
+const SYSTEM_PROMPT = buildSystemPrompt(null);
 
 // ─────────────────────────────────────────────────────────────────
 // PREPROCESSING LOCAL — zero LLM cost
@@ -226,11 +299,23 @@ function computeDocHash(text, intent) {
 // ─────────────────────────────────────────────────────────────────
 // BUILD USER PROMPT — changes per request
 // ─────────────────────────────────────────────────────────────────
-function buildUserPrompt(subjectName, intent, heuristics) {
+function buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNote, knowledgeLevel, timeContext) {
   const intentMap = {
     understand: 'ÎNȚELEGERE PROFUNDĂ — accent pe mecanisme și analogii intuitive',
     exam_prep:  'PREGĂTIRE EXAMEN — accent pe termeni exacți, formule, greșeli frecvente',
     apply:      'APLICARE PRACTICĂ — accent pe cazuri, exemple, protocoale',
+  };
+
+  const knowledgeMap = {
+    first_contact: 'PRIMUL CONTACT cu materia — explică termenii de bază, folosește analogii simple, nu presupune cunoștințe anterioare, glosar obligatoriu dacă există terminologie specifică',
+    intermediate:  'CUNOAȘTE BAZELE — poți folosi terminologia specifică, focusează pe conexiuni și nuanțe, nu explica ce știe deja',
+    review:        'RECAPITULARE — dens și concis, accent pe ce diferențiază conceptele, warnings pentru greșeli frecvente la examen',
+  };
+
+  const timeMap = {
+    exam_soon:      'EXAMEN IMINENT — prioritizează formule esențiale, warnings, conditii de aplicare, ce iese frecvent la examene',
+    studying_ahead: 'TIMP SUFICIENT — include profunzime, conexiuni cu alte concepte, aplicații practice, context larg',
+    quick_review:   'REVIZUIRE RAPIDĂ — key_insight și pathway sunt prioritare, secțiunile să fie concise, fără divagații',
   };
 
   const hints = [];
@@ -240,7 +325,16 @@ function buildUserPrompt(subjectName, intent, heuristics) {
   if (heuristics.sourceQuality === 'poor') hints.push('documentul pare fragmentat — reconstruiește conceptual mai mult decât urmezi structura textului');
   if (heuristics.truncated) hints.push(`documentul original are ${heuristics.wordCount} cuvinte — am trimis un chunk reprezentativ`);
 
+  const domainLine       = domain          ? `Domeniu materie: ${domain}` : '';
+  const profileLine      = userProfileNote ? `Profil student la această materie: "${userProfileNote}" — adaptează explicațiile și exemplele în consecință` : '';
+  const knowledgeLine    = knowledgeLevel && knowledgeMap[knowledgeLevel] ? `Nivel student: ${knowledgeMap[knowledgeLevel]}` : '';
+  const timeContextLine  = timeContext && timeMap[timeContext] ? `Context timp: ${timeMap[timeContext]}` : '';
+
   return `Materie: ${subjectName}
+${domainLine}
+${profileLine}
+${knowledgeLine}
+${timeContextLine}
 Intent student: ${intentMap[intent] || intentMap.understand}
 ${hints.length ? 'Hints din analiză locală:\n' + hints.map(h => '- ' + h).join('\n') : ''}
 
@@ -253,13 +347,13 @@ Generează scaffold-ul cognitiv conform instrucțiunilor. EXCLUSIV JSON valid.`;
 // ─────────────────────────────────────────────────────────────────
 // GENERATE — main entry point
 // ─────────────────────────────────────────────────────────────────
-async function generateSmartSummary({ text, subjectName, intent = 'understand', apiKey }) {
+async function generateSmartSummary({ text, subjectName, intent = 'understand', apiKey, domain, userProfileNote, knowledgeLevel, timeContext }) {
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY missing');
 
   const client = new Anthropic({ apiKey });
   const heuristics = preprocessDocument(text);
   const model = selectModel(heuristics);
-  const userPrompt = buildUserPrompt(subjectName, intent, heuristics);
+  const userPrompt = buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNote, knowledgeLevel, timeContext);
 
   const response = await client.messages.create({
     model,
@@ -267,8 +361,8 @@ async function generateSmartSummary({ text, subjectName, intent = 'understand', 
     system: [
       {
         type: 'text',
-        text: SYSTEM_PROMPT,
-        cache_control: { type: 'ephemeral' }, // prompt caching
+        text: buildSystemPrompt(domain),
+        cache_control: { type: 'ephemeral' }, // cached per domain variant
       },
     ],
     messages: [{ role: 'user', content: userPrompt }],

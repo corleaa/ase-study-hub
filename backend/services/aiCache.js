@@ -73,4 +73,5 @@ function setCached(feature, payload, value) {
 module.exports = {
   getCached,
   setCached,
+  makeCacheKey,
 };

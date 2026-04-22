@@ -27,7 +27,7 @@ const {
   askStructuredJson,
   normalizeChatPayload,
 } = require('../services/aiService');
-const { getCached, setCached } = require('../services/aiCache');
+const { getCached, setCached, makeCacheKey } = require('../services/aiCache');
 const {
   chatResponse,
   quizResponse,
@@ -44,6 +44,11 @@ const {
 const {
   getSmartSummaryByHash,
   createSmartSummary,
+  getPrescanByHash,
+  createPrescan,
+  getDbCached,
+  setDbCached,
+  createSummaryFeedback,
 } = require('../db/client');
 
 // ── Shared middleware stack for all AI routes ─────────────────────
@@ -101,7 +106,9 @@ Format pentru multiple choice:
 Format pentru adevărat/fals:
 {"type":"tf","question":"...","correct":true,"explanation":"..."}`;
 
-      const cachedQuestions = getCached('quiz', cachePayload);
+      const cacheHash = makeCacheKey('quiz', cachePayload);
+
+      const cachedQuestions = getCached('quiz', cachePayload) || getDbCached('quiz', cacheHash);
       if (cachedQuestions) {
         logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash);
         return res.json(quizResponse(cachedQuestions));
@@ -120,18 +127,16 @@ Format pentru adevărat/fals:
         return res.status(502).json({ error: 'AI a returnat format invalid. Încearcă din nou.' });
       }
 
-      // Validate AI response structure
       const validation = validateAiResponse('quiz', questions);
       if (!validation.valid) {
-        logger.warn('Quiz: AI response failed schema validation', {
-          userId: req.user?.id,
-          error:  validation.error,
-        });
+        logger.warn('Quiz: AI response failed schema validation', { userId: req.user?.id, error: validation.error });
         return res.status(502).json({ error: 'AI a returnat date neașteptate. Încearcă din nou.' });
       }
 
+      setCached('quiz', cachePayload, validation.data);
+      setDbCached('quiz', cacheHash, validation.data);
       logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash);
-      res.json(quizResponse(setCached('quiz', cachePayload, validation.data)));
+      res.json(quizResponse(validation.data));
     } catch (e) {
       next(e);
     }
@@ -153,7 +158,9 @@ router.post('/flashcards',
 Răspunde EXCLUSIV cu un JSON array valid. Niciun text în afara JSON-ului. Fără markdown, fără backticks.
 Format: [{"front":"Întrebare sau termen","back":"Răspuns sau definiție"}]`;
 
-      const cachedFlashcards = getCached('flashcards', cachePayload);
+      const cacheHash = makeCacheKey('flashcards', cachePayload);
+
+      const cachedFlashcards = getCached('flashcards', cachePayload) || getDbCached('flashcards', cacheHash);
       if (cachedFlashcards) {
         logApiCall(req.user?.id ?? null, 'flashcards', req.clientIpHash);
         return res.json(flashcardsResponse(cachedFlashcards));
@@ -174,15 +181,14 @@ Format: [{"front":"Întrebare sau termen","back":"Răspuns sau definiție"}]`;
 
       const validation = validateAiResponse('flashcards', flashcards);
       if (!validation.valid) {
-        logger.warn('Flashcards: AI response failed schema validation', {
-          userId: req.user?.id,
-          error:  validation.error,
-        });
+        logger.warn('Flashcards: AI response failed schema validation', { userId: req.user?.id, error: validation.error });
         return res.status(502).json({ error: 'AI a returnat date neașteptate. Încearcă din nou.' });
       }
 
+      setCached('flashcards', cachePayload, validation.data);
+      setDbCached('flashcards', cacheHash, validation.data);
       logApiCall(req.user?.id ?? null, 'flashcards', req.clientIpHash);
-      res.json(flashcardsResponse(setCached('flashcards', cachePayload, validation.data)));
+      res.json(flashcardsResponse(validation.data));
     } catch (e) {
       next(e);
     }
@@ -204,7 +210,9 @@ router.post('/exam',
 Răspunde EXCLUSIV cu un JSON array valid. Niciun text în afara JSON-ului. Fără markdown, fără backticks.
 Format: [{"type":"mc","question":"...","options":["a) ...","b) ...","c) ...","d) ..."],"correct":0,"explanation":"..."}]`;
 
-      const cachedExam = getCached('exam', cachePayload);
+      const cacheHash = makeCacheKey('exam', cachePayload);
+
+      const cachedExam = getCached('exam', cachePayload) || getDbCached('exam', cacheHash);
       if (cachedExam) {
         logApiCall(req.user?.id ?? null, 'exam', req.clientIpHash);
         return res.json(examResponse(cachedExam, minutes));
@@ -225,15 +233,14 @@ Format: [{"type":"mc","question":"...","options":["a) ...","b) ...","c) ...","d)
 
       const validation = validateAiResponse('exam', questions);
       if (!validation.valid) {
-        logger.warn('Exam: AI response failed schema validation', {
-          userId: req.user?.id,
-          error:  validation.error,
-        });
+        logger.warn('Exam: AI response failed schema validation', { userId: req.user?.id, error: validation.error });
         return res.status(502).json({ error: 'AI a returnat date neașteptate. Încearcă din nou.' });
       }
 
+      setCached('exam', cachePayload, validation.data);
+      setDbCached('exam', cacheHash, validation.data);
       logApiCall(req.user?.id ?? null, 'exam', req.clientIpHash);
-      res.json(examResponse(setCached('exam', cachePayload, validation.data), minutes));
+      res.json(examResponse(validation.data, minutes));
     } catch (e) {
       next(e);
     }
@@ -270,13 +277,137 @@ Creează un rezumat clar, structurat, cu titluri și bullet points. Folosește f
 );
 
 // ─────────────────────────────────────────────────────────────────
+// POST /api/ai/pre-scan
+// Lightweight Haiku call — detects topics, section kinds, difficulty, language
+// Results saved to document_prescans for learning + shown to user as animation
+// ─────────────────────────────────────────────────────────────────
+router.post('/pre-scan',
+  ...aiGuard('smart-summary'),
+  async (req, res, next) => {
+    try {
+      const { text, subjectName } = req.body;
+      if (!text || typeof text !== 'string' || text.trim().length < 50) {
+        return res.status(400).json({ error: 'Textul documentului este prea scurt sau lipsă.' });
+      }
+
+      const userId = req.user?.id ?? null;
+      const docHash = computeDocHash(text, 'prescan');
+
+      // Return cached prescan if exists (same doc, same user)
+      if (userId) {
+        const cached = getPrescanByHash(docHash, userId);
+        if (cached) {
+          return res.json({
+            topics:      JSON.parse(cached.detected_topics || '[]'),
+            kinds:       JSON.parse(cached.detected_kinds || '[]'),
+            difficulty:  cached.difficulty,
+            language:    cached.language,
+            domain_hint: cached.domain_hint,
+            fromCache:   true,
+          });
+        }
+      }
+
+      const Anthropic = require('@anthropic-ai/sdk');
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const MODEL_HAIKU = process.env.ANTHROPIC_HAIKU_MODEL || 'claude-haiku-4-5-20251001';
+
+      const chunk = text.substring(0, 4000);
+      const userContent = `Analizează rapid acest document academic și returnează EXCLUSIV JSON valid, fără text în afara lui.
+
+Materie: ${(subjectName || '').substring(0, 60)}
+
+DOCUMENT (primele 4000 caractere):
+${chunk}
+
+Returnează:
+{
+  "topics": ["topic1", "topic2", "topic3"],
+  "kinds": ["kind1", "kind2", "kind3"],
+  "difficulty": "introductory|intermediate|advanced",
+  "language": "ro|en|other",
+  "domain_hint": "exact_sciences|social_sciences|law|medicine|humanities|cs|other"
+}
+
+Unde:
+- topics: 3-5 topicuri principale din document (în limba documentului)
+- kinds: 2-4 tipuri de secțiuni relevante din lista: formule, derivare, complexitate, date_numerice, mechanism, cauza_efect, comparatie, taxonomie, protocol, cod, conditii, articol, exceptii, studii, autori, critici, caz, ddx, aplicatii, warnings, glosar, distributie
+- difficulty: dificultatea estimată
+- language: limba documentului
+- domain_hint: domeniul academic detectat`;
+
+      const response = await client.messages.create({
+        model: MODEL_HAIKU,
+        max_tokens: 400,
+        system: 'Ești un analizor de documente academice. Returnezi EXCLUSIV JSON valid.',
+        messages: [{ role: 'user', content: userContent }],
+      });
+
+      const raw = response.content[0]?.text || '{}';
+      let detected = {};
+      try {
+        const cleaned = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
+        detected = JSON.parse(cleaned);
+      } catch {
+        logger.warn('Pre-scan JSON parse failed', { raw: raw.substring(0, 200) });
+        return res.status(502).json({ error: 'Nu am putut analiza documentul. Încearcă din nou.' });
+      }
+
+      const tokensUsed = (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0);
+      detected.tokens_used = tokensUsed;
+
+      if (userId) {
+        createPrescan(docHash, userId, detected);
+      }
+
+      logApiCall(userId, 'pre-scan', req.clientIpHash, response.usage?.input_tokens || 0, response.usage?.output_tokens || 0, 0, (subjectName || '').substring(0, 60));
+
+      res.json({
+        topics:      Array.isArray(detected.topics) ? detected.topics : [],
+        kinds:       Array.isArray(detected.kinds) ? detected.kinds : [],
+        difficulty:  detected.difficulty || null,
+        language:    detected.language || null,
+        domain_hint: detected.domain_hint || null,
+        fromCache:   false,
+      });
+    } catch (e) {
+      logger.error('Pre-scan error', { error: e.message });
+      next(e);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
+// POST /api/ai/summary-feedback
+// Simple thumbs up/down stored after user reads a summary
+// ─────────────────────────────────────────────────────────────────
+router.post('/summary-feedback',
+  ...aiGuard('quiz'),
+  async (req, res, next) => {
+    try {
+      const { summaryId, rating } = req.body;
+      const numRating = Number(rating);
+      if (numRating !== 1 && numRating !== -1) {
+        return res.status(400).json({ error: 'rating trebuie să fie 1 sau -1.' });
+      }
+      const userId = req.user?.id ?? null;
+      createSummaryFeedback(summaryId ? Number(summaryId) : null, userId, numRating);
+      res.json({ ok: true });
+    } catch (e) {
+      logger.error('Summary feedback error', { error: e.message });
+      next(e);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
 // POST /api/ai/smart-summary
 // ─────────────────────────────────────────────────────────────────
 router.post('/smart-summary',
   ...aiGuard('smart-summary'),
   async (req, res, next) => {
     try {
-      const { text, subjectName, intent = 'understand', subjectId, title, documentId } = req.body;
+      const { text, subjectName, intent = 'understand', subjectId, title, documentId, domain, userProfileNote, knowledgeLevel, timeContext } = req.body;
 
       if (!text || typeof text !== 'string' || text.trim().length < 50) {
         return res.status(400).json({ error: 'Textul documentului este prea scurt sau lipsă.' });
@@ -305,6 +436,10 @@ router.post('/smart-summary',
         subjectName,
         intent: safeIntent,
         apiKey: process.env.ANTHROPIC_API_KEY,
+        domain: typeof domain === 'string' ? domain.substring(0, 50) : undefined,
+        userProfileNote: typeof userProfileNote === 'string' ? userProfileNote.substring(0, 200) : undefined,
+        knowledgeLevel: typeof knowledgeLevel === 'string' ? knowledgeLevel : undefined,
+        timeContext: typeof timeContext === 'string' ? timeContext : undefined,
       });
 
       // ── Save to DB ───────────────────────────────────────────────

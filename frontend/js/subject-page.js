@@ -525,7 +525,7 @@ function setupSubjectPageInteractions(element, key, subject) {
         removeFile();
         return;
       case 'generate-presentation':
-        generatePresentation(actionEl.dataset.subjectKey);
+        runPreScan(actionEl.dataset.subjectKey);
         return;
       case 'export-chat':
         exportChatAsPDF(actionEl.dataset.subjectKey);
@@ -1109,7 +1109,164 @@ REGULI STRICTE:
 - DOAR JSON valid`;
 }
 
-async function generatePresentation(key) {
+// ─────────────────────────────────────────────────────────────────
+// PRE-SCAN — Haiku quick analysis before summary generation
+// ─────────────────────────────────────────────────────────────────
+var _prescanKnowledgeLevel = '';
+var _prescanTimeContext = '';
+
+async function runPreScan(key) {
+  var inputEl  = document.getElementById('summaryInput');
+  var btnEl    = document.getElementById('summaryBtn');
+  var statusEl = document.getElementById('summaryStatus');
+
+  var text = uploadedFileText || (inputEl ? inputEl.value.trim() : '');
+  if (!text) {
+    if (statusEl) statusEl.textContent = '[!] Încarcă un fișier sau lipește text mai întâi';
+    return;
+  }
+
+  var subjectObj  = getSubjects()[key];
+  var subjectFull = subjectObj ? subjectObj.full : key;
+
+  _prescanKnowledgeLevel = '';
+  _prescanTimeContext = '';
+
+  if (btnEl) btnEl.disabled = true;
+  showPrescanModal(key, null, false);
+
+  var prescanData = null;
+  try {
+    var res = await authFetch('/api/ai/pre-scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ text: text, subjectName: subjectFull }),
+    });
+    if (res.ok) prescanData = await res.json();
+  } catch (e) { /* show modal without data */ }
+
+  if (btnEl) btnEl.disabled = false;
+  showPrescanModal(key, prescanData, true);
+}
+
+function showPrescanModal(key, prescanData, loaded) {
+  var DOMAIN_LABELS = { medicine: 'Medicină / Biologie', law: 'Drept / Legislație', exact_sciences: 'Matematică / Fizică / Chimie', social_sciences: 'Economie / Psihologie / Management', cs: 'Informatică / Programare', humanities: 'Umanioare / Istorie / Filosofie', other: 'Alt domeniu' };
+  var DIFF_LABELS   = { introductory: 'Introductiv', intermediate: 'Intermediar', advanced: 'Avansat' };
+
+  var html = '<div class="modal-overlay" style="z-index:200;">';
+  html += '<div class="modal-box" style="max-width:480px;">';
+  html += '<div class="modal-header"><div class="modal-title">Înainte să generăm</div></div>';
+
+  if (!loaded) {
+    html += '<div style="padding:32px;text-align:center;">';
+    html += '<div class="typing-dots" style="justify-content:center;margin-bottom:12px;"><span></span><span></span><span></span></div>';
+    html += '<div style="font-size:.88rem;color:var(--text-secondary);">Scanăm documentul tău...</div>';
+    html += '</div>';
+  } else {
+    if (prescanData) {
+      var domain = prescanData.domain_hint ? (DOMAIN_LABELS[prescanData.domain_hint] || prescanData.domain_hint) : null;
+      var diff   = prescanData.difficulty  ? (DIFF_LABELS[prescanData.difficulty]    || prescanData.difficulty)  : null;
+      var topics = Array.isArray(prescanData.topics) ? prescanData.topics : [];
+      var kinds  = Array.isArray(prescanData.kinds)  ? prescanData.kinds  : [];
+
+      html += '<div style="background:var(--bg-surface);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px;">';
+      html += '<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:10px;">Am detectat în document</div>';
+
+      if (domain || diff) {
+        html += '<div class="anim" style="display:flex;gap:16px;margin-bottom:10px;">';
+        if (domain) html += '<div><span style="font-size:.75rem;color:var(--text-muted);">Domeniu</span><div style="font-size:.85rem;font-weight:600;color:var(--text-primary);">' + escapeHtml(domain) + '</div></div>';
+        if (diff)   html += '<div><span style="font-size:.75rem;color:var(--text-muted);">Dificultate</span><div style="font-size:.85rem;font-weight:600;color:var(--text-primary);">' + escapeHtml(diff) + '</div></div>';
+        html += '</div>';
+      }
+
+      if (topics.length) {
+        html += '<div class="anim anim-d1" style="margin-bottom:10px;">';
+        html += '<div style="font-size:.75rem;color:var(--text-muted);margin-bottom:5px;">Topicuri principale</div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+        topics.slice(0, 4).forEach(function(t) {
+          html += '<span style="background:var(--accent-muted);color:var(--accent);border-radius:20px;padding:3px 10px;font-size:.78rem;font-weight:500;">' + escapeHtml(t) + '</span>';
+        });
+        html += '</div></div>';
+      }
+
+      if (kinds.length) {
+        html += '<div class="anim anim-d2">';
+        html += '<div style="font-size:.75rem;color:var(--text-muted);margin-bottom:5px;">Secțiuni pregătite</div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+        kinds.forEach(function(k) {
+          html += '<span style="background:var(--bg-raised);color:var(--text-secondary);border-radius:20px;padding:3px 10px;font-size:.78rem;border:1px solid var(--border);">' + escapeHtml(k) + '</span>';
+        });
+        html += '</div></div>';
+      }
+
+      html += '</div>';
+    }
+
+    html += '<div style="margin-bottom:14px;">';
+    html += '<div style="font-size:.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;">Nivelul tău la această materie</div>';
+    html += '<div style="display:flex;gap:7px;flex-wrap:wrap;">';
+    [['first_contact','Prima dată'],['intermediate','Știu bazele'],['review','Recapitulez']].forEach(function(opt) {
+      html += '<button class="prescan-btn prescan-level-btn" data-value="' + opt[0] + '" style="flex:1;min-width:90px;padding:9px 10px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.82rem;cursor:pointer;font-family:inherit;color:var(--text-secondary);transition:all .15s;">' + opt[1] + '</button>';
+    });
+    html += '</div></div>';
+
+    html += '<div style="margin-bottom:20px;">';
+    html += '<div style="font-size:.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;">Context</div>';
+    html += '<div style="display:flex;gap:7px;flex-wrap:wrap;">';
+    [['exam_soon','Am examen în curând'],['studying_ahead','Studiez din timp'],['quick_review','Revizuire rapidă']].forEach(function(opt) {
+      html += '<button class="prescan-btn prescan-time-btn" data-value="' + opt[0] + '" style="flex:1;min-width:110px;padding:9px 10px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.82rem;cursor:pointer;font-family:inherit;color:var(--text-secondary);transition:all .15s;">' + opt[1] + '</button>';
+    });
+    html += '</div></div>';
+
+    html += '<button id="prescanConfirmBtn" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;">Generează rezumatul</button>';
+  }
+
+  html += '</div></div>';
+  document.getElementById('modalContainer').innerHTML = html;
+
+  if (!loaded) return;
+
+  function styleActive(btn) {
+    btn.style.background    = 'var(--accent-muted)';
+    btn.style.borderColor   = 'var(--accent-border)';
+    btn.style.color         = 'var(--accent)';
+    btn.style.fontWeight    = '700';
+  }
+  function styleInactive(btn) {
+    btn.style.background    = 'var(--bg-surface)';
+    btn.style.borderColor   = 'var(--border)';
+    btn.style.color         = 'var(--text-secondary)';
+    btn.style.fontWeight    = '';
+  }
+
+  document.querySelectorAll('.prescan-level-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _prescanKnowledgeLevel = btn.dataset.value;
+      document.querySelectorAll('.prescan-level-btn').forEach(styleInactive);
+      styleActive(btn);
+    });
+  });
+
+  document.querySelectorAll('.prescan-time-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _prescanTimeContext = btn.dataset.value;
+      document.querySelectorAll('.prescan-time-btn').forEach(styleInactive);
+      styleActive(btn);
+    });
+  });
+
+  var confirmBtn = document.getElementById('prescanConfirmBtn');
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', function() {
+      document.getElementById('modalContainer').innerHTML = '';
+      generatePresentation(key, { knowledgeLevel: _prescanKnowledgeLevel, timeContext: _prescanTimeContext });
+    });
+  }
+}
+
+async function generatePresentation(key, params) {
+  params = params || {};
   var inputEl    = document.getElementById('summaryInput');
   var btnEl      = document.getElementById('summaryBtn');
   var statusEl   = document.getElementById('summaryStatus');
@@ -1127,7 +1284,7 @@ async function generatePresentation(key) {
   var intent = _selectedIntent || 'understand';
 
   if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<span>⏳</span> Se generează fișa...'; }
-  if (statusEl) statusEl.textContent = 'Analizez documentul și construiesc scaffold-ul (~20-40s)...';
+  if (statusEl) statusEl.textContent = 'Construiesc scaffold-ul cognitiv (~20-40s)...';
 
   try {
     var res = await authFetch('/api/ai/smart-summary', {
@@ -1135,11 +1292,15 @@ async function generatePresentation(key) {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
-        text:        text,
-        subjectName: subjectFull,
-        intent:      intent,
-        title:       title,
-        subjectId:   subjectObj && subjectObj.id ? subjectObj.id : null,
+        text:            text,
+        subjectName:     subjectFull,
+        intent:          intent,
+        title:           title,
+        subjectId:       subjectObj && subjectObj.id ? subjectObj.id : null,
+        domain:          subjectObj && subjectObj.domain ? subjectObj.domain : undefined,
+        userProfileNote: subjectObj && subjectObj.userProfileNote ? subjectObj.userProfileNote : undefined,
+        knowledgeLevel:  params.knowledgeLevel || undefined,
+        timeContext:     params.timeContext || undefined,
       })
     });
 
@@ -1165,6 +1326,7 @@ async function generatePresentation(key) {
         smartData:     summaryData,
         intent:        intent,
         fromCache:     resData.fromCache || false,
+        summaryId:     resData.id || null,
         slides:        slides.length ? slides : [{ tag: 'Rezumat', title: summaryData.output.title, content: '<div style="color:var(--text-secondary);padding:20px;">Rezumat generat.</div>' }],
       };
 
@@ -1183,7 +1345,7 @@ async function generatePresentation(key) {
       renderSidebar();
       setTimeout(function() {
         if (typeof openSummaryPage === 'function') {
-          openSummaryPage(summaryData, title, subjectFull, intent, key);
+          openSummaryPage(summaryData, title, subjectFull, intent, key, resData.id || null);
         }
       }, 150);
       return;
@@ -1456,7 +1618,7 @@ openPresentationViewer = function(key, presIndex) {
   if (pres && pres.isSmartSummary && pres.smartData) {
     if (typeof openSummaryPage === 'function') {
       var subj = key && getSubjects ? (getSubjects()[key]||{}).full || key : '';
-      openSummaryPage(pres.smartData, pres.title, subj, pres.intent, key);
+      openSummaryPage(pres.smartData, pres.title, subj, pres.intent, key, pres.summaryId || null);
     }
     return;
   }

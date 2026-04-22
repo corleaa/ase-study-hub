@@ -505,8 +505,34 @@ function renderSmartSummaryPage(data) {
     h += '</div>';
   }
 
+  // ── Feedback widget ───────────────────────────────────────────
+  var summaryId = (window.__summaryPageData && window.__summaryPageData.summaryId) || null;
+  h += '<div id="summaryFeedbackWidget" style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);text-align:center;">';
+  h += '<div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;">Rezumatul a fost util?</div>';
+  h += '<div style="display:flex;gap:10px;justify-content:center;">';
+  h += '<button onclick="submitSummaryFeedback(' + JSON.stringify(summaryId) + ', 1, this)" style="padding:8px 20px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-surface);color:var(--text-secondary);font-size:.85rem;cursor:pointer;font-family:inherit;transition:all .15s;">Da, a fost util</button>';
+  h += '<button onclick="submitSummaryFeedback(' + JSON.stringify(summaryId) + ', -1, this)" style="padding:8px 20px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-surface);color:var(--text-secondary);font-size:.85rem;cursor:pointer;font-family:inherit;transition:all .15s;">Nu era ce aveam nevoie</button>';
+  h += '</div></div>';
+
   h += '</div>';
   return h;
+}
+
+async function submitSummaryFeedback(summaryId, rating, buttonEl) {
+  var widget = document.getElementById('summaryFeedbackWidget');
+  if (!widget || widget.dataset.voted) return;
+  widget.dataset.voted = '1';
+
+  try {
+    await authFetch('/api/ai/summary-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ summaryId: summaryId, rating: rating }),
+    });
+  } catch (e) { /* non-critical */ }
+
+  widget.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted);padding:8px 0;">Mulțumim pentru feedback!</div>';
 }
 
 function renderSectionBlock(sec) {
@@ -758,8 +784,8 @@ function initHighlightSystem(contentEl, storageKey) {
 // ─────────────────────────────────────────────────────────────────
 // openSummaryPage — navigate to summary as a full app page
 // ─────────────────────────────────────────────────────────────────
-function openSummaryPage(data, title, subjectName, intent, subjectKey) {
-  window.__summaryPageData = { data: data, title: title, subjectName: subjectName, intent: intent };
+function openSummaryPage(data, title, subjectName, intent, subjectKey, summaryId) {
+  window.__summaryPageData = { data: data, title: title, subjectName: subjectName, intent: intent, summaryId: summaryId || null };
 
   if (typeof state !== 'undefined') {
     state.activeSummary = {
