@@ -535,9 +535,81 @@ async function submitSummaryFeedback(summaryId, rating, buttonEl) {
   widget.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted);padding:8px 0;">Mulțumim pentru feedback!</div>';
 }
 
-function downloadSummaryAsPrint() {
-  if (!document.getElementById('summaryPageContent')) return;
-  window.print();
+async function downloadSummaryAsPrint() {
+  var content = document.getElementById('summaryPageContent');
+  if (!content) return;
+
+  var btn = document.getElementById('summaryDownloadBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Se generează...'; }
+
+  try {
+    if (!window.html2canvas) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    }
+    if (!window.jspdf) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    }
+
+    // Ascunde elementele interactive temporar
+    var hideStyle = document.createElement('style');
+    hideStyle.id = '__pdf-hide';
+    hideStyle.textContent = '[data-quiz-trigger],[data-quiz-container],#summaryFeedbackWidget{display:none!important;}';
+    document.head.appendChild(hideStyle);
+
+    // Capturează tot conținutul (inclusiv ce e scrollat)
+    var prevOverflow = content.style.overflow;
+    var prevMaxH    = content.style.maxHeight;
+    content.style.overflow  = 'visible';
+    content.style.maxHeight = 'none';
+
+    var canvas = await html2canvas(content, {
+      scale:           2,
+      useCORS:         true,
+      allowTaint:      true,
+      backgroundColor: null,
+      scrollX:         0,
+      scrollY:         0,
+      windowWidth:     content.scrollWidth,
+      windowHeight:    content.scrollHeight,
+    });
+
+    // Restaurează
+    content.style.overflow  = prevOverflow;
+    content.style.maxHeight = prevMaxH;
+    document.getElementById('__pdf-hide').remove();
+
+    // Construiește PDF A4
+    var { jsPDF } = window.jspdf;
+    var pdf       = new jsPDF('p', 'mm', 'a4');
+    var pageW     = pdf.internal.pageSize.getWidth();
+    var pageH     = pdf.internal.pageSize.getHeight();
+    var imgW      = pageW;
+    var imgH      = (canvas.height * pageW) / canvas.width;
+    var imgData   = canvas.toDataURL('image/png');
+
+    var y = 0;
+    pdf.addImage(imgData, 'PNG', 0, y, imgW, imgH);
+    var remaining = imgH - pageH;
+    while (remaining > 0) {
+      y -= pageH;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, y, imgW, imgH);
+      remaining -= pageH;
+    }
+
+    var sd    = window.__summaryPageData;
+    var title = (sd && sd.title) ? sd.title.replace(/[^a-z0-9\-_ ]/gi, '').trim() : 'rezumat';
+    pdf.save(title + '.pdf');
+
+  } catch (e) {
+    alert('Nu am putut genera PDF-ul. Încearcă din nou.');
+    console.error('PDF export error:', e);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descarcă';
+    }
+  }
 }
 
 function renderSectionBlock(sec) {
