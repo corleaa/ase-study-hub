@@ -8055,3 +8055,27 @@ details[open] .detail-chevron {
 }
 .dmw-send-btn:hover { opacity: .88; }
 
+
+/* ─────────────────────────────────────────────────────────────────
+   PRINT — show only summary content, hide everything else
+───────────────────────────────────────────────────────────────── */
+@media print {
+  body * { visibility: hidden; }
+  #summaryPageContent,
+  #summaryPageContent * { visibility: visible; }
+  #summaryPageContent {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: visible !important;
+    background: #fff;
+    color: #1a1a2e;
+  }
+  /* hide site-specific interactive elements */
+  [data-quiz-trigger],
+  [data-quiz-container],
+  #summaryFeedbackWidget { visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
+  /* force light colors for readability */
+  #summaryPageContent { --text-primary:#1a1a2e; --text-secondary:#3a3a5a; --text-muted:#7878a0; --border:#dddde8; --bg-surface:#f5f5fa; --bg-raised:#ededf5; --bg-overlay:#f5f5fa; --bg-base:#fff; --accent:#e8895a; --green:#3d9e6e; --blue:#4a78d8; --purple:#8558d8; --amber:#d4901c; --red:#cc4444; }
+}

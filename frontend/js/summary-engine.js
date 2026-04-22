@@ -536,46 +536,8 @@ async function submitSummaryFeedback(summaryId, rating, buttonEl) {
 }
 
 function downloadSummaryAsPrint() {
-  var sd = window.__summaryPageData;
-  if (!sd || !sd.data) return;
-
-  var summaryHTML = renderSmartSummaryPage(sd.data);
-
-  var printPage = '<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8">' +
-    '<title>' + (sd.title || 'Rezumat').replace(/</g,'&lt;') + '</title>' +
-    '<style>' +
-    '*{box-sizing:border-box;margin:0;padding:0;}' +
-    'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#1a1a2e;}' +
-    ':root{' +
-      '--text-primary:#1a1a2e;--text-secondary:#3a3a5a;--text-muted:#7878a0;' +
-      '--border:#dddde8;--bg-surface:#f5f5fa;--bg-raised:#ededf5;--bg-overlay:#f5f5fa;--bg-base:#fff;' +
-      '--accent:#e8895a;--green:#3d9e6e;--blue:#4a78d8;--purple:#8558d8;--amber:#d4901c;--red:#cc4444;' +
-      '--font-body:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;' +
-      '--radius:10px;--radius-sm:8px;--radius-xs:6px;' +
-    '}' +
-    /* hide all site-specific interactive elements */
-    'div:has([data-quiz-trigger]){display:none!important;}' +
-    '[data-quiz-trigger],[data-quiz-container],#summaryFeedbackWidget{display:none!important;}' +
-    'details{page-break-inside:avoid;}' +
-    '@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}' +
-    '</style></head><body>' +
-    '<div style="max-width:720px;margin:0 auto;padding:24px 28px 48px;">' +
-    '<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:14px;margin-bottom:20px;border-bottom:2px solid #e8895a;">' +
-    '<div style="font-size:.8rem;font-weight:700;color:#3a3a5a;">' + (sd.subjectName || '').replace(/</g,'&lt;') + '</div>' +
-    '<div style="font-size:.72rem;color:#aaa;">' + new Date().toLocaleDateString('ro') + '</div>' +
-    '</div>' +
-    summaryHTML +
-    '</div>' +
-    '</body></html>';
-
-  var win = window.open('', '_blank');
-  if (!win) {
-    alert('Permite pop-up-urile în browser pentru a descărca rezumatul.');
-    return;
-  }
-  win.document.write(printPage);
-  win.document.close();
-  setTimeout(function() { win.print(); }, 600);
+  if (!document.getElementById('summaryPageContent')) return;
+  window.print();
 }
 
 function renderSectionBlock(sec) {
