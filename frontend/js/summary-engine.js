@@ -605,14 +605,15 @@ function downloadSummaryAsPrint() {
     });
   }
 
-  var html = '<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8">' +
+  var html = '<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>' + esc(title) + '</title>' +
     '<style>' +
-    'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Georgia,serif;max-width:720px;margin:0 auto;padding:32px 40px 60px;color:#1a1a2e;background:#fff;font-size:15px;line-height:1.7;}' +
-    'h1{font-size:1.9rem;font-weight:800;margin:0 0 10px;line-height:1.2;letter-spacing:-.02em;}' +
-    '.meta{font-size:.72rem;color:#999;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}' +
-    '.why{font-size:1rem;color:#444;line-height:1.8;margin:14px 0 24px;padding-bottom:20px;border-bottom:2px solid #e8895a;}' +
-    '.tag{display:inline-block;background:#f5f0ff;color:#7040c0;border-radius:20px;padding:2px 10px;font-size:.72rem;margin:0 4px 4px 0;}' +
+    '@page{size:A4;margin:18mm 20mm;}' +
+    'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Georgia,serif;max-width:170mm;margin:0 auto;padding:0;color:#1a1a2e;background:#fff;font-size:11pt;line-height:1.65;}' +
+    'h1{font-size:1.6rem;font-weight:800;margin:0 0 8px;line-height:1.2;letter-spacing:-.02em;}' +
+    '.meta{font-size:8pt;color:#999;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}' +
+    '.why{font-size:.95rem;color:#444;line-height:1.8;margin:12px 0 20px;padding-bottom:16px;border-bottom:2px solid #e8895a;}' +
+    '.tag{display:inline-block;background:#f5f0ff;color:#7040c0;border-radius:20px;padding:2px 10px;font-size:8pt;margin:0 4px 4px 0;}' +
     '.section{margin:28px 0;padding:18px 20px;background:#fafafa;border-left:3px solid #e8895a;border-radius:0 8px 8px 0;page-break-inside:avoid;}' +
     '.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#e8895a;margin-bottom:10px;}' +
     'table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:6px;}' +
@@ -644,8 +645,19 @@ function downloadSummaryAsPrint() {
     '.ce-urmeaza-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#e8895a;margin-bottom:6px;}' +
     '.prereqs{font-size:.82rem;color:#666;margin-bottom:20px;}' +
     '.prereqs span{display:inline-block;background:#f0f0f8;border-radius:20px;padding:2px 10px;margin:0 4px 4px 0;}' +
-    '@media print{body{padding:20px 24px;}.section{page-break-inside:avoid;}}' +
-    '</style></head><body>';
+    '.section{page-break-inside:avoid;}' +
+    '.layer{page-break-inside:avoid;}' +
+    '.print-bar{position:fixed;top:0;left:0;right:0;background:#1a1a2e;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;font-family:-apple-system,sans-serif;font-size:13px;z-index:999;}' +
+    '.print-bar strong{font-size:14px;}' +
+    '.print-btn{background:#e8895a;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;}' +
+    '.print-btn:hover{background:#d4784a;}' +
+    '.content{margin-top:52px;}' +
+    '@media print{.print-bar{display:none!important;}.content{margin-top:0;}}' +
+    '</style>' +
+    '<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},400);});<\/script>' +
+    '</head><body>' +
+    '<div class="print-bar"><strong>' + esc(title) + '</strong><button class="print-btn" onclick="window.print()">Salvează ca PDF</button></div>' +
+    '<div class="content">';
 
   html += '<div class="meta">' + esc(subjectName) + ' · ' + new Date().toLocaleDateString('ro') + (a.difficulty ? ' · ' + esc(DIFF_LABEL[a.difficulty] || a.difficulty) : '') + '</div>';
   html += '<h1>' + esc(title) + '</h1>';
@@ -681,7 +693,7 @@ function downloadSummaryAsPrint() {
     html += '<div class="ce-urmeaza"><div class="ce-urmeaza-label">Ce vei găsi în documentul complet</div>' + esc(o.ce_urmeaza) + '</div>';
   }
 
-  html += '</body></html>';
+  html += '</div></body></html>';
 
   var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   var url  = URL.createObjectURL(blob);
