@@ -535,81 +535,159 @@ async function submitSummaryFeedback(summaryId, rating, buttonEl) {
   widget.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted);padding:8px 0;">Mulțumim pentru feedback!</div>';
 }
 
-async function downloadSummaryAsPrint() {
-  var content = document.getElementById('summaryPageContent');
-  if (!content) return;
+function downloadSummaryAsPrint() {
+  var sd = window.__summaryPageData;
+  if (!sd || !sd.data) return;
 
-  var btn = document.getElementById('summaryDownloadBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Se generează...'; }
+  var data        = sd.data;
+  var o           = data.output || {};
+  var a           = data.analysis || {};
+  var title       = sd.title || o.title || 'Rezumat';
+  var subjectName = sd.subjectName || '';
 
-  try {
-    if (!window.html2canvas) {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KIND_LABEL = { formule:'Formule', derivare:'Derivare', complexitate:'Complexitate', date_numerice:'Date numerice', mechanism:'Mecanism', cauza_efect:'Cauză–Efect', comparatie:'Comparație', taxonomie:'Taxonomie', protocol:'Protocol', cod:'Cod', conditii:'Condiții', articol:'Articol', exceptii:'Excepții', studii:'Studii', autori:'Autori', critici:'Critici', caz:'Caz', ddx:'Diagnostic diferențial', aplicatii:'Aplicații', warnings:'Atenție', glosar:'Glosar', distributie:'Distribuție' };
+  var DIFF_LABEL  = { introductory:'Introductiv', intermediate:'Intermediar', advanced:'Avansat' };
+
+  function renderSection(sec) {
+    var h = '';
+    var k = sec.kind;
+    if (k === 'formule' && sec.items) {
+      sec.items.forEach(function(it) { h += '<div class="formula-row"><code>' + esc(it.expression) + '</code><span>' + esc(it.label) + '</span></div>'; });
+    } else if (k === 'derivare' && sec.steps) {
+      h += '<ol>' + sec.steps.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>';
+    } else if (k === 'complexitate' && sec.rows) {
+      h += '<table><tr><th>Caz</th><th>Timp</th><th>Spațiu</th><th>Notă</th></tr>' + sec.rows.map(function(r){ return '<tr><td>'+esc(r.case)+'</td><td>'+esc(r.time)+'</td><td>'+esc(r.space)+'</td><td>'+esc(r.note)+'</td></tr>'; }).join('') + '</table>';
+    } else if (k === 'date_numerice' && sec.rows) {
+      h += '<table><tr><th>Indicator</th><th>Valoare</th><th>Notă</th></tr>' + sec.rows.map(function(r){ return '<tr><td>'+esc(r.metric)+'</td><td><strong>'+esc(r.value)+'</strong></td><td>'+esc(r.note)+'</td></tr>'; }).join('') + '</table>';
+    } else if (k === 'mechanism' && sec.items) {
+      sec.items.forEach(function(it){ h += '<div class="mech-row"><span class="mech-level">'+esc(it.level)+'</span><span>'+esc(it.text)+'</span></div>'; });
+    } else if (k === 'cauza_efect' && sec.chains) {
+      sec.chains.forEach(function(chain){ h += '<div class="chain">' + chain.map(esc).join(' ') + '</div>'; });
+    } else if (k === 'comparatie' && sec.items) {
+      h += '<table><tr><th>Aspect</th><th>'+esc(sec.label_a)+'</th><th>'+esc(sec.label_b)+'</th></tr>' + sec.items.map(function(it){ return '<tr><td>'+esc(it.aspect)+'</td><td>'+esc(it.a)+'</td><td>'+esc(it.b)+'</td></tr>'; }).join('') + '</table>';
+    } else if ((k === 'taxonomie' || k === 'aplicatii' || k === 'warnings' || k === 'exceptii' || k === 'conditii' || k === 'protocol') && sec.items) {
+      h += '<ul>' + sec.items.map(function(it){ return '<li>' + esc(typeof it === 'string' ? it : it.name + (it.description ? ' — ' + it.description : '')) + '</li>'; }).join('') + '</ul>';
+    } else if (k === 'glosar' && sec.items) {
+      h += '<dl>' + sec.items.map(function(it){ return '<dt>'+esc(it.term)+'</dt><dd>'+esc(it.definition)+'</dd>'; }).join('') + '</dl>';
+    } else if (k === 'studii' && sec.items) {
+      h += '<ul>' + sec.items.map(function(it){ return '<li><strong>'+esc(it.t)+'</strong> — '+esc(it.d)+'</li>'; }).join('') + '</ul>';
+    } else if (k === 'autori' && sec.cards) {
+      h += '<ul>' + sec.cards.map(function(it){ return '<li><strong>'+esc(it.name)+'</strong> ('+esc(it.year)+') — '+esc(it.contribution)+'</li>'; }).join('') + '</ul>';
+    } else if (k === 'critici' && sec.items) {
+      h += '<ul>' + sec.items.map(function(it){ return '<li>' + esc(it) + '</li>'; }).join('') + '</ul>';
+    } else if (k === 'caz' && sec.body) {
+      h += '<p>' + esc(sec.body) + '</p>';
+    } else if (k === 'articol') {
+      if (sec.cite) h += '<p class="cite">'+esc(sec.cite)+'</p>';
+      if (sec.body) h += '<p>'+esc(sec.body)+'</p>';
+    } else if (k === 'ddx' && sec.rows) {
+      h += '<table><tr><th>Alternativă</th><th>Cum o distingi</th></tr>' + sec.rows.map(function(r){ return '<tr><td>'+esc(r.name)+'</td><td>'+esc(r.cue)+'</td></tr>'; }).join('') + '</table>';
+    } else if (k === 'cod' && sec.code) {
+      h += '<pre><code>' + esc(sec.code) + '</code></pre>';
+    } else {
+      h += '<p>' + esc(JSON.stringify(sec)) + '</p>';
     }
-    if (!window.jspdf) {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    }
-
-    // Ascunde elementele interactive temporar
-    var hideStyle = document.createElement('style');
-    hideStyle.id = '__pdf-hide';
-    hideStyle.textContent = '[data-quiz-trigger],[data-quiz-container],#summaryFeedbackWidget{display:none!important;}';
-    document.head.appendChild(hideStyle);
-
-    // Capturează tot conținutul (inclusiv ce e scrollat)
-    var prevOverflow = content.style.overflow;
-    var prevMaxH    = content.style.maxHeight;
-    content.style.overflow  = 'visible';
-    content.style.maxHeight = 'none';
-
-    var canvas = await html2canvas(content, {
-      scale:           2,
-      useCORS:         true,
-      allowTaint:      true,
-      backgroundColor: null,
-      scrollX:         0,
-      scrollY:         0,
-      windowWidth:     content.scrollWidth,
-      windowHeight:    content.scrollHeight,
-    });
-
-    // Restaurează
-    content.style.overflow  = prevOverflow;
-    content.style.maxHeight = prevMaxH;
-    document.getElementById('__pdf-hide').remove();
-
-    // Construiește PDF A4
-    var { jsPDF } = window.jspdf;
-    var pdf       = new jsPDF('p', 'mm', 'a4');
-    var pageW     = pdf.internal.pageSize.getWidth();
-    var pageH     = pdf.internal.pageSize.getHeight();
-    var imgW      = pageW;
-    var imgH      = (canvas.height * pageW) / canvas.width;
-    var imgData   = canvas.toDataURL('image/png');
-
-    var y = 0;
-    pdf.addImage(imgData, 'PNG', 0, y, imgW, imgH);
-    var remaining = imgH - pageH;
-    while (remaining > 0) {
-      y -= pageH;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, y, imgW, imgH);
-      remaining -= pageH;
-    }
-
-    var sd    = window.__summaryPageData;
-    var title = (sd && sd.title) ? sd.title.replace(/[^a-z0-9\-_ ]/gi, '').trim() : 'rezumat';
-    pdf.save(title + '.pdf');
-
-  } catch (e) {
-    alert('Nu am putut genera PDF-ul. Încearcă din nou.');
-    console.error('PDF export error:', e);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descarcă';
-    }
+    return h;
   }
+
+  var sectionsHtml = '';
+  var sections = (o.sections || []).filter(function(s){ return (s.relevance||1) > 0.45; }).sort(function(a,b){ return (b.relevance||0)-(a.relevance||0); });
+  sections.forEach(function(sec) {
+    sectionsHtml += '<div class="section"><div class="section-label">' + esc(KIND_LABEL[sec.kind] || sec.kind) + (sec.title ? ' — ' + esc(sec.title) : '') + '</div>' + renderSection(sec) + '</div>';
+  });
+
+  var layersHtml = '';
+  if (o.layers && o.layers.length) {
+    o.layers.forEach(function(layer) {
+      layersHtml += '<div class="layer"><div class="layer-level">'+esc(layer.level)+'</div><div class="layer-text">'+esc(layer.text)+'</div></div>';
+    });
+  }
+
+  var html = '<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8">' +
+    '<title>' + esc(title) + '</title>' +
+    '<style>' +
+    'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Georgia,serif;max-width:720px;margin:0 auto;padding:32px 40px 60px;color:#1a1a2e;background:#fff;font-size:15px;line-height:1.7;}' +
+    'h1{font-size:1.9rem;font-weight:800;margin:0 0 10px;line-height:1.2;letter-spacing:-.02em;}' +
+    '.meta{font-size:.72rem;color:#999;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}' +
+    '.why{font-size:1rem;color:#444;line-height:1.8;margin:14px 0 24px;padding-bottom:20px;border-bottom:2px solid #e8895a;}' +
+    '.tag{display:inline-block;background:#f5f0ff;color:#7040c0;border-radius:20px;padding:2px 10px;font-size:.72rem;margin:0 4px 4px 0;}' +
+    '.section{margin:28px 0;padding:18px 20px;background:#fafafa;border-left:3px solid #e8895a;border-radius:0 8px 8px 0;page-break-inside:avoid;}' +
+    '.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#e8895a;margin-bottom:10px;}' +
+    'table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:6px;}' +
+    'th{background:#f0f0f8;padding:7px 10px;text-align:left;font-size:.75rem;font-weight:700;}' +
+    'td{padding:7px 10px;border-top:1px solid #eee;}' +
+    'ul,ol{padding-left:20px;margin:6px 0;}li{margin:5px 0;}' +
+    'dl{margin:6px 0;}dt{font-weight:700;margin-top:8px;}dd{margin-left:16px;color:#555;}' +
+    'pre{background:#f5f5f8;border-radius:6px;padding:14px;overflow-x:auto;font-size:.82rem;}' +
+    'code{font-family:monospace;}' +
+    '.formula-row{display:flex;align-items:baseline;gap:14px;padding:5px 0;border-bottom:1px solid #f0f0f0;}' +
+    '.formula-row code{font-size:1rem;color:#333;flex-shrink:0;}' +
+    '.formula-row span{color:#666;font-size:.85rem;}' +
+    '.mech-row{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #f0f0f0;}' +
+    '.mech-level{font-weight:700;font-size:.75rem;min-width:60px;color:#e8895a;padding-top:2px;}' +
+    '.chain{font-size:.9rem;color:#444;padding:4px 0;}' +
+    '.cite{font-style:italic;color:#888;font-size:.85rem;margin-bottom:6px;}' +
+    '.layer{display:flex;gap:14px;padding:8px 0;border-bottom:1px solid #f0f0f0;}' +
+    '.layer:last-child{border-bottom:none;}' +
+    '.layer-level{font-weight:700;font-size:.75rem;min-width:80px;color:#5b8af0;padding-top:2px;}' +
+    '.layer-text{color:#444;font-size:.9rem;}' +
+    '.layers-box{background:#f5f8ff;border-left:3px solid #5b8af0;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0 28px;}' +
+    '.layers-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5b8af0;margin-bottom:10px;}' +
+    '.insight{font-style:italic;font-size:1rem;color:#555;text-align:center;margin:28px 0;padding:16px 24px;border-top:1px solid #eee;border-bottom:1px solid #eee;}' +
+    '.pathway{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:20px 0;}' +
+    '.pathway-step{padding:4px 12px;border-radius:20px;font-size:.8rem;color:#888;background:#f5f5f5;}' +
+    '.pathway-step.active{background:#fff0e8;color:#e8895a;font-weight:700;border:1px solid #e8895a;}' +
+    '.pathway-arrow{color:#ccc;font-size:.8rem;}' +
+    '.ce-urmeaza{background:#fff8f4;border-left:3px solid #e8895a;padding:14px 18px;border-radius:0 8px 8px 0;margin-top:28px;}' +
+    '.ce-urmeaza-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#e8895a;margin-bottom:6px;}' +
+    '.prereqs{font-size:.82rem;color:#666;margin-bottom:20px;}' +
+    '.prereqs span{display:inline-block;background:#f0f0f8;border-radius:20px;padding:2px 10px;margin:0 4px 4px 0;}' +
+    '@media print{body{padding:20px 24px;}.section{page-break-inside:avoid;}}' +
+    '</style></head><body>';
+
+  html += '<div class="meta">' + esc(subjectName) + ' · ' + new Date().toLocaleDateString('ro') + (a.difficulty ? ' · ' + esc(DIFF_LABEL[a.difficulty] || a.difficulty) : '') + '</div>';
+  html += '<h1>' + esc(title) + '</h1>';
+
+  if (o.domain_tags && o.domain_tags.length) {
+    html += '<div style="margin-bottom:12px;">' + o.domain_tags.slice(0,4).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join('') + '</div>';
+  }
+
+  if (o.why_it_matters) html += '<div class="why">' + esc(o.why_it_matters) + '</div>';
+
+  if (a.prerequisites && a.prerequisites.length) {
+    html += '<div class="prereqs"><strong>Înainte să citești:</strong> ' + a.prerequisites.map(function(p){ return '<span>'+esc(p)+'</span>'; }).join('') + '</div>';
+  }
+
+  if (layersHtml) {
+    html += '<div class="layers-box"><div class="layers-label">Trei niveluri de înțelegere</div>' + layersHtml + '</div>';
+  }
+
+  html += sectionsHtml;
+
+  if (o.key_insight) html += '<div class="insight">&ldquo;' + esc(o.key_insight) + '&rdquo;</div>';
+
+  if (o.pathway && o.pathway.length) {
+    var mid = Math.floor(o.pathway.length / 2);
+    html += '<div class="pathway">' + o.pathway.map(function(s, i){
+      var parts = '<span class="pathway-step' + (i === mid ? ' active' : '') + '">' + esc(s) + '</span>';
+      if (i < o.pathway.length - 1) parts += '<span class="pathway-arrow">→</span>';
+      return parts;
+    }).join('') + '</div>';
+  }
+
+  if (o.ce_urmeaza) {
+    html += '<div class="ce-urmeaza"><div class="ce-urmeaza-label">Ce vei găsi în documentul complet</div>' + esc(o.ce_urmeaza) + '</div>';
+  }
+
+  html += '</body></html>';
+
+  var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  var url  = URL.createObjectURL(blob);
+  var win  = window.open(url, '_blank');
+  setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
+  if (!win) alert('Permite pop-up-urile pentru a descărca rezumatul.');
 }
 
 function renderSectionBlock(sec) {
