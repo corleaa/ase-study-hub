@@ -466,10 +466,10 @@ function renderSmartSummaryPage(data) {
   if (o.pathway && o.pathway.length) {
     h += '<div style="margin-bottom:24px;">';
     h += '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:12px;">Traseu conceptual</div>';
-    h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">';
+    h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;overflow:hidden;">';
     o.pathway.forEach(function(step, i) {
       var isActive = i === Math.floor(o.pathway.length / 2);
-      h += '<div style="padding:5px 12px;border-radius:20px;font-size:.78rem;'+(isActive?'background:rgba(242,155,109,.12);color:var(--accent);border:1px solid rgba(242,155,109,.25);font-weight:600;':'color:var(--text-muted);')+'white-space:nowrap;">'+escapeHtml(step)+'</div>';
+      h += '<div style="padding:5px 12px;border-radius:20px;font-size:.78rem;'+(isActive?'background:rgba(242,155,109,.12);color:var(--accent);border:1px solid rgba(242,155,109,.25);font-weight:600;':'color:var(--text-muted);')+'white-space:normal;word-break:break-word;">'+escapeHtml(step)+'</div>';
       if (i < o.pathway.length-1) h += '<div style="color:var(--border);font-size:.8rem;padding:0 2px;">→</div>';
     });
     h += '</div></div>';
@@ -1668,8 +1668,8 @@ function renderSummaryPage(element) {
   // ── Split body ────────────────────────────────────────────────────
   h += '<div style="display:flex;flex:1;min-height:0;overflow:hidden;">';
 
-  // Left: scrollable summary
-  h += '<div id="summaryPageContent" style="flex:1;overflow-y:auto;min-width:0;">';
+  // Left: scrollable summary — overflow-x:hidden prevents horizontal scroll
+  h += '<div id="summaryPageContent" style="flex:1;overflow-y:auto;overflow-x:hidden;min-width:0;">';
   h += renderSmartSummaryPage(data);
   h += '</div>';
 
