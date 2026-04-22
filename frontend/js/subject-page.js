@@ -98,7 +98,7 @@ function renderSubjectPage(element, key, subject) {
   ];
   intents.forEach(function(intent, i) {
     var isActive = i === 0;
-    html += '<button class="intent-btn' + (isActive?' active':'') + '" data-intent="' + intent.id + '" onclick="selectIntent(this)" style="flex:1;min-width:130px;background:' + (isActive?'var(--accent-muted)':'var(--bg-surface)') + ';border:1px solid ' + (isActive?'var(--accent-border)':'var(--border)') + ';border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left;transition:all .15s;">';
+    html += '<button class="intent-btn' + (isActive?' active':'') + '" data-subject-action="select-intent" data-intent="' + intent.id + '" style="flex:1;min-width:130px;background:' + (isActive?'var(--accent-muted)':'var(--bg-surface)') + ';border:1px solid ' + (isActive?'var(--accent-border)':'var(--border)') + ';border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left;transition:all .15s;">';
     html += '<div style="font-size:.82rem;font-weight:500;color:' + (isActive?'var(--accent)':'var(--text-secondary)') + ';">' + intent.label + '</div>';
     html += '<div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">' + intent.desc + '</div>';
     html += '</button>';
@@ -527,6 +527,9 @@ function setupSubjectPageInteractions(element, key, subject) {
       case 'generate-presentation':
         runPreScan(actionEl.dataset.subjectKey);
         return;
+      case 'select-intent':
+        selectIntent(actionEl);
+        return;
       case 'export-chat':
         exportChatAsPDF(actionEl.dataset.subjectKey);
         return;
@@ -775,6 +778,23 @@ async function sendChatMessage(key) {
 // FILE UPLOAD & PROCESSING
 // =============================================
 var uploadedFileText = '';
+var PRE_SCAN_MAX_CHARS = 4000;
+var SUMMARY_MAX_CHARS = 18000;
+
+function compactDocumentText(text) {
+  return String(text || '').replace(/\s+/g, ' ').trim();
+}
+
+function trimDocumentForAi(text, maxChars) {
+  var clean = compactDocumentText(text);
+  if (clean.length <= maxChars) return clean;
+
+  var headChars = Math.floor(maxChars * 0.75);
+  var tailChars = Math.max(0, maxChars - headChars - 14);
+  var head = clean.slice(0, headChars);
+  var tail = tailChars ? clean.slice(clean.length - tailChars) : '';
+  return head + '\n\n[...]\n\n' + tail;
+}
 
 function handleFileUpload(event) {
   var file = event.target.files[0];
@@ -1120,7 +1140,8 @@ async function runPreScan(key) {
   var btnEl    = document.getElementById('summaryBtn');
   var statusEl = document.getElementById('summaryStatus');
 
-  var text = uploadedFileText || (inputEl ? inputEl.value.trim() : '');
+  var rawText = uploadedFileText || (inputEl ? inputEl.value.trim() : '');
+  var text = trimDocumentForAi(rawText, PRE_SCAN_MAX_CHARS);
   if (!text) {
     if (statusEl) statusEl.textContent = '[!] Încarcă un fișier sau lipește text mai întâi';
     return;
@@ -1272,7 +1293,8 @@ async function generatePresentation(key, params) {
   var statusEl   = document.getElementById('summaryStatus');
   var titleInput = document.getElementById('presTitle');
 
-  var text = uploadedFileText || (inputEl ? inputEl.value.trim() : '');
+  var rawText = uploadedFileText || (inputEl ? inputEl.value.trim() : '');
+  var text = trimDocumentForAi(rawText, SUMMARY_MAX_CHARS);
   if (!text) {
     if (statusEl) statusEl.textContent = '[!] Încarcă un fișier sau lipește text mai întâi';
     return;
@@ -1284,7 +1306,11 @@ async function generatePresentation(key, params) {
   var intent = _selectedIntent || 'understand';
 
   if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<span>⏳</span> Se generează fișa...'; }
-  if (statusEl) statusEl.textContent = 'Construiesc scaffold-ul cognitiv (~20-40s)...';
+  if (statusEl) {
+    statusEl.textContent = rawText.length > text.length
+      ? 'Construiesc scaffold-ul cognitiv dintr-un extras reprezentativ al documentului (~20-40s)...'
+      : 'Construiesc scaffold-ul cognitiv (~20-40s)...';
+  }
 
   try {
     var res = await authFetch('/api/ai/smart-summary', {

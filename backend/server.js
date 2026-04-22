@@ -114,7 +114,7 @@ app.use(cors({
 
 // ── Cookie parser + body parsing ──────────────────────────────────
 app.use(cookieParser());
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({ limit: '1mb' }));
 
 // ── Routes ────────────────────────────────────────────────────────
 app.use('/api/auth',     require('./routes/auth'));
