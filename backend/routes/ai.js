@@ -472,6 +472,9 @@ router.post('/smart-summary',
       res.json({ summary: result.data, fromCache: false, id: savedId });
     } catch (e) {
       logger.error('Smart summary error', { error: e.message });
+      if (e?.message) {
+        return res.status(502).json({ error: e.message });
+      }
       next(e);
     }
   }

@@ -392,63 +392,84 @@ async function generateSmartSummary({ text, subjectName, intent = 'understand', 
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY missing');
 
   const client = new Anthropic({ apiKey });
-  const heuristics = preprocessDocument(text);
-  const model = selectModel(heuristics);
-  const userPrompt = buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNote, knowledgeLevel, timeContext);
+  async function runOnce(sourceText) {
+    const heuristics = preprocessDocument(sourceText);
+    const model = selectModel(heuristics);
+    const userPrompt = buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNote, knowledgeLevel, timeContext);
 
-  const response = await client.messages.create({
-    model,
-    max_tokens: model === MODEL_SONNET ? 8000 : 5000,
-    system: [
-      {
-        type: 'text',
-        text: buildSystemPrompt(domain),
-        cache_control: { type: 'ephemeral' }, // cached per domain variant
-      },
-    ],
-    messages: [{ role: 'user', content: userPrompt }],
-  });
+    const response = await client.messages.create({
+      model,
+      max_tokens: model === MODEL_SONNET ? 8000 : 5000,
+      system: [
+        {
+          type: 'text',
+          text: buildSystemPrompt(domain),
+          cache_control: { type: 'ephemeral' }, // cached per domain variant
+        },
+      ],
+      messages: [{ role: 'user', content: userPrompt }],
+    });
 
-  const raw = response.content[0]?.text || '';
-  const clean = raw
-    .replace(/^```(?:json)?\s*/m, '')
-    .replace(/\s*```$/m, '')
-    .trim();
+    const raw = response.content[0]?.text || '';
+    const clean = raw
+      .replace(/^```(?:json)?\s*/m, '')
+      .replace(/\s*```$/m, '')
+      .trim();
 
-  let parsed;
-  try {
-    parsed = JSON.parse(clean);
-  } catch (firstErr) {
-    // Try extracting the largest JSON object from response
-    const match = clean.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('AI nu a returnat JSON valid');
+    let parsed;
     try {
-      parsed = JSON.parse(match[0]);
-    } catch {
-      // JSON truncated mid-response (output exceeded max_tokens)
-      const isTruncated = firstErr.message && firstErr.message.includes('position');
-      throw new Error(
-        isTruncated
-          ? 'Documentul este prea lung pentru o singură fișă. Încearcă cu primele 3-4 pagini sau un capitol specific.'
-          : 'AI nu a returnat JSON valid. Încearcă din nou.'
-      );
+      parsed = JSON.parse(clean);
+    } catch (firstErr) {
+      const match = clean.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('AI nu a returnat JSON valid');
+      try {
+        parsed = JSON.parse(match[0]);
+      } catch {
+        const isTruncated = firstErr.message && firstErr.message.includes('position');
+        throw new Error(
+          isTruncated
+            ? 'Documentul este prea lung pentru o singură fișă. Încearcă cu primele 3-4 pagini sau un capitol specific.'
+            : 'AI nu a returnat JSON valid. Încearcă din nou.'
+        );
+      }
+    }
+
+    if (!parsed.output || !parsed.output.title) {
+      throw new Error('Structura JSON incompletă — încearcă din nou.');
+    }
+
+    return {
+      data: parsed,
+      model,
+      inputTokens:  response.usage?.input_tokens  || 0,
+      outputTokens: response.usage?.output_tokens || 0,
+      costUsd: ((response.usage?.input_tokens || 0) * 3 + (response.usage?.output_tokens || 0) * 15) / 1_000_000,
+      heuristics,
+      engineVersion: ENGINE_VERSION,
+    };
+  }
+
+  try {
+    return await runOnce(text);
+  } catch (err) {
+    const cleanText = text.replace(/\s+/g, ' ').trim();
+    const shouldRetryCompact = cleanText.length > 18000;
+    if (!shouldRetryCompact) throw err;
+
+    // Fallback for very large / noisy PDFs: use a tighter representative excerpt.
+    const compact = cleanText.substring(0, 9000)
+      + '\n\n[...]\n\n'
+      + cleanText.substring(Math.max(0, Math.floor(cleanText.length * 0.45)), Math.max(0, Math.floor(cleanText.length * 0.45)) + 4000)
+      + '\n\n[...]\n\n'
+      + cleanText.substring(Math.max(0, cleanText.length - 3000));
+
+    try {
+      return await runOnce(compact);
+    } catch (fallbackErr) {
+      const msg = fallbackErr?.message || err?.message || 'Generarea a eșuat.';
+      throw new Error(msg);
     }
   }
-
-  // Validate minimal structure
-  if (!parsed.output || !parsed.output.title) {
-    throw new Error('Structura JSON incompletă — încearcă din nou.');
-  }
-
-  return {
-    data: parsed,
-    model,
-    inputTokens:  response.usage?.input_tokens  || 0,
-    outputTokens: response.usage?.output_tokens || 0,
-    costUsd: ((response.usage?.input_tokens || 0) * 3 + (response.usage?.output_tokens || 0) * 15) / 1_000_000,
-    heuristics,
-    engineVersion: ENGINE_VERSION,
-  };
 }
 
 // ─────────────────────────────────────────────────────────────────
