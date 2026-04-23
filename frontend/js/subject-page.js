@@ -1280,6 +1280,7 @@ REGULI STRICTE:
 var _prescanKnowledgeLevel = '';
 var _prescanTimeContext = '';
 var _prescanDomainHint = '';
+var _prescanOutputLanguage = 'ro';
 
 async function runPreScan(key) {
   var inputEl  = document.getElementById('summaryInput');
@@ -1299,6 +1300,7 @@ async function runPreScan(key) {
   _prescanKnowledgeLevel = '';
   _prescanTimeContext = '';
   _prescanDomainHint = '';
+  _prescanOutputLanguage = 'ro';
 
   if (btnEl) btnEl.disabled = true;
   showPrescanModal(key, null, false);
@@ -1390,6 +1392,13 @@ function showPrescanModal(key, prescanData, loaded) {
     });
     html += '</div></div>';
 
+    html += '<div style="margin-bottom:20px;">';
+    html += '<div style="font-size:.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;">Limba rezumatului</div>';
+    html += '<div style="display:flex;gap:7px;">';
+    html += '<button class="prescan-btn prescan-lang-btn" data-value="ro" style="flex:1;padding:9px 10px;background:var(--accent-muted);border:1px solid var(--accent-border);border-radius:var(--radius-sm);font-size:.82rem;cursor:pointer;font-family:inherit;color:var(--accent);font-weight:700;">🇷🇴 Română</button>';
+    html += '<button class="prescan-btn prescan-lang-btn" data-value="en" style="flex:1;padding:9px 10px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.82rem;cursor:pointer;font-family:inherit;color:var(--text-secondary);">🇬🇧 English</button>';
+    html += '</div></div>';
+
     html += '<button id="prescanConfirmBtn" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;">Generează rezumatul</button>';
   }
 
@@ -1427,11 +1436,19 @@ function showPrescanModal(key, prescanData, loaded) {
     });
   });
 
+  document.querySelectorAll('.prescan-lang-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _prescanOutputLanguage = btn.dataset.value;
+      document.querySelectorAll('.prescan-lang-btn').forEach(styleInactive);
+      styleActive(btn);
+    });
+  });
+
   var confirmBtn = document.getElementById('prescanConfirmBtn');
   if (confirmBtn) {
     confirmBtn.addEventListener('click', function() {
       document.getElementById('modalContainer').innerHTML = '';
-      generatePresentation(key, { knowledgeLevel: _prescanKnowledgeLevel, timeContext: _prescanTimeContext });
+      generatePresentation(key, { knowledgeLevel: _prescanKnowledgeLevel, timeContext: _prescanTimeContext, outputLanguage: _prescanOutputLanguage });
     });
   }
 }
@@ -1477,6 +1494,7 @@ async function generatePresentation(key, params) {
         userProfileNote: subjectObj && subjectObj.userProfileNote ? subjectObj.userProfileNote : undefined,
         knowledgeLevel:  params.knowledgeLevel || undefined,
         timeContext:     params.timeContext || undefined,
+        output_language: params.outputLanguage || 'ro',
       })
     });
 

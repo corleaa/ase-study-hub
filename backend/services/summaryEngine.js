@@ -328,10 +328,11 @@ function selectModel(heuristics) {
 // ─────────────────────────────────────────────────────────────────
 // DOCUMENT HASH — for cache key
 // ─────────────────────────────────────────────────────────────────
-function computeDocHash(text, intent) {
+function computeDocHash(text, intent, outputLanguage) {
+  const lang = outputLanguage === 'en' ? 'en' : 'ro';
   return crypto
     .createHash('sha256')
-    .update(text.substring(0, 50000) + intent + ENGINE_VERSION)
+    .update(text.substring(0, 50000) + intent + ENGINE_VERSION + lang)
     .digest('hex')
     .substring(0, 32);
 }
@@ -339,7 +340,7 @@ function computeDocHash(text, intent) {
 // ─────────────────────────────────────────────────────────────────
 // BUILD USER PROMPT — changes per request
 // ─────────────────────────────────────────────────────────────────
-function buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNote, knowledgeLevel, timeContext) {
+function buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNote, knowledgeLevel, timeContext, outputLanguage) {
   const intentMap = {
     understand: 'ÎNȚELEGERE PROFUNDĂ — accent pe mecanisme și analogii intuitive',
     exam_prep:  'PREGĂTIRE EXAMEN — accent pe termeni exacți, formule, greșeli frecvente',
@@ -371,11 +372,16 @@ function buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNot
   const knowledgeLine    = knowledgeLevel && knowledgeMap[knowledgeLevel] ? `Nivel student: ${knowledgeMap[knowledgeLevel]}` : '';
   const timeContextLine  = timeContext && timeMap[timeContext] ? `Context timp: ${timeMap[timeContext]}` : '';
 
+  const langLine = outputLanguage === 'en'
+    ? 'Output language: ENGLISH — write ALL text fields (title, why_it_matters, layers[].text, sections content, pathway items, ce_urmeaza, key_insight, prerequisites, leads_to, requires, descriptions, labels, annotations, and any other free-text fields) EXCLUSIVELY in English. Keep JSON keys and kind names as-is.'
+    : '';
+
   return `Materie: ${subjectName}
 ${domainLine}
 ${profileLine}
 ${knowledgeLine}
 ${timeContextLine}
+${langLine}
 Intent student: ${intentMap[intent] || intentMap.understand}
 ${hints.length ? 'Hints din analiză locală:\n' + hints.map(h => '- ' + h).join('\n') : ''}
 
@@ -388,14 +394,14 @@ Generează scaffold-ul cognitiv conform instrucțiunilor. EXCLUSIV JSON valid.`;
 // ─────────────────────────────────────────────────────────────────
 // GENERATE — main entry point
 // ─────────────────────────────────────────────────────────────────
-async function generateSmartSummary({ text, subjectName, intent = 'understand', apiKey, domain, userProfileNote, knowledgeLevel, timeContext }) {
+async function generateSmartSummary({ text, subjectName, intent = 'understand', apiKey, domain, userProfileNote, knowledgeLevel, timeContext, outputLanguage }) {
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY missing');
 
   const client = new Anthropic({ apiKey });
   async function runOnce(sourceText) {
     const heuristics = preprocessDocument(sourceText);
     const model = selectModel(heuristics);
-    const userPrompt = buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNote, knowledgeLevel, timeContext);
+    const userPrompt = buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNote, knowledgeLevel, timeContext, outputLanguage);
 
     const response = await client.messages.create({
       model,

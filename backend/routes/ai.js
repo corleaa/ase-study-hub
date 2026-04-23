@@ -409,7 +409,8 @@ router.post('/smart-summary',
   ...aiGuard('smart-summary'),
   async (req, res, next) => {
     try {
-      const { text, subjectName, intent = 'understand', subjectId, title, documentId, domain, userProfileNote, knowledgeLevel, timeContext } = req.body;
+      const { text, subjectName, intent = 'understand', subjectId, title, documentId, domain, userProfileNote, knowledgeLevel, timeContext, output_language } = req.body;
+      const outputLanguage = output_language === 'en' ? 'en' : 'ro';
 
       if (!text || typeof text !== 'string' || text.trim().length < 50) {
         return res.status(400).json({ error: 'Textul documentului este prea scurt sau lipsă.' });
@@ -423,7 +424,7 @@ router.post('/smart-summary',
       const userId = req.user?.id ?? null;
 
       // ── Cache check ─────────────────────────────────────────────
-      const docHash = computeDocHash(text, safeIntent);
+      const docHash = computeDocHash(text, safeIntent, outputLanguage);
       if (userId) {
         const cached = getSmartSummaryByHash(docHash, userId);
         if (cached?.output_json) {
@@ -442,6 +443,7 @@ router.post('/smart-summary',
         userProfileNote: typeof userProfileNote === 'string' ? userProfileNote.substring(0, 200) : undefined,
         knowledgeLevel: typeof knowledgeLevel === 'string' ? knowledgeLevel : undefined,
         timeContext: typeof timeContext === 'string' ? timeContext : undefined,
+        outputLanguage,
       });
 
       // ── Save to DB ───────────────────────────────────────────────
