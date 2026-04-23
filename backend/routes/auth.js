@@ -81,9 +81,11 @@ router.post('/register',
   validate('register'),
   async (req, res, next) => {
     try {
-      // Registration can be disabled via DB setting or env var
+      // Registration can be controlled from env or DB.
+      // Env takes precedence so production can be recovered quickly
+      // even if the persistent DB setting was left closed.
       const { getSetting } = require('../db/client');
-      const regOpen = getSetting('registration_open') ?? (process.env.REGISTRATION_OPEN ?? 'true');
+      const regOpen = process.env.REGISTRATION_OPEN ?? getSetting('registration_open') ?? 'true';
       if (regOpen === 'false') {
         return res.status(403).json({ error: 'Înregistrările sunt momentan închise. Contactează administratorul pentru acces.' });
       }
