@@ -64,7 +64,7 @@ const ALLOWED_EXTENSIONS = new Set(['.pdf', '.txt', '.md', '.markdown', '.csv', 
 // ─────────────────────────────────────────────────────────────────
 // 2. SIZE LIMITS
 // ─────────────────────────────────────────────────────────────────
-const MAX_FILE_BYTES = parseInt(process.env.MAX_FILE_SIZE, 10) || 5 * 1024 * 1024;  // 5 MB
+const MAX_FILE_BYTES = parseInt(process.env.MAX_FILE_SIZE, 10) || 25 * 1024 * 1024;  // 25 MB
 const MAX_FILES_PER_REQUEST = 1;
 
 // ─────────────────────────────────────────────────────────────────

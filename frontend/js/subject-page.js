@@ -72,7 +72,7 @@ function renderSubjectPage(element, key, subject) {
   html += '<input type="file" id="fileUpload" accept=".pdf,.txt,.doc,.docx,.md,.csv,.pptx">';
   html += '<div class="su-icon" style="display:flex;justify-content:center;color:var(--text-muted);">' + icon('upload','lg') + '</div>';
   html += '<div class="su-text">Trage un fișier sau click pentru a încărca</div>';
-  html += '<div class="su-hint">PDF, TXT, DOCX, PPTX, MD, CSV — max 10MB</div>';
+  html += '<div class="su-hint">PDF, TXT, DOCX, PPTX, MD, CSV — max 25MB</div>';
   html += '</div>';
 
   html += '<div class="summary-file-info" id="fileInfo">';
@@ -938,9 +938,9 @@ async function runSyllabusGap(subjectKey) {
 }
 
 function processFile(file, append) {
-  var maxSize = 10 * 1024 * 1024; // 10MB
+  var maxSize = 25 * 1024 * 1024; // 25MB
   if (file.size > maxSize) {
-    alert('Fișierul e prea mare (max 10MB)');
+    alert('Fișierul e prea mare (max 25MB)');
     return;
   }
 
