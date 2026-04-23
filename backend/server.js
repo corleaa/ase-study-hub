@@ -66,9 +66,9 @@ app.use((req, res, next) => {
       directives: {
         defaultSrc:   ["'self'"],
         // Per-request nonce — NO 'unsafe-inline'
-        scriptSrc:    ["'self'", `'nonce-${nonce}'`, 'https://cdnjs.cloudflare.com'],
-        styleSrc:     ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-        fontSrc:      ['https://fonts.gstatic.com'],
+        scriptSrc:    ["'self'", `'nonce-${nonce}'`, 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net'],
+        styleSrc:     ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
+        fontSrc:      ['https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
         connectSrc:   ["'self'"],
         imgSrc:       ["'self'", 'data:', 'blob:'],
         formAction:   ["'self'"],
@@ -127,13 +127,17 @@ app.use('/api/admin',    require('./routes/admin'));
 
 // ── CSP violation reports ─────────────────────────────────────────
 app.post('/api/csp-report',
-  express.json({
-    type:  ['application/csp-report', 'application/reports+json', 'application/json'],
+  express.text({
+    type:  ['application/csp-report', 'application/reports+json', 'application/json', 'text/plain'],
     limit: '10kb',
   }),
   (req, res) => {
     try {
-      logger.warn('CSP violation', { report: req.body?.['csp-report'] || req.body || null });
+      let payload = req.body;
+      if (typeof payload === 'string' && payload.trim()) {
+        try { payload = JSON.parse(payload); } catch {}
+      }
+      logger.warn('CSP violation', { report: payload?.['csp-report'] || payload || null });
     } catch {}
     res.status(204).end();
   }
