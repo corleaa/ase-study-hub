@@ -49,6 +49,7 @@ const {
   getDbCached,
   setDbCached,
   createSummaryFeedback,
+  createSectionFeedback,
 } = require('../db/client');
 
 // ── Shared middleware stack for all AI routes ─────────────────────
@@ -382,7 +383,8 @@ Unde:
 // Simple thumbs up/down stored after user reads a summary
 // ─────────────────────────────────────────────────────────────────
 router.post('/summary-feedback',
-  ...aiGuard('quiz'),
+  aiIpLimiter,
+  optionalAuth,
   async (req, res, next) => {
     try {
       const { summaryId, rating } = req.body;
@@ -633,6 +635,86 @@ Generează EXACT 2 întrebări grilă. Returnează EXCLUSIV JSON valid:
 
       logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash, 0, 0, 0, subjectName?.substring(0, 60));
       res.json({ questions: result.questions });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
+// POST /api/ai/section-feedback
+// ─────────────────────────────────────────────────────────────────
+router.post('/section-feedback',
+  aiIpLimiter,
+  optionalAuth,
+  async (req, res, next) => {
+    try {
+      const { summaryId, sectionKind, sectionTitle, rating } = req.body;
+      const numRating = Number(rating);
+      if (numRating !== 1 && numRating !== -1) {
+        return res.status(400).json({ error: 'rating trebuie să fie 1 sau -1.' });
+      }
+      const userId = req.user?.id ?? null;
+      createSectionFeedback(summaryId ? Number(summaryId) : null, userId, sectionKind, sectionTitle, numRating);
+      res.json({ ok: true });
+    } catch (e) {
+      logger.error('Section feedback error', { error: e.message });
+      next(e);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────
+// POST /api/ai/syllabus-gap
+// Compares a list of syllabus topics against existing summary data
+// ─────────────────────────────────────────────────────────────────
+router.post('/syllabus-gap',
+  ...aiGuard('quiz'),
+  async (req, res, next) => {
+    try {
+      const { syllabusText, coveredTopics, subjectName } = req.body;
+      if (!syllabusText || !syllabusText.trim()) {
+        return res.status(400).json({ error: 'syllabusText este obligatoriu.' });
+      }
+
+      const MODEL_HAIKU = process.env.ANTHROPIC_HAIKU_MODEL || 'claude-haiku-4-5-20251001';
+      const Anthropic = require('@anthropic-ai/sdk');
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+      const coveredStr = (coveredTopics || []).slice(0, 30).join(', ') || 'niciun rezumat generat încă';
+      const prompt = `Materie: ${(subjectName || 'necunoscută').substring(0, 60)}
+
+Syllabus / tematica examenului:
+${syllabusText.substring(0, 3000)}
+
+Topicuri acoperite deja de rezumatele studentului:
+${coveredStr}
+
+Analizează gap-urile. Răspunde EXCLUSIV cu JSON valid:
+{
+  "covered": ["topic acoperit 1", "topic acoperit 2"],
+  "partial": ["topic parțial acoperit 1"],
+  "missing": ["topic lipsă 1", "topic lipsă 2"],
+  "tip": "O recomandare concretă despre ce să studieze primul"
+}`;
+
+      const response = await client.messages.create({
+        model: MODEL_HAIKU,
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      const raw = (response.content[0]?.text || '').replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) return res.status(422).json({ error: 'Răspuns invalid de la AI.' });
+
+      const result = JSON.parse(match[0]);
+      logApiCall(req.user?.id ?? null, 'quiz', req.clientIpHash,
+        response.usage?.input_tokens || 0, response.usage?.output_tokens || 0,
+        ((response.usage?.input_tokens || 0) * 3 + (response.usage?.output_tokens || 0) * 15) / 1_000_000,
+        subjectName?.substring(0, 60));
+
+      res.json(result);
     } catch (e) {
       next(e);
     }

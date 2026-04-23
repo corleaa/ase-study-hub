@@ -41,15 +41,18 @@ Distribuie 1.0 între aceste tipuri de cunoaștere (suma = 1.0):
 // All 21 section kind definitions (used in full/fallback prompt)
 const ALL_SECTION_KINDS = `
 ────────────────────────────────────────────
-BIBLIOTECA DE SECȚIUNI (21 tipuri)
+BIBLIOTECA DE SECȚIUNI (23 tipuri)
 ────────────────────────────────────────────
 Alege 3-5 secțiuni cu relevance > 0.5. Fiecare are schema exactă de mai jos.
 
 CANTITATIVE:
-formule      → {"kind":"formule","title":"...","relevance":0.0,"items":[{"expression":"formula","label":"ce calculează"}]}
-derivare     → {"kind":"derivare","title":"...","relevance":0.0,"steps":["pas 1","pas 2"]}
+formule      → {"kind":"formule","title":"...","relevance":0.0,"items":[{"expression":"LaTeX: ex \\frac{F}{m}","label":"ce calculează","vars":[{"symbol":"F","meaning":"forța [N]"}]}]}
+derivare     → {"kind":"derivare","title":"...","relevance":0.0,"steps":["pas 1 cu LaTeX inline dacă e nevoie: $E=mc^2$","pas 2"]}
 complexitate → {"kind":"complexitate","title":"...","relevance":0.0,"rows":[{"case":"Best/Average/Worst","time":"O(...)","space":"O(...)","note":"..."}]}
 date_numerice→ {"kind":"date_numerice","title":"...","relevance":0.0,"rows":[{"metric":"...","value":"...","note":"..."}]}
+constante    → {"kind":"constante","title":"...","relevance":0.0,"items":[{"symbol":"G","value":"6.674×10⁻¹¹","unit":"N·m²/kg²","meaning":"constanta gravitației universale"}]}
+assumptions  → {"kind":"assumptions","title":"...","relevance":0.0,"model":"Modelul sau teorema","items":["H1: homoscedasticity — Var(εᵢ) = σ² constant","H2: ..."]}
+
 
 STRUCTURALE:
 mechanism    → {"kind":"mechanism","title":"...","relevance":0.0,"items":[{"level":"Macro","text":"..."},{"level":"Mediu","text":"..."},{"level":"Micro","text":"..."}]}
@@ -84,8 +87,10 @@ glosar       → {"kind":"glosar","title":"...","relevance":0.0,"items":[{"term"
 
 // Section kind schemas — one per kind
 const KIND_SCHEMAS = {
-  formule:      'formule      → {"kind":"formule","title":"...","relevance":0.0,"items":[{"expression":"formula","label":"ce calculează"}]}',
-  derivare:     'derivare     → {"kind":"derivare","title":"...","relevance":0.0,"steps":["pas 1","pas 2"]}',
+  formule:      'formule      → {"kind":"formule","title":"...","relevance":0.0,"items":[{"expression":"LaTeX: ex \\\\frac{F}{m}","label":"ce calculează","vars":[{"symbol":"F","meaning":"forța [N]"}]}]}',
+  derivare:     'derivare     → {"kind":"derivare","title":"...","relevance":0.0,"steps":["pas 1 — LaTeX inline cu $...$: $E=mc^2$","pas 2"]}',
+  constante:    'constante    → {"kind":"constante","title":"...","relevance":0.0,"items":[{"symbol":"G","value":"6.674×10⁻¹¹","unit":"N·m²/kg²","meaning":"constanta gravitației universale"}]}',
+  assumptions:  'assumptions  → {"kind":"assumptions","title":"...","relevance":0.0,"model":"Modelul sau teorema","items":["H1: ...","H2: ..."]}',
   complexitate: 'complexitate → {"kind":"complexitate","title":"...","relevance":0.0,"rows":[{"case":"Best/Average/Worst","time":"O(...)","space":"O(...)","note":"..."}]}',
   date_numerice:'date_numerice→ {"kind":"date_numerice","title":"...","relevance":0.0,"rows":[{"metric":"...","value":"...","note":"..."}]}',
   mechanism:    'mechanism    → {"kind":"mechanism","title":"...","relevance":0.0,"items":[{"level":"Macro","text":"..."},{"level":"Mediu","text":"..."},{"level":"Micro","text":"..."}]}',
@@ -112,7 +117,8 @@ const KIND_SCHEMAS = {
 const DOMAIN_KINDS = {
   medicine:       ['mechanism','cauza_efect','protocol','ddx','warnings','caz','glosar','comparatie','taxonomie','studii','date_numerice'],
   law:            ['articol','exceptii','conditii','protocol','glosar','comparatie','taxonomie','warnings','caz','cauza_efect'],
-  exact_sciences: ['formule','derivare','complexitate','date_numerice','mechanism','cauza_efect','comparatie','distributie','glosar','warnings'],
+  exact_sciences: ['formule','derivare','complexitate','date_numerice','mechanism','cauza_efect','comparatie','distributie','glosar','warnings','constante','assumptions'],
+  engineering:    ['formule','derivare','constante','date_numerice','mechanism','cauza_efect','comparatie','protocol','warnings','glosar','assumptions','conditii'],
   social_sciences:['mechanism','cauza_efect','comparatie','taxonomie','studii','autori','critici','aplicatii','warnings','glosar','caz','date_numerice'],
   cs:             ['cod','complexitate','protocol','mechanism','comparatie','warnings','glosar','aplicatii','caz','cauza_efect'],
   humanities:     ['autori','studii','critici','comparatie','taxonomie','glosar','cauza_efect','caz','aplicatii','warnings'],
@@ -122,7 +128,8 @@ const DOMAIN_KINDS = {
 const DOMAIN_RULES = {
   medicine:        '- procedural > 0.3 → include protocol\n- empirical > 0.3 → include studii\n- Dacă alternative de diagnostic → ddx obligatoriu\n- Dacă pași clari → protocol',
   law:             '- normative > 0.25 → articol și conditii obligatorii\n- exceptii dacă legea prevede excepții explicite\n- procedural → protocol pentru proceduri juridice',
-  exact_sciences:  '- quantitative > 0.35 → formule sau derivare obligatoriu\n- distributie DOAR dacă probabilitate/VaR/pierderi stochastice explicit menționate\n- complexitate dacă algoritmi prezenți',
+  exact_sciences:  '- quantitative > 0.35 → formule sau derivare obligatoriu\n- constante dacă document conține constante fizice sau parametri de referință\n- assumptions dacă document menționează ipoteze de model (Gauss-Markov, regularitate, etc.)\n- distributie DOAR dacă probabilitate/VaR/pierderi stochastice explicit menționate\n- complexitate dacă algoritmi prezenți',
+  engineering:     '- quantitative > 0.35 → formule și constante obligatorii\n- assumptions dacă sunt menționate condiții de aplicabilitate sau limite de model\n- protocol pentru proceduri tehnice sau proceduri de calcul\n- comparatie dacă sunt puse în contrast metode sau abordări',
   social_sciences: '- empirical > 0.3 → studii sau autori\n- comparatie dacă două teorii/modele puse față în față\n- critici dacă document prezintă limite sau dezbateri',
   cs:              '- cod obligatoriu dacă algoritmi sau pseudocod în document\n- complexitate dacă cod prezent\n- protocol pentru fluxuri de date sau arhitecturi',
   humanities:      '- autori dacă contribuții individuale menționate\n- critici dacă dezbateri sau limite prezentate\n- caz dacă exemple istorice sau literare concrete',
@@ -140,13 +147,16 @@ const PROMPT_DOMAIN_DETECTION = `
 ────────────────────────────────────────────
 DETECTARE DOMENIU (domain_category)
 ────────────────────────────────────────────
-exact_sciences: matematică, fizică, chimie, statistică, inginerie
-social_sciences: psihologie, sociologie, economie, management, marketing
+exact_sciences: matematică, fizică, chimie, statistică, econometrie, analiză numerică, termodinamică, mecanică cuantică — orice disciplină cu formalism matematic dens
+engineering: inginerie aerospațială, inginerie mecanică, electrică, electronică, automatică, construcții, inginerie industrială, robotică
+social_sciences: psihologie, sociologie, economie generală, management, marketing, comportament organizațional — fără matematică intensivă
 law: drept, legislație, constituție, articole de lege, reglementări
 medicine: medicină, anatomie, farmacologie, fiziologie, patologie, biologie
 humanities: filozofie, istorie, literatură, lingvistică, artă, pedagogie
 cs: programare, algoritmi, sisteme, rețele, baze de date, securitate IT
-other: orice alt domeniu`;
+other: orice alt domeniu
+
+IMPORTANT: econometria, statistica matematică și modelele cantitative din economie → exact_sciences (nu social_sciences)`;
 
 const PROMPT_SCAFFOLD_PRINCIPLES = `
 ────────────────────────────────────────────
@@ -156,7 +166,15 @@ Fiecare secțiune trebuie să:
 1. Folosească terminologia exactă din document (nu parafrazeze în alt limbaj)
 2. Creeze ancore mentale pe care studentul le va recunoaște în textul original
 3. Prioritizeze STRUCTURA față de completitudine
-4. Nu explice tot — deschidă calea spre document`;
+4. Nu explice tot — deschidă calea spre document
+
+────────────────────────────────────────────
+NOTAȚIE MATEMATICĂ
+────────────────────────────────────────────
+- Câmpul "expression" din "formule": folosește EXCLUSIV notație LaTeX (ex: \\frac{a}{b}, \\int_0^T f(x)dx, \\sigma^2, \\nabla^2\\psi)
+- Pașii din "derivare": poți folosi LaTeX inline cu delimitatori $...$ (ex: "Din $F=ma$ rezultă $a=\\frac{F}{m}$")
+- Orice alt câmp de text: text simplu cu simboluri Unicode (σ², ∂x, ≤) — FĂRĂ LaTeX
+- Fiecare item din "formule" trebuie să aibă câmpul "vars" cu toate variabilele explicate`;
 
 const PROMPT_OUTPUT_FORMAT = (domainCategory) => `
 ────────────────────────────────────────────
@@ -177,7 +195,7 @@ Niciun text, niciun markdown, niciun backtick în afara JSON-ului.
     "title": "Titlu concis al temei",
     "why_it_matters": "1-2 propoziții de ce contează",
     "domain_tags": ["tag1","tag2","tag3"],
-    "domain_category": "${domainCategory || 'exact_sciences|social_sciences|law|medicine|humanities|cs|other'}",
+    "domain_category": "${domainCategory || 'exact_sciences|engineering|social_sciences|law|medicine|humanities|cs|other'}",
     "layers": [
       {"level":"Intuitiv","text":"explicație simplă, analogie din viața reală"},
       {"level":"Conceptual","text":"explicație academică, termeni cheie, logica internă"},
@@ -227,9 +245,20 @@ function preprocessDocument(text) {
   const clean = text.replace(/\s+/g, ' ').trim();
   const wordCount = clean.split(' ').length;
 
-  // Formula detection — math symbols + LaTeX patterns
-  const formulaMatches = clean.match(/[=∑∫∂≤≥±√∞∈∩∪→←⟹∀∃]|\\[a-z]+\{|[A-Z]\([A-Z]\)|P\[|E\[/g) || [];
+  // Formula detection — math symbols, LaTeX, Greek names, subscripts, units
+  const formulaMatches = clean.match(
+    /[=∑∫∂≤≥±√∞∈∩∪→←⟹∀∃λμσπθφψωΓΔΘΛΞΠΣΦΨΩαβγδεζηικνξορτυχ]|\\[a-zA-Z]+[\{\s(]|[A-Za-z]_[0-9a-zA-Z{]|[A-Za-z]\^[0-9a-zA-Z{-]|d[²³]|∂²|P\[|E\[|Var\[|Cov\[|\b(?:alpha|beta|gamma|delta|epsilon|theta|lambda|sigma|omega|phi|chi|psi|mu|nu|rho|tau)\b/g
+  ) || [];
   const formulaDensity = formulaMatches.length / Math.max(wordCount, 1);
+
+  // OCR artifact detection
+  const words = clean.split(' ');
+  const singleCharWords = words.filter(function(w){ return w.length === 1 && /[a-zA-Z]/.test(w); }).length;
+  const singleCharRatio = singleCharWords / Math.max(words.length, 1);
+  const avgWordLen = words.reduce(function(s, w){ return s + w.length; }, 0) / Math.max(words.length, 1);
+  const suspiciousChars = (clean.match(/[□■▪▫◆◇○●‐‑…� -]/g) || []).length;
+  const ocrRisk = (singleCharRatio > 0.15 || avgWordLen < 2.5 || suspiciousChars > 20) ? 'high'
+    : (singleCharRatio > 0.08 || avgWordLen < 3.2) ? 'medium' : 'low';
 
   // Code detection
   const hasCode = /function\s+\w+|def\s+\w+|class\s+\w+|import\s+\w+|SELECT\s+|for\s*\(|while\s*\(|```/.test(clean);
@@ -246,13 +275,23 @@ function preprocessDocument(text) {
   if (avgWordLength < 3 || wordCount < 100) sourceQuality = 'poor';
   else if (wordCount < 300 || headingCount === 0) sourceQuality = 'medium';
 
-  // Smart chunking — keep beginning + end for context
-  const MAX_CHARS = 14000;
+  // Smart chunking — formula-dense docs get larger window + middle preserved
+  const isTechnical = formulaDensity > 0.02;
+  const MAX_CHARS = isTechnical ? 20000 : 14000;
   let chunk = clean;
   if (clean.length > MAX_CHARS) {
-    const head = clean.substring(0, Math.floor(MAX_CHARS * 0.75));
-    const tail = clean.substring(clean.length - Math.floor(MAX_CHARS * 0.25));
-    chunk = head + '\n\n[...]\n\n' + tail;
+    if (isTechnical) {
+      // head 40% + middle 40% + tail 20% — preserves derivations at center
+      const head = clean.substring(0, Math.floor(MAX_CHARS * 0.4));
+      const midStart = Math.floor(clean.length * 0.4);
+      const mid  = clean.substring(midStart, midStart + Math.floor(MAX_CHARS * 0.4));
+      const tail = clean.substring(clean.length - Math.floor(MAX_CHARS * 0.2));
+      chunk = head + '\n\n[...]\n\n' + mid + '\n\n[...]\n\n' + tail;
+    } else {
+      const head = clean.substring(0, Math.floor(MAX_CHARS * 0.75));
+      const tail = clean.substring(clean.length - Math.floor(MAX_CHARS * 0.25));
+      chunk = head + '\n\n[...]\n\n' + tail;
+    }
   }
 
   return {
@@ -262,6 +301,7 @@ function preprocessDocument(text) {
     hasLegalContent,
     headingCount,
     sourceQuality,
+    ocrRisk,
     chunk,
     originalLength: text.length,
     truncated: text.length > MAX_CHARS,
@@ -323,6 +363,7 @@ function buildUserPrompt(subjectName, intent, heuristics, domain, userProfileNot
   if (heuristics.hasCode) hints.push('documentul conține cod sau algoritmi — include secțiunea cod');
   if (heuristics.hasLegalContent) hints.push('documentul conține conținut normativ/juridic — include articol și conditii');
   if (heuristics.sourceQuality === 'poor') hints.push('documentul pare fragmentat — reconstruiește conceptual mai mult decât urmezi structura textului');
+  if (heuristics.ocrRisk === 'high') hints.push('ATENȚIE: textul conține artefacte OCR sau extracție defectuoasă — ignoră caracterele garbled, reconstruiește conceptele din context');
   if (heuristics.truncated) hints.push(`documentul original are ${heuristics.wordCount} cuvinte — am trimis un chunk reprezentativ`);
 
   const domainLine       = domain          ? `Domeniu materie: ${domain}` : '';

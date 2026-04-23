@@ -78,7 +78,10 @@ function renderSubjectPage(element, key, subject) {
   html += '<div class="summary-file-info" id="fileInfo">';
   html += '<span>📎</span><span class="sf-name" id="fileName"></span>';
   html += '<span class="sf-size" id="fileSize"></span>';
+  html += '<label style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:2px 10px;font-size:.72rem;cursor:pointer;white-space:nowrap;margin-left:auto;">+ doc<input type="file" id="fileUploadExtra" accept=".pdf,.txt,.doc,.docx,.md,.csv,.pptx" style="display:none;"></label>';
   html += '<button class="sf-remove" data-subject-action="remove-uploaded-file">✕</button></div>';
+
+  html += '<div id="multiDocList" style="display:none;background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:8px;"></div>';
 
   html += '<div class="summary-or">sau lipește textul manual</div>';
   html += '<textarea class="summary-textarea" id="summaryInput" placeholder="Lipește aici textul din curs, PDF, sau notițe..."></textarea>';
@@ -150,6 +153,44 @@ function renderSubjectPage(element, key, subject) {
     html += '</div>';
   }
 
+  html += '</div></div>';
+
+  // === CONCEPT MAP ===
+  if (allPres.length >= 2) {
+    var conceptFreq = {};
+    allPres.forEach(function(p) {
+      if (!p.smartData || !p.smartData.output) return;
+      var o = p.smartData.output;
+      var terms = (o.pathway||[]).concat(o.domain_tags||[]);
+      (o.sections||[]).forEach(function(s){ if(s.title) terms.push(s.title); });
+      terms.forEach(function(t) {
+        if (!t || t.length < 3) return;
+        var k = t.toLowerCase().trim();
+        conceptFreq[k] = (conceptFreq[k]||0) + 1;
+      });
+    });
+    var repeated = Object.keys(conceptFreq).filter(function(k){ return conceptFreq[k] > 1; }).sort(function(a,b){ return conceptFreq[b]-conceptFreq[a]; }).slice(0, 20);
+    if (repeated.length) {
+      html += '<div class="panel panel-full anim-d2" style="margin-bottom:16px;">';
+      html += '<div class="panel-head"><span>🔗 Concepte comune între rezumate</span></div>';
+      html += '<div class="panel-body"><div style="display:flex;flex-wrap:wrap;gap:7px;">';
+      repeated.forEach(function(k) {
+        var freq = conceptFreq[k];
+        var opacity = 0.5 + Math.min(freq-1, 4) * 0.12;
+        html += '<span style="background:rgba(242,155,109,'+opacity+');color:#fff;border-radius:20px;padding:4px 12px;font-size:.78rem;font-weight:'+(freq>2?'700':'500')+';" title="Apare în '+freq+' rezumate">'+escapeHtml(k)+'</span>';
+      });
+      html += '</div></div></div>';
+    }
+  }
+
+  // === SYLLABUS GAP ANALYZER ===
+  html += '<div class="panel panel-full anim-d2" id="syllabusGapPanel" style="margin-bottom:16px;">';
+  html += '<div class="panel-head" style="cursor:pointer;" onclick="toggleSyllabusPanel()"><span>📋 Analizează gap-uri față de syllabus</span><span id="syllabusChevron" style="margin-left:auto;font-size:.75rem;color:var(--text-muted);">▼</span></div>';
+  html += '<div id="syllabusGapBody" style="display:none;" class="panel-body">';
+  html += '<div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;">Lipește syllabus-ul sau temele de examen. AI-ul verifică ce ai deja acoperit și ce lipsește.</div>';
+  html += '<textarea id="syllabusInput" placeholder="Ex: 1. Regresia liniară, 2. Testul t, 3. ANOVA, 4. Serii de timp..." style="width:100%;height:100px;background:var(--bg-overlay);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text-primary);font-family:inherit;font-size:.82rem;resize:vertical;box-sizing:border-box;"></textarea>';
+  html += '<button onclick="runSyllabusGap(\'' + escapeHtml(key) + '\')" style="margin-top:8px;padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-family:inherit;font-size:.85rem;">Analizează gap-urile</button>';
+  html += '<div id="syllabusGapResult" style="margin-top:14px;"></div>';
   html += '</div></div>';
 
   // === TOOLS TABS ===
@@ -488,6 +529,15 @@ function setupSubjectPageInteractions(element, key, subject) {
     fileUpload.dataset.bound = 'true';
     fileUpload.addEventListener('change', handleFileUpload);
   }
+  var fileUploadExtra = element.querySelector('#fileUploadExtra');
+  if (fileUploadExtra && !fileUploadExtra.dataset.bound) {
+    fileUploadExtra.dataset.bound = 'true';
+    fileUploadExtra.addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (file) processFile(file, true);
+      e.target.value = '';
+    });
+  }
 
   // Guard against accumulating duplicate listeners on every renderPage() call
   if (element.dataset.interactionsBound) return;
@@ -778,6 +828,7 @@ async function sendChatMessage(key) {
 // FILE UPLOAD & PROCESSING
 // =============================================
 var uploadedFileText = '';
+var uploadedDocuments = []; // [{name, text}] for multi-document
 var PRE_SCAN_MAX_CHARS = 4000;
 var SUMMARY_MAX_CHARS = 18000;
 
@@ -798,10 +849,95 @@ function trimDocumentForAi(text, maxChars) {
 
 function handleFileUpload(event) {
   var file = event.target.files[0];
-  if (file) processFile(file);
+  if (file) processFile(file, false);
 }
 
-function processFile(file) {
+function detectOcrRisk(text) {
+  var words = text.split(/\s+/);
+  var single = words.filter(function(w){ return w.length === 1 && /[a-zA-Z]/.test(w); }).length;
+  var ratio = single / Math.max(words.length, 1);
+  var avgLen = words.reduce(function(s,w){ return s+w.length; }, 0) / Math.max(words.length,1);
+  return ratio > 0.12 || avgLen < 2.8;
+}
+
+function renderDocumentList() {
+  var listEl = document.getElementById('multiDocList');
+  if (!listEl) return;
+  if (!uploadedDocuments.length) { listEl.style.display = 'none'; return; }
+  listEl.style.display = 'block';
+  listEl.innerHTML = uploadedDocuments.map(function(d, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.78rem;color:var(--text-secondary);">'
+      + '<span style="color:var(--accent);">📄</span>'
+      + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(d.name)+'</span>'
+      + '<span style="color:var(--text-muted);font-size:.7rem;">'+Math.round(d.text.length/1000)+'k</span>'
+      + '<button onclick="removeUploadedDocument('+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.8rem;padding:0 4px;">✕</button>'
+      + '</div>';
+  }).join('');
+  // Combined text for AI
+  uploadedFileText = uploadedDocuments.map(function(d, i) {
+    return '=== DOCUMENT ' + (i+1) + ': ' + d.name + ' ===\n\n' + d.text;
+  }).join('\n\n');
+}
+
+function removeUploadedDocument(idx) {
+  uploadedDocuments.splice(idx, 1);
+  if (!uploadedDocuments.length) uploadedFileText = '';
+  renderDocumentList();
+}
+
+function toggleSyllabusPanel() {
+  var body = document.getElementById('syllabusGapBody');
+  var chevron = document.getElementById('syllabusChevron');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chevron) chevron.textContent = open ? '▼' : '▲';
+}
+
+async function runSyllabusGap(subjectKey) {
+  var inp = document.getElementById('syllabusInput');
+  var resultEl = document.getElementById('syllabusGapResult');
+  if (!inp || !resultEl) return;
+  var syllabusText = inp.value.trim();
+  if (!syllabusText) { resultEl.innerHTML = '<div style="color:var(--red);font-size:.8rem;">Lipește syllabus-ul mai întâi.</div>'; return; }
+
+  resultEl.innerHTML = '<div style="color:var(--text-muted);font-size:.8rem;">Se analizează...</div>';
+
+  var subjectObj = getSubjects()[subjectKey];
+  var allPres = getAllPresentations(subjectKey);
+  var coveredTopics = allPres.filter(function(p){ return p.smartData; }).map(function(p) {
+    var o = p.smartData.output || {};
+    return [p.title, o.title].concat(o.pathway||[]).concat(o.domain_tags||[]).filter(Boolean).join(', ');
+  });
+
+  try {
+    var res = await authFetch('/api/ai/syllabus-gap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ syllabusText: syllabusText, coveredTopics: coveredTopics, subjectName: subjectObj ? subjectObj.full : subjectKey }),
+    });
+    if (!res.ok) throw new Error('Eroare server ' + res.status);
+    var data = await res.json();
+    var h = '<div style="display:flex;flex-direction:column;gap:12px;">';
+    if (data.covered && data.covered.length) {
+      h += '<div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--green);margin-bottom:6px;">✓ Acoperite</div><div style="display:flex;flex-wrap:wrap;gap:5px;">' + data.covered.map(function(t){ return '<span style="background:rgba(78,203,141,.1);border:1px solid rgba(78,203,141,.25);border-radius:20px;padding:3px 10px;font-size:.76rem;color:var(--green);">'+escapeHtml(t)+'</span>'; }).join('') + '</div></div>';
+    }
+    if (data.partial && data.partial.length) {
+      h += '<div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--amber);margin-bottom:6px;">~ Parțial acoperite</div><div style="display:flex;flex-wrap:wrap;gap:5px;">' + data.partial.map(function(t){ return '<span style="background:rgba(233,187,116,.1);border:1px solid rgba(233,187,116,.25);border-radius:20px;padding:3px 10px;font-size:.76rem;color:var(--amber);">'+escapeHtml(t)+'</span>'; }).join('') + '</div></div>';
+    }
+    if (data.missing && data.missing.length) {
+      h += '<div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--red);margin-bottom:6px;">✗ Lipsesc — generează rezumate pentru</div><div style="display:flex;flex-wrap:wrap;gap:5px;">' + data.missing.map(function(t){ return '<span style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:20px;padding:3px 10px;font-size:.76rem;color:var(--red);">'+escapeHtml(t)+'</span>'; }).join('') + '</div></div>';
+    }
+    if (data.tip) h += '<div style="background:rgba(242,155,109,.07);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 8px 8px 0;font-size:.82rem;color:var(--text-secondary);">💡 '+escapeHtml(data.tip)+'</div>';
+    h += '</div>';
+    resultEl.innerHTML = h;
+  } catch(e) {
+    resultEl.innerHTML = '<div style="color:var(--red);font-size:.8rem;">' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function processFile(file, append) {
   var maxSize = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSize) {
     alert('Fișierul e prea mare (max 10MB)');
@@ -812,27 +948,40 @@ function processFile(file) {
   var statusEl = document.getElementById('summaryStatus');
   if (statusEl) statusEl.textContent = 'Se extrage textul...';
 
-  // Show file info
-  var fileInfoEl = document.getElementById('fileInfo');
-  var fileNameEl = document.getElementById('fileName');
-  var fileSizeEl = document.getElementById('fileSize');
-  if (fileInfoEl) fileInfoEl.classList.add('visible');
-  if (fileNameEl) fileNameEl.textContent = file.name;
-  if (fileSizeEl) fileSizeEl.textContent = formatFileSize(file.size);
+  if (!append) {
+    // Show file info for primary file
+    var fileInfoEl = document.getElementById('fileInfo');
+    var fileNameEl = document.getElementById('fileName');
+    var fileSizeEl = document.getElementById('fileSize');
+    if (fileInfoEl) fileInfoEl.classList.add('visible');
+    if (fileNameEl) fileNameEl.textContent = file.name;
+    if (fileSizeEl) fileSizeEl.textContent = formatFileSize(file.size);
 
-  // Auto-fill title
-  var titleInput = document.getElementById('presTitle');
-  if (titleInput && !titleInput.value) {
-    titleInput.value = file.name.replace(/\.[^.]+$/, '');
+    // Auto-fill title
+    var titleInput = document.getElementById('presTitle');
+    if (titleInput && !titleInput.value) {
+      titleInput.value = file.name.replace(/\.[^.]+$/, '');
+    }
+  }
+
+  function _onFileExtracted(text, label) {
+    if (!append) {
+      uploadedDocuments = [{ name: file.name, text: text }];
+      uploadedFileText = text;
+      var inp = document.getElementById('summaryInput');
+      if (inp) inp.value = text.substring(0, 500) + (text.length > 500 ? '\n\n... [' + label + ']' : '');
+    } else {
+      uploadedDocuments.push({ name: file.name, text: text });
+      renderDocumentList();
+    }
+    var ocrWarn = detectOcrRisk(text) ? ' ⚠ Calitate OCR slabă — verifică textul.' : '';
+    if (statusEl) statusEl.textContent = '[OK] ' + label + ocrWarn;
   }
 
   if (extension === 'txt' || extension === 'md' || extension === 'csv') {
     var reader = new FileReader();
     reader.onload = function(e) {
-      uploadedFileText = e.target.result;
-      document.getElementById('summaryInput').value = uploadedFileText.substring(0, 500) +
-        (uploadedFileText.length > 500 ? '\n\n... [text complet încărcat — ' + uploadedFileText.length + ' caractere]' : '');
-      if (statusEl) statusEl.textContent = '[OK] ' + uploadedFileText.length + ' caractere extrase';
+      _onFileExtracted(e.target.result, e.target.result.length + ' caractere extrase');
     };
     reader.readAsText(file);
 
@@ -852,13 +1001,10 @@ function processFile(file) {
           var content = await page.getTextContent();
           text += content.items.map(function(item) { return item.str; }).join(' ') + '\n\n';
         }
-        uploadedFileText = text.trim();
-        document.getElementById('summaryInput').value = uploadedFileText.substring(0, 500) +
-          (uploadedFileText.length > 500 ? '\n\n... [PDF complet — ' + pdf.numPages + ' pagini, ' + uploadedFileText.length + ' caractere]' : '');
-        if (statusEl) statusEl.textContent = '[OK] PDF: ' + pdf.numPages + ' pagini, ' + uploadedFileText.length + ' caractere';
+        _onFileExtracted(text.trim(), 'PDF: ' + pdf.numPages + ' pagini, ' + text.trim().length + ' caractere');
       } catch (err) {
         if (statusEl) statusEl.textContent = '[!] Eroare PDF: ' + err.message;
-        uploadedFileText = '';
+        if (!append) uploadedFileText = '';
       }
     };
     reader.readAsArrayBuffer(file);
@@ -890,13 +1036,10 @@ function processFile(file) {
           }
         }
 
-        uploadedFileText = text.trim();
-        document.getElementById('summaryInput').value = uploadedFileText.substring(0, 500) +
-          (uploadedFileText.length > 500 ? '\n\n... [' + extension.toUpperCase() + ' complet — ' + uploadedFileText.length + ' caractere]' : '');
-        if (statusEl) statusEl.textContent = '[OK] ' + extension.toUpperCase() + ': ' + uploadedFileText.length + ' caractere extrase';
+        _onFileExtracted(text.trim(), extension.toUpperCase() + ': ' + text.trim().length + ' caractere extrase');
       } catch (err) {
         if (statusEl) statusEl.textContent = '[!] Eroare ' + extension + ': ' + err.message;
-        uploadedFileText = '';
+        if (!append) uploadedFileText = '';
       }
     };
     reader.readAsArrayBuffer(file);
@@ -908,6 +1051,7 @@ function processFile(file) {
 
 function removeFile() {
   uploadedFileText = '';
+  uploadedDocuments = [];
   var fileInfoEl = document.getElementById('fileInfo');
   if (fileInfoEl) fileInfoEl.classList.remove('visible');
   var fileInput = document.getElementById('fileUpload');
@@ -915,6 +1059,7 @@ function removeFile() {
   document.getElementById('summaryInput').value = '';
   var statusEl = document.getElementById('summaryStatus');
   if (statusEl) statusEl.textContent = '';
+  renderDocumentList();
 }
 
 function formatFileSize(bytes) {
@@ -1134,6 +1279,7 @@ REGULI STRICTE:
 // ─────────────────────────────────────────────────────────────────
 var _prescanKnowledgeLevel = '';
 var _prescanTimeContext = '';
+var _prescanDomainHint = '';
 
 async function runPreScan(key) {
   var inputEl  = document.getElementById('summaryInput');
@@ -1152,6 +1298,7 @@ async function runPreScan(key) {
 
   _prescanKnowledgeLevel = '';
   _prescanTimeContext = '';
+  _prescanDomainHint = '';
 
   if (btnEl) btnEl.disabled = true;
   showPrescanModal(key, null, false);
@@ -1164,7 +1311,10 @@ async function runPreScan(key) {
       credentials: 'include',
       body: JSON.stringify({ text: text, subjectName: subjectFull }),
     });
-    if (res.ok) prescanData = await res.json();
+    if (res.ok) {
+      prescanData = await res.json();
+      _prescanDomainHint = prescanData.domain_hint || '';
+    }
   } catch (e) { /* show modal without data */ }
 
   if (btnEl) btnEl.disabled = false;
@@ -1172,7 +1322,7 @@ async function runPreScan(key) {
 }
 
 function showPrescanModal(key, prescanData, loaded) {
-  var DOMAIN_LABELS = { medicine: 'Medicină / Biologie', law: 'Drept / Legislație', exact_sciences: 'Matematică / Fizică / Chimie', social_sciences: 'Economie / Psihologie / Management', cs: 'Informatică / Programare', humanities: 'Umanioare / Istorie / Filosofie', other: 'Alt domeniu' };
+  var DOMAIN_LABELS = { medicine: 'Medicină / Biologie', law: 'Drept / Legislație', exact_sciences: 'Matematică / Fizică / Econometrie', engineering: 'Inginerie', social_sciences: 'Economie / Psihologie / Management', cs: 'Informatică / Programare', humanities: 'Umanioare / Istorie / Filosofie', other: 'Alt domeniu' };
   var DIFF_LABELS   = { introductory: 'Introductiv', intermediate: 'Intermediar', advanced: 'Avansat' };
 
   var html = '<div class="modal-overlay" style="z-index:200;">';
@@ -1323,7 +1473,7 @@ async function generatePresentation(key, params) {
         intent:          intent,
         title:           title,
         subjectId:       subjectObj && subjectObj.id ? subjectObj.id : null,
-        domain:          subjectObj && subjectObj.domain ? subjectObj.domain : undefined,
+        domain:          _prescanDomainHint || (subjectObj && subjectObj.domain ? subjectObj.domain : undefined),
         userProfileNote: subjectObj && subjectObj.userProfileNote ? subjectObj.userProfileNote : undefined,
         knowledgeLevel:  params.knowledgeLevel || undefined,
         timeContext:     params.timeContext || undefined,

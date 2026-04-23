@@ -301,6 +301,19 @@ function initDb() {
     )`);
   } catch {}
 
+  // Per-section feedback
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS section_feedback (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      summary_id   INTEGER REFERENCES summaries(id) ON DELETE SET NULL,
+      user_id      INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      section_kind TEXT NOT NULL,
+      section_title TEXT,
+      rating       INTEGER NOT NULL CHECK(rating IN (1, -1)),
+      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+  } catch {}
+
   // AI response cache — persistent 24h cache for quiz/flashcards/exam
   try {
     db.exec(`CREATE TABLE IF NOT EXISTS ai_response_cache (
@@ -1066,6 +1079,12 @@ function createSummaryFeedback(summaryId, userId, rating) {
     .run(summaryId || null, userId || null, rating);
 }
 
+function createSectionFeedback(summaryId, userId, sectionKind, sectionTitle, rating) {
+  getDb()
+    .prepare('INSERT INTO section_feedback (summary_id, user_id, section_kind, section_title, rating) VALUES (?, ?, ?, ?, ?)')
+    .run(summaryId || null, userId || null, sectionKind || '', sectionTitle || '', rating);
+}
+
 // ─────────────────────────────────────────────────────────────────
 // AI RESPONSE CACHE (persistent, 24h TTL)
 // ─────────────────────────────────────────────────────────────────
@@ -1252,6 +1271,7 @@ module.exports = {
   getDbCached,
   setDbCached,
   createSummaryFeedback,
+  createSectionFeedback,
   // Admin
   getAdminStats,
   // Adaptive recall engine
